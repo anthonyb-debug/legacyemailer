@@ -8,26 +8,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 <style>
   :root{
-    --ink:#0f172a;
-    --ink-soft:#64748b;
-    --paper:#f4f7fb;
-    --panel:#ffffff;
-    --line:#e2e8f0;
-    --accent:#2563eb;
-    --accent-soft:#eaf1fd;
-    --warn:#dc2626;
-    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  }
-  html[data-theme="dark"]{
     --ink:#e2e8f0;
     --ink-soft:#94a3b8;
     --paper:#0b1220;
+    --paper-gradient: linear-gradient(160deg, #0a0f1e 0%, #101c36 50%, #0a1120 100%);
     --panel:#131b2c;
     --line:#22304a;
     --accent:#3b82f6;
     --accent-soft:#16233c;
     --warn:#f87171;
+    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
   body, .compose-modal, .msg-row, .form-control{
     transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
@@ -36,7 +27,8 @@
   html,body{height:100%;margin:0;}
   body{
     font-family:var(--sans);
-    background:var(--paper);
+    background:var(--paper-gradient);
+    background-attachment:fixed;
     color:var(--ink);
     display:flex;
     flex-direction:column;
@@ -121,16 +113,13 @@
     align-items:center;
     padding:6px 8px;
     border-radius:8px;
-    background:transparent;
+    background:rgba(255,255,255,0.94);
+    box-shadow:0 1px 3px rgba(0,0,0,0.25);
   }
   .sidebar-logo img{
     height:30px;
     width:auto;
     display:block;
-  }
-  html[data-theme="dark"] .sidebar-logo{
-    background:rgba(255,255,255,0.94);
-    box-shadow:0 1px 3px rgba(0,0,0,0.25);
   }
   .compose-btn{
     width:100%;
@@ -179,6 +168,7 @@
     display:flex;justify-content:space-between;align-items:center;
   }
   .refresh-link{font-family:var(--sans);cursor:pointer;color:var(--accent);text-transform:none;letter-spacing:0;font-size:12px;}
+  .list-header-left{display:flex;align-items:center;gap:10px;}
   .list-header-actions{display:flex;align-items:center;gap:12px;}
   .selection-info{font-family:var(--sans);font-size:12px;color:var(--ink-soft);text-transform:none;letter-spacing:0;}
   .msg-row{
@@ -192,7 +182,7 @@
   .msg-row:hover{background:var(--accent-soft);}
   .msg-row.selected{background:var(--accent-soft);border-left:3px solid var(--accent);padding-left:15px;}
   .msg-row.unread .msg-from, .msg-row.unread .msg-subject{font-weight:700;}
-  .msg-checkbox{margin-top:3px;flex-shrink:0;cursor:pointer;accent-color:var(--accent);width:14px;height:14px;}
+  .msg-checkbox{margin-top:3px;flex-shrink:0;cursor:pointer;accent-color:var(--accent);width:16px;height:16px;}
   .msg-content{flex:1;min-width:0;}
   .msg-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:3px;}
   .msg-from{font-size:13.5px;color:var(--ink);}
@@ -243,7 +233,13 @@
   .read-body{font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap;word-wrap:break-word;}
   .read-body a{color:var(--accent);}
 
-  .read-body-html{font-size:14px;line-height:1.6;color:var(--ink);word-wrap:break-word;overflow-wrap:break-word;}
+  .read-body-html{
+    font-size:14px;line-height:1.6;word-wrap:break-word;overflow-wrap:break-word;
+    background:rgba(255,255,255,0.96);
+    color:#1a1a1a;
+    padding:16px;
+    border-radius:10px;
+  }
   .read-body-html img{max-width:100%;height:auto;}
   .read-body-html img[data-cid]:not([src]){
     display:inline-block;min-width:24px;min-height:24px;
@@ -253,12 +249,6 @@
   .read-body-html a{color:var(--accent);}
   .read-body-html blockquote{
     margin:8px 0;padding-left:12px;border-left:2px solid var(--line);color:var(--ink-soft);
-  }
-  html[data-theme="dark"] .read-body-html{
-    background:rgba(255,255,255,0.96);
-    color:#1a1a1a;
-    padding:16px;
-    border-radius:10px;
   }
 
   .thread-message{padding-bottom:24px;margin-bottom:24px;border-bottom:1px solid var(--line);}
@@ -298,27 +288,27 @@
   }
   .modal-overlay.open{display:flex;}
   .compose-modal{
-    width:680px;max-width:100%;
+    width:760px;max-width:100%;
     background:var(--panel);border:1px solid var(--line);border-radius:12px;
     box-shadow:0 12px 40px rgba(0,0,0,0.18);
     display:flex;flex-direction:column;
-    max-height:90vh;
+    max-height:95vh;
   }
   .compose-head{
     display:flex;justify-content:space-between;align-items:center;
-    padding:14px 20px;border-bottom:1px solid var(--line);
+    padding:11px 20px;border-bottom:1px solid var(--line);
     background:var(--ink);border-radius:12px 12px 0 0;
   }
   .compose-head span{color:#fff;font-size:13.5px;font-weight:600;}
   .compose-close{background:transparent;color:#fff;font-size:16px;padding:2px 8px;}
-  .compose-body{padding:18px 20px 4px;overflow-y:auto;flex:1;}
+  .compose-body{padding:14px 20px 2px;overflow-y:auto;flex:1;}
 
-  .form-block{margin-bottom:14px;}
-  .form-label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+  .form-block{margin-bottom:9px;}
+  .form-label{display:block;font-size:11.5px;font-weight:600;color:var(--ink);margin-bottom:3px;}
   .form-label .req{color:var(--warn);margin-left:2px;}
   .form-control{
-    width:100%;border:1px solid var(--line);border-radius:8px;
-    padding:9px 12px;font-size:13px;font-family:var(--sans);color:var(--ink);
+    width:100%;border:1px solid var(--line);border-radius:7px;
+    padding:6px 10px;font-size:12.5px;font-family:var(--sans);color:var(--ink);
     background:var(--panel);outline:none;
   }
   .form-control:focus{border-color:var(--accent);}
@@ -329,28 +319,29 @@
     padding-right:30px;
   }
   select.form-control:invalid, select.form-control option[value=""]{color:var(--ink-soft);}
-  textarea.form-control{resize:vertical;min-height:80px;line-height:1.5;font-family:var(--sans);}
+  textarea.form-control{resize:vertical;min-height:52px;line-height:1.45;font-family:var(--sans);}
   .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;}
+  .form-grid .form-block{margin-bottom:9px;}
   .file-drop{
-    border:1px dashed var(--line);border-radius:8px;padding:10px 12px;
-    display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-soft);
+    border:1px dashed var(--line);border-radius:8px;padding:7px 10px;
+    display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink-soft);
   }
   .file-drop input[type=file]{display:none;}
   .file-drop-btn{
     background:var(--panel);border:1px solid var(--line);color:var(--ink);
-    padding:7px 12px;font-size:12.5px;border-radius:7px;flex-shrink:0;
+    padding:5px 10px;font-size:12px;border-radius:6px;flex-shrink:0;
   }
   .file-drop-btn:hover{border-color:var(--ink-soft);}
-  .file-list{margin-top:8px;display:flex;flex-direction:column;gap:5px;}
+  .file-list{margin-top:6px;display:flex;flex-direction:column;gap:4px;}
   .file-chip{
     display:flex;align-items:center;justify-content:space-between;
-    font-size:12px;color:var(--ink-soft);background:var(--accent-soft);
-    padding:5px 9px;border-radius:6px;
+    font-size:11.5px;color:var(--ink-soft);background:var(--accent-soft);
+    padding:4px 8px;border-radius:6px;
   }
   .file-chip button{background:transparent;color:var(--warn);font-size:12px;padding:0 4px;}
 
   .compose-foot{
-    padding:14px 20px;border-top:1px solid var(--line);
+    padding:10px 20px;border-top:1px solid var(--line);
     display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
   }
   .send-status{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);}
@@ -379,7 +370,6 @@
     <button type="button" id="search-clear-btn" style="display:none;" aria-label="Clear search">✕</button>
   </div>
   <div class="account-area">
-    <button class="btn-ghost" id="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
     <img id="agent-avatar" class="agent-avatar" style="display:none;" alt="">
     <span class="account-email" id="agent-label" style="display:none;"></span>
     <button class="btn-ghost" id="agent-signout-btn" style="display:none;">Sign out</button>
@@ -412,9 +402,13 @@
   <div class="main">
     <div class="list-pane">
       <div class="list-header">
-        <span id="list-title">Inbox</span>
+        <div class="list-header-left">
+          <input type="checkbox" id="select-all-checkbox" class="msg-checkbox" aria-label="Select all">
+          <span id="list-title">Inbox</span>
+        </div>
         <div class="list-header-actions">
           <span class="selection-info" id="selection-info" style="display:none;"></span>
+          <span class="selection-info" id="list-status" style="display:none;"></span>
           <span class="refresh-link" id="mark-read-btn" style="display:none;">Mark read</span>
           <span class="refresh-link" id="mark-unread-btn" style="display:none;">Mark unread</span>
           <span class="refresh-link" id="refresh-btn">Refresh</span>
@@ -674,7 +668,32 @@ function initAgentSignIn(){
   google.accounts.id.renderButton(el('g_id_signin'), { theme: 'outline', size: 'large', width: 260 });
 }
 
+function isAgentTokenExpired(){
+  if(!agentIdToken) return true;
+  try{
+    const payload = decodeJwtPayload(agentIdToken);
+    // 30s buffer so we don't race an in-flight request against the exact expiry second
+    return !payload.exp || (payload.exp * 1000) <= Date.now() + 30000;
+  }catch(e){
+    return true;
+  }
+}
+
+function showSessionExpired(){
+  el('app-shell').style.display = 'none';
+  el('agent-avatar').style.display = 'none';
+  el('agent-label').style.display = 'none';
+  el('agent-signout-btn').style.display = 'none';
+  el('signin-screen').style.display = 'flex';
+  el('agent-error').textContent = 'Your session timed out. Please sign in again to continue.';
+  el('agent-error').style.display = 'block';
+}
+
 async function gmailFetch(path, options = {}){
+  if(isAgentTokenExpired()){
+    showSessionExpired();
+    throw new Error('Session expired — please sign in again.');
+  }
   const res = await fetch(WORKER_BASE_URL + path, {
     ...options,
     headers: {
@@ -685,9 +704,26 @@ async function gmailFetch(path, options = {}){
   });
   if(!res.ok){
     const text = await res.text();
+    if(res.status === 403 && /Agent verification failed/.test(text)){
+      showSessionExpired();
+    }
     throw new Error('Proxy error ' + res.status + ': ' + text);
   }
   return res.json();
+}
+
+// Runs several async calls in parallel but never lets a single flaky one
+// take down the whole batch — returns whatever succeeded, and reports how
+// many failed so the caller can decide whether to show a warning.
+async function fetchAllSettled(items, fn){
+  const results = await Promise.allSettled(items.map(fn));
+  const values = [];
+  let failures = 0;
+  results.forEach(r => {
+    if(r.status === 'fulfilled') values.push(r.value);
+    else { failures++; console.error('Request failed:', r.reason); }
+  });
+  return { values, failures };
 }
 
 async function boot(){
@@ -853,9 +889,9 @@ async function loadFolder(folder, silent){
     const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery)}&maxResults=${PAGE_SIZE}`);
     const ids = (listRes.messages || []).map(m => m.id);
 
-    const full = await Promise.all(ids.map(id =>
+    const { values: full, failures } = await fetchAllSettled(ids, id =>
       gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
-    ));
+    );
 
     messagesCache[folder] = full.map(parseMessageMetadata);
     nextPageTokens[folder] = listRes.nextPageToken || null;
@@ -863,6 +899,9 @@ async function loadFolder(folder, silent){
     updateNavCounts();
     if(folder === currentFolder && !silent){
       renderList();
+      if(failures > 0){
+        showListStatus(`${failures} message(s) couldn't be loaded — try Refresh.`);
+      }
     }
   }catch(e){
     console.error(e);
@@ -885,9 +924,9 @@ async function loadMoreFolder(folder){
     const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery)}&maxResults=${PAGE_SIZE}&pageToken=${encodeURIComponent(nextPageTokens[folder])}`);
     const ids = (listRes.messages || []).map(m => m.id);
 
-    const full = await Promise.all(ids.map(id =>
+    const { values: full, failures } = await fetchAllSettled(ids, id =>
       gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
-    ));
+    );
 
     messagesCache[folder] = messagesCache[folder].concat(full.map(parseMessageMetadata));
     nextPageTokens[folder] = listRes.nextPageToken || null;
@@ -895,6 +934,9 @@ async function loadMoreFolder(folder){
     updateNavCounts();
     if(folder === currentFolder){
       renderList();
+      if(failures > 0){
+        showListStatus(`${failures} message(s) couldn't be loaded — try Load more again.`);
+      }
     }
   }catch(e){
     console.error(e);
@@ -947,6 +989,7 @@ function updateSelectionToolbar(){
 function clearSelection(){
   selectedThreadIds.clear();
   updateSelectionToolbar();
+  updateSelectAllCheckboxState();
 }
 
 async function bulkSetUnread(unread){
@@ -955,15 +998,39 @@ async function bulkSetUnread(unread){
   const groups = groupByThread(flatList).filter(g => selectedThreadIds.has(g.threadId));
   const allMessages = groups.flatMap(g => g.messages);
 
-  await Promise.allSettled(allMessages.map(m => setMessageUnreadState(m, unread)));
+  const results = await Promise.allSettled(allMessages.map(m => setMessageUnreadState(m, unread)));
+  const failures = results.filter(r => r.status === 'rejected');
+  if(failures.length > 0){
+    console.error('Mark read/unread failed for', failures.length, 'message(s):', failures.map(f => f.reason));
+    showListStatus(`Couldn't update ${failures.length} of ${allMessages.length} message(s) — check your connection and try again.`);
+  }
 
   clearSelection();
   updateNavCounts();
   renderList();
 }
 
+function showListStatus(text){
+  const statusEl = el('list-status');
+  statusEl.textContent = text;
+  statusEl.style.color = 'var(--warn)';
+  statusEl.style.display = 'inline';
+  clearTimeout(showListStatus._timer);
+  showListStatus._timer = setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
+}
+
 el('mark-read-btn').addEventListener('click', () => bulkSetUnread(false));
 el('mark-unread-btn').addEventListener('click', () => bulkSetUnread(true));
+
+el('select-all-checkbox').addEventListener('change', () => {
+  if(el('select-all-checkbox').checked){
+    lastRenderedGroups.forEach(g => selectedThreadIds.add(g.threadId));
+  }else{
+    lastRenderedGroups.forEach(g => selectedThreadIds.delete(g.threadId));
+  }
+  updateSelectionToolbar();
+  renderList();
+});
 
 function formatBytes(bytes){
   if(!bytes) return '0 KB';
@@ -998,12 +1065,14 @@ async function downloadAttachment(messageId, att){
 /* ---------------- Search ---------------- */
 let searchActive = false;
 let searchResultsCache = [];
+let searchRequestId = 0;
 
 async function performSearch(term){
   if(!term){
     clearSearch();
     return;
   }
+  const requestId = ++searchRequestId;
   searchActive = true;
   el('search-clear-btn').style.display = 'inline-block';
   el('list-title').textContent = `Search: "${term}"`;
@@ -1014,10 +1083,21 @@ async function performSearch(term){
   try{
     const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(q)}&maxResults=50`);
     const ids = (listRes.messages || []).map(m => m.id);
-    const full = await Promise.all(ids.map(id => gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)));
+    const { values: full, failures } = await fetchAllSettled(ids, id =>
+      gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
+    );
+
+    // If a newer search started while this one was in flight, discard
+    // these results rather than let a slow older search clobber it.
+    if(requestId !== searchRequestId) return;
+
     searchResultsCache = full.map(parseMessageMetadata);
     renderList();
+    if(failures > 0){
+      showListStatus(`${failures} result(s) couldn't be loaded — search results may be incomplete.`);
+    }
   }catch(e){
+    if(requestId !== searchRequestId) return;
     console.error(e);
     el('msg-list').innerHTML = `
       <div style="padding:20px;color:var(--warn);font-size:13px;">
@@ -1066,12 +1146,24 @@ function groupByThread(list){
   return groups;
 }
 
+let lastRenderedGroups = [];
+
+function updateSelectAllCheckboxState(){
+  const cb = el('select-all-checkbox');
+  const total = lastRenderedGroups.length;
+  const selectedCount = lastRenderedGroups.filter(g => selectedThreadIds.has(g.threadId)).length;
+  cb.checked = total > 0 && selectedCount === total;
+  cb.indeterminate = selectedCount > 0 && selectedCount < total;
+}
+
 function renderList(){
   const flatList = searchActive ? searchResultsCache : (messagesCache[currentFolder] || []);
   const groups = groupByThread(flatList);
+  lastRenderedGroups = groups;
   const container = el('msg-list');
   if(groups.length === 0){
     container.innerHTML = '<div style="padding:20px;color:var(--ink-soft);font-size:13px;">No messages.</div>';
+    updateSelectAllCheckboxState();
     return;
   }
   container.innerHTML = groups.map((g, i) => {
@@ -1118,8 +1210,11 @@ function renderList(){
         selectedThreadIds.delete(cb.dataset.threadid);
       }
       updateSelectionToolbar();
+      updateSelectAllCheckboxState();
     });
   });
+
+  updateSelectAllCheckboxState();
 
   const loadMoreBtn = document.getElementById('load-more-btn');
   if(loadMoreBtn){
@@ -1634,29 +1729,6 @@ el('send-btn').addEventListener('click', async () => {
   }
 });
 
-/* ---------------- Dark mode ---------------- */
-function initTheme(){
-  const saved = localStorage.getItem('leadmail-theme');
-  if(saved === 'dark'){
-    document.documentElement.dataset.theme = 'dark';
-    el('theme-toggle-btn').textContent = '☀️';
-  }
-}
-
-function toggleTheme(){
-  const isDark = document.documentElement.dataset.theme === 'dark';
-  const next = isDark ? 'light' : 'dark';
-  if(next === 'dark'){
-    document.documentElement.dataset.theme = 'dark';
-  }else{
-    delete document.documentElement.dataset.theme;
-  }
-  localStorage.setItem('leadmail-theme', next);
-  el('theme-toggle-btn').textContent = next === 'dark' ? '☀️' : '🌙';
-}
-
-el('theme-toggle-btn').addEventListener('click', toggleTheme);
-
 /* ---------------- Keyboard shortcuts ---------------- */
 function navigateList(delta){
   const rows = Array.from(document.querySelectorAll('.msg-row'));
@@ -1703,7 +1775,6 @@ document.addEventListener('keydown', (e) => {
 /* ---------------- Boot ---------------- */
 window.addEventListener('load', () => {
   showConfigWarningIfNeeded();
-  initTheme();
   const wait = setInterval(() => {
     if(window.google && google.accounts && google.accounts.id){
       clearInterval(wait);
