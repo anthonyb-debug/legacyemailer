@@ -179,14 +179,21 @@
     display:flex;justify-content:space-between;align-items:center;
   }
   .refresh-link{font-family:var(--sans);cursor:pointer;color:var(--accent);text-transform:none;letter-spacing:0;font-size:12px;}
+  .list-header-actions{display:flex;align-items:center;gap:12px;}
+  .selection-info{font-family:var(--sans);font-size:12px;color:var(--ink-soft);text-transform:none;letter-spacing:0;}
   .msg-row{
     padding:13px 18px;
     border-bottom:1px solid var(--line);
     cursor:pointer;
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
   }
   .msg-row:hover{background:var(--accent-soft);}
   .msg-row.selected{background:var(--accent-soft);border-left:3px solid var(--accent);padding-left:15px;}
   .msg-row.unread .msg-from, .msg-row.unread .msg-subject{font-weight:700;}
+  .msg-checkbox{margin-top:3px;flex-shrink:0;cursor:pointer;accent-color:var(--accent);width:14px;height:14px;}
+  .msg-content{flex:1;min-width:0;}
   .msg-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:3px;}
   .msg-from{font-size:13.5px;color:var(--ink);}
   .msg-date{font-family:var(--mono);font-size:11px;color:var(--ink-soft);flex-shrink:0;}
@@ -238,6 +245,10 @@
 
   .read-body-html{font-size:14px;line-height:1.6;color:var(--ink);word-wrap:break-word;overflow-wrap:break-word;}
   .read-body-html img{max-width:100%;height:auto;}
+  .read-body-html img[data-cid]:not([src]){
+    display:inline-block;min-width:24px;min-height:24px;
+    background:var(--accent-soft);border-radius:4px;
+  }
   .read-body-html table{max-width:100%;border-collapse:collapse;}
   .read-body-html a{color:var(--accent);}
   .read-body-html blockquote{
@@ -402,7 +413,12 @@
     <div class="list-pane">
       <div class="list-header">
         <span id="list-title">Inbox</span>
-        <span class="refresh-link" id="refresh-btn">Refresh</span>
+        <div class="list-header-actions">
+          <span class="selection-info" id="selection-info" style="display:none;"></span>
+          <span class="refresh-link" id="mark-read-btn" style="display:none;">Mark read</span>
+          <span class="refresh-link" id="mark-unread-btn" style="display:none;">Mark unread</span>
+          <span class="refresh-link" id="refresh-btn">Refresh</span>
+        </div>
       </div>
       <div id="msg-list"></div>
     </div>
@@ -785,24 +801,44 @@ async function hydrateMessage(m){
   let resolvedHtml = null;
   if(html){
     let htmlStr = base64UrlDecodeToUtf8(html);
-    for(const img of inlineImages){
-      try{
-        const res = await gmailFetch(`/gmail/v1/users/me/messages/${m.id}/attachments/${img.attachmentId}`);
-        const dataUri = `data:${img.mimeType};base64,${base64UrlToStdBase64(res.data)}`;
-        const escapedCid = img.contentId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        htmlStr = htmlStr.replace(new RegExp(`cid:${escapedCid}`, 'g'), dataUri);
-      }catch(e){
-        console.error('Inline image fetch failed', e);
-      }
-    }
-    resolvedHtml = window.DOMPurify ? DOMPurify.sanitize(htmlStr, { ADD_ATTR: ['target'] }) : htmlStr;
+    // Strip cid: image sources into data-cid placeholders — the actual
+    // image bytes are fetched afterward, in parallel, once the message is
+    // already on screen, so text/layout never waits on image round-trips.
+    htmlStr = htmlStr.replace(/\ssrc=(["'])cid:([^"']+)\1/g, ' data-cid="$2"');
+    resolvedHtml = window.DOMPurify ? DOMPurify.sanitize(htmlStr, { ADD_ATTR: ['target', 'data-cid'] }) : htmlStr;
   }
 
   m.bodyHtml = resolvedHtml;
   m.body = text ? base64UrlDecodeToUtf8(text) : (resolvedHtml ? null : '(no readable body)');
   m.attachments = attachments;
+  m.pendingInlineImages = inlineImages;
   m.hydrated = true;
   return m;
+}
+
+// Fetches inline images (signature logos, etc.) in parallel, in the
+// background, patching each <img data-cid="..."> once its data arrives —
+// so a slow or large image never blocks the rest of the message.
+async function resolveInlineImagesForMessage(m){
+  if(!m.pendingInlineImages || m.pendingInlineImages.length === 0) return;
+  const card = document.getElementById(`msg-card-${m.id}`);
+  if(!card) return;
+
+  await Promise.all(m.pendingInlineImages.map(async (img) => {
+    try{
+      let dataUri = m.resolvedInlineData && m.resolvedInlineData[img.contentId];
+      if(!dataUri){
+        const res = await gmailFetch(`/gmail/v1/users/me/messages/${m.id}/attachments/${img.attachmentId}`);
+        dataUri = `data:${img.mimeType};base64,${base64UrlToStdBase64(res.data)}`;
+        m.resolvedInlineData = m.resolvedInlineData || {};
+        m.resolvedInlineData[img.contentId] = dataUri;
+      }
+      const imgEl = card.querySelector(`img[data-cid="${img.contentId}"]`);
+      if(imgEl) imgEl.src = dataUri;
+    }catch(e){
+      console.error('Inline image fetch failed', e);
+    }
+  }));
 }
 
 let nextPageTokens = { INBOX: null, SENT: null };
@@ -874,15 +910,20 @@ function updateNavCounts(){
   el('count-sent').textContent = sentCount > 0 ? sentCount : '';
 }
 
+async function setMessageUnreadState(m, unread){
+  const body = unread ? { addLabelIds: ['UNREAD'] } : { removeLabelIds: ['UNREAD'] };
+  await gmailFetch(`/gmail/v1/users/me/messages/${m.id}/modify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  m.unread = unread;
+}
+
 async function markAsRead(m){
   if(!m.unread) return;
   try{
-    await gmailFetch(`/gmail/v1/users/me/messages/${m.id}/modify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ removeLabelIds: ['UNREAD'] })
-    });
-    m.unread = false;
+    await setMessageUnreadState(m, false);
     updateNavCounts();
     if(!searchActive){
       renderList();
@@ -891,6 +932,38 @@ async function markAsRead(m){
     console.error('Failed to mark as read', e);
   }
 }
+
+/* ---------------- Selection + bulk read/unread ---------------- */
+let selectedThreadIds = new Set();
+
+function updateSelectionToolbar(){
+  const count = selectedThreadIds.size;
+  el('selection-info').style.display = count > 0 ? 'inline' : 'none';
+  el('selection-info').textContent = count > 0 ? `${count} selected` : '';
+  el('mark-read-btn').style.display = count > 0 ? 'inline' : 'none';
+  el('mark-unread-btn').style.display = count > 0 ? 'inline' : 'none';
+}
+
+function clearSelection(){
+  selectedThreadIds.clear();
+  updateSelectionToolbar();
+}
+
+async function bulkSetUnread(unread){
+  if(selectedThreadIds.size === 0) return;
+  const flatList = searchActive ? searchResultsCache : (messagesCache[currentFolder] || []);
+  const groups = groupByThread(flatList).filter(g => selectedThreadIds.has(g.threadId));
+  const allMessages = groups.flatMap(g => g.messages);
+
+  await Promise.allSettled(allMessages.map(m => setMessageUnreadState(m, unread)));
+
+  clearSelection();
+  updateNavCounts();
+  renderList();
+}
+
+el('mark-read-btn').addEventListener('click', () => bulkSetUnread(false));
+el('mark-unread-btn').addEventListener('click', () => bulkSetUnread(true));
 
 function formatBytes(bytes){
   if(!bytes) return '0 KB';
@@ -961,6 +1034,7 @@ function clearSearch(){
   el('search-input').value = '';
   el('search-clear-btn').style.display = 'none';
   el('list-title').textContent = currentFolder === 'INBOX' ? 'Inbox' : 'Sent';
+  clearSelection();
   renderList();
 }
 
@@ -1005,12 +1079,15 @@ function renderList(){
     const hasAttachment = g.messages.some(m => m.hasAttachments);
     return `
     <div class="msg-row ${g.unread ? 'unread' : ''}" data-idx="${i}">
-      <div class="msg-top">
-        <span class="msg-from">${escapeHtml(addr.name || addr.email)}</span>
-        <span class="msg-date">${formatDate(g.latest.date)}</span>
+      <input type="checkbox" class="msg-checkbox" data-threadid="${escapeHtml(g.threadId)}" aria-label="Select conversation">
+      <div class="msg-content">
+        <div class="msg-top">
+          <span class="msg-from">${escapeHtml(addr.name || addr.email)}</span>
+          <span class="msg-date">${formatDate(g.latest.date)}</span>
+        </div>
+        <div class="msg-subject">${escapeHtml(g.latest.subject)}${g.count > 1 ? `<span class="thread-count">${g.count}</span>` : ''}${hasAttachment ? '<span class="attachment-flag" title="Has attachment">📎</span>' : ''}</div>
+        <div class="msg-snippet">${escapeHtml(g.latest.snippet)}</div>
       </div>
-      <div class="msg-subject">${escapeHtml(g.latest.subject)}${g.count > 1 ? `<span class="thread-count">${g.count}</span>` : ''}${hasAttachment ? '<span class="attachment-flag" title="Has attachment">📎</span>' : ''}</div>
-      <div class="msg-snippet">${escapeHtml(g.latest.snippet)}</div>
     </div>
   `;
   }).join('');
@@ -1028,6 +1105,19 @@ function renderList(){
       container.querySelectorAll('.msg-row').forEach(r => r.classList.remove('selected'));
       row.classList.add('selected');
       openThread(groups[parseInt(row.dataset.idx)]);
+    });
+  });
+
+  container.querySelectorAll('.msg-checkbox').forEach(cb => {
+    cb.checked = selectedThreadIds.has(cb.dataset.threadid);
+    cb.addEventListener('click', (e) => e.stopPropagation());
+    cb.addEventListener('change', () => {
+      if(cb.checked){
+        selectedThreadIds.add(cb.dataset.threadid);
+      }else{
+        selectedThreadIds.delete(cb.dataset.threadid);
+      }
+      updateSelectionToolbar();
     });
   });
 
@@ -1107,7 +1197,7 @@ function renderReadingThread(messages){
       : `<div class="read-body">${escapeHtml(m.body || '')}</div>`;
 
     return `
-      <div class="thread-message">
+      <div class="thread-message" id="msg-card-${escapeHtml(m.id)}">
         <div class="read-header-row">
           <div class="read-avatar" style="background:${color};">${escapeHtml(initial)}</div>
           <div class="read-sender-block">
@@ -1145,6 +1235,8 @@ function renderReadingThread(messages){
       });
     });
   });
+
+  messages.forEach(m => resolveInlineImagesForMessage(m));
 }
 
 let currentOpenGroup = null;
@@ -1198,6 +1290,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
     currentFolder = item.dataset.folder;
     searchActive = false;
     currentOpenGroup = null;
+    clearSelection();
     el('search-input').value = '';
     el('search-clear-btn').style.display = 'none';
     el('list-title').textContent = currentFolder === 'INBOX' ? 'Inbox' : 'Sent';
