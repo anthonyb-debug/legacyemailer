@@ -64,8 +64,8 @@
   .topbar{
     display:flex;align-items:center;justify-content:space-between;
     padding:12px 24px;
-    border-bottom:1px solid var(--line);
-    background:var(--panel);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    background:linear-gradient(135deg, #0b1730 0%, #16284d 55%, #0a1428 100%);
     flex-shrink:0;
   }
   .brand{display:flex;align-items:center;gap:10px;min-width:0;flex-shrink:1;}
@@ -75,26 +75,38 @@
     display:flex;align-items:center;justify-content:center;
     color:#fff;font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:-0.02em;
   }
-  .brand-name{
-    font-weight:600;font-size:15px;letter-spacing:-0.01em;color:var(--ink);
+  .topbar .brand-name{
+    font-weight:600;font-size:15px;letter-spacing:-0.01em;color:#fff;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .brand-sub{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-left:6px;}
   .account-area{display:flex;align-items:center;gap:12px;flex-shrink:0;}
-  .agent-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid var(--line);}
+  .topbar .agent-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,0.3);}
   .search-bar{flex:1;max-width:440px;position:relative;margin:0 24px;}
-  .search-bar input{
-    width:100%;padding:8px 34px 8px 14px;border:1px solid var(--line);border-radius:var(--radius-sm);
-    font-size:13px;font-family:var(--sans);color:var(--ink);outline:none;background:var(--paper);
+  .topbar .search-bar input{
+    width:100%;padding:8px 34px 8px 14px;border-radius:var(--radius-sm);
+    font-size:13px;font-family:var(--sans);outline:none;
+    border:1px solid rgba(255,255,255,0.18);
+    background:rgba(255,255,255,0.08);
+    color:#fff;
     transition:border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
   }
-  .search-bar input:focus{border-color:var(--accent);background:var(--panel);box-shadow:0 0 0 3px var(--accent-soft);}
-  .search-bar button{
-    position:absolute;right:6px;top:50%;transform:translateY(-50%);
-    background:transparent;color:var(--ink-soft);font-size:12px;padding:4px 6px;border-radius:6px;
+  .topbar .search-bar input::placeholder{color:rgba(255,255,255,0.55);}
+  .topbar .search-bar input:focus{
+    border-color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.14);
+    box-shadow:0 0 0 3px rgba(255,255,255,0.08);
   }
-  .search-bar button:hover{color:var(--ink);background:var(--line);}
-  .account-email{font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink);}
+  .topbar .search-bar button{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    background:transparent;color:rgba(255,255,255,0.65);font-size:12px;padding:4px 6px;border-radius:6px;
+  }
+  .topbar .search-bar button:hover{color:#fff;background:rgba(255,255,255,0.12);}
+  .topbar .account-email{font-family:var(--sans);font-size:13px;font-weight:500;color:#fff;}
+  .topbar .btn-ghost{
+    background:transparent;color:#fff;
+    border:1px solid rgba(255,255,255,0.28);
+  }
+  .topbar .btn-ghost:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.45);}
 
   /* ---------- Buttons: three consistent styles (primary / secondary / danger) ---------- */
   button{
