@@ -1049,8 +1049,10 @@ async function loadMoreFolder(folder){
 function updateNavCounts(){
   const inboxUnread = (messagesCache.INBOX || []).filter(m => m.unread).length;
   el('count-inbox').textContent = inboxUnread > 0 ? inboxUnread : '';
-  const sentCount = (messagesCache.SENT || []).length;
-  el('count-sent').textContent = sentCount > 0 ? sentCount : '';
+  // Sent intentionally shows no badge — there's no meaningful "unread"
+  // concept for sent mail, and the raw loaded-message count (always 25
+  // until "Load more" is clicked) was misleading, not informative.
+  el('count-sent').textContent = '';
 }
 
 async function setMessageUnreadState(m, unread){
