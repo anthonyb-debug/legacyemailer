@@ -1456,10 +1456,10 @@ async function openThread(group){
   el('reading-pane').innerHTML = `
     <div class="empty-state"><p>Loading…</p></div>
   `;
-  try{
-    await Promise.all(group.messages.map(hydrateMessage));
-  }catch(e){
-    console.error(e);
+  const { failures } = await fetchAllSettled(group.messages, hydrateMessage);
+  const loadedMessages = group.messages.filter(m => m.hydrated);
+
+  if(loadedMessages.length === 0){
     el('reading-pane').innerHTML = `
       <div class="empty-state">
         <p style="color:var(--warn);">Couldn't load this message.</p>
@@ -1470,7 +1470,11 @@ async function openThread(group){
     if(retryBtn) retryBtn.addEventListener('click', () => openThread(group));
     return;
   }
-  renderReadingThread(group.messages);
+
+  renderReadingThread(loadedMessages);
+  if(failures > 0){
+    showListStatus(`${failures} message(s) in this thread couldn't be loaded.`);
+  }
   if(currentFolder === 'INBOX'){
     group.messages.filter(m => m.unread).forEach(m => markAsRead(m));
   }
