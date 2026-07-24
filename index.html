@@ -263,13 +263,13 @@
   </div>
   <div class="account-area">
     <span class="account-email" id="account-email"></span>
-    <button class="btn-ghost" id="signout-btn" style="display:none;">Sign out</button>
-    <button class="btn-primary" id="signin-btn">Sign in with Google</button>
+    <span class="account-email" id="agent-label" style="display:none;"></span>
+    <button class="btn-ghost" id="agent-signout-btn" style="display:none;">Sign out</button>
   </div>
 </div>
 
 <div class="banner" id="config-banner">
-  Set CLIENT_ID in the script before this will work — see comment at top of &lt;script&gt; block.
+  Set WORKER_BASE_URL and PROXY_API_KEY in the script before this will work — see comment at top of &lt;script&gt; block.
 </div>
 
 <div class="app" id="app-shell" style="display:none;">
@@ -304,8 +304,9 @@
   <div class="signin-card">
     <div class="brand-mark">L</div>
     <h1>Lead Mail</h1>
-    <p>Sign in with the shared Gmail account to view its inbox, sent items, and send new mail.</p>
-    <button class="btn-primary" id="signin-btn-2" style="width:100%;padding:11px;">Sign in with Google</button>
+    <p>Sign in with your work Google account to identify yourself. Mail is always sent and read as legacy@allianceglobalsolutions.com — your personal account is only used to confirm who you are.</p>
+    <div id="g_id_signin" style="display:flex;justify-content:center;"></div>
+    <p id="agent-error" style="color:var(--warn);margin-top:14px;display:none;"></p>
   </div>
 </div>
 
@@ -429,97 +430,111 @@
 <script>
 /* =========================================================================
    SETUP REQUIRED BEFORE THIS WORKS:
-   1. Go to Google Cloud Console -> create/select a project.
-   2. Enable the "Gmail API" for that project.
-   3. Create OAuth 2.0 credentials -> Application type: "Web application".
-      - Add your GitHub Pages URL (e.g. https://yourname.github.io/repo/)
-        under "Authorized JavaScript origins".
-   4. On the OAuth consent screen, leave Publishing status = "Testing"
-      and add your generic Gmail address as a "Test user".
-   5. Paste the Client ID below.
+
+   A) Cloudflare Worker (holds the legacy@ Gmail account credentials):
+      1. Deploy worker.js to Cloudflare Workers (free tier is fine).
+      2. Set secrets on the Worker: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+         GOOGLE_REFRESH_TOKEN, PROXY_API_KEY, ALLOWED_ORIGIN,
+         ALLOWED_EMAIL_DOMAIN.
+      3. Paste your Worker's URL and the same PROXY_API_KEY value below.
+
+   B) Agent sign-in (identifies *who* is using the app — completely
+      separate from the legacy@ Gmail account itself):
+      1. Reuse the same Google OAuth Client ID you already created.
+      2. Paste it into SIGNIN_CLIENT_ID below.
+      3. Agents outside your allowed email domain will be rejected by
+         the Worker even if Google lets them sign in, so the domain
+         restriction is enforced server-side, not just in this file.
    ========================================================================= */
-const CLIENT_ID = "51238718236-udgujbg2kippeeg63i2u69nrh9d23vq4.apps.googleusercontent.com";
+const WORKER_BASE_URL = "https://lead-mail-proxy.anthony-b.workers.dev";
+const PROXY_API_KEY = "legacyhealingcenterphilippines";
+const SIGNIN_CLIENT_ID = "51238718236-udgujbg2kippeeg63i2u69nrh9d23vq4.apps.googleusercontent.com";
 
-const SCOPES = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send";
-
-let tokenClient;
-let accessToken = null;
 let currentFolder = "INBOX";
 let messagesCache = { INBOX: [], SENT: [] };
+let agentIdToken = null;
+let agentProfile = null;
 
 const el = (id) => document.getElementById(id);
 
 function showConfigWarningIfNeeded(){
-  if(CLIENT_ID.startsWith("YOUR_CLIENT_ID")){
+  if(WORKER_BASE_URL.includes("YOUR-WORKER-NAME") || PROXY_API_KEY === "YOUR_PROXY_API_KEY"){
     el('config-banner').classList.add('show');
   }
 }
 
-function initGoogle(){
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    callback: (resp) => {
-      if(resp.error){
-        console.error(resp);
-        return;
-      }
-      accessToken = resp.access_token;
-      onSignedIn();
-    }
+/* ---------------- Agent identity sign-in ---------------- */
+function decodeJwtPayload(token){
+  const payload = token.split('.')[1];
+  const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
+  return JSON.parse(decodeURIComponent(escape(atob(padded))));
+}
+
+function handleCredentialResponse(response){
+  agentIdToken = response.credential;
+  agentProfile = decodeJwtPayload(agentIdToken);
+  el('agent-error').style.display = 'none';
+
+  el('signin-screen').style.display = 'none';
+  el('app-shell').style.display = 'flex';
+  el('agent-label').textContent = agentProfile.name || agentProfile.email;
+  el('agent-label').style.display = 'inline';
+  el('agent-signout-btn').style.display = 'inline-block';
+
+  boot().catch(e => {
+    console.error(e);
+    el('agent-error').textContent = 'Signed in, but the mail server rejected this account: ' + e.message;
+    el('agent-error').style.display = 'block';
+    signOutAgent();
   });
 }
 
-function requestSignIn(){
-  if(CLIENT_ID.startsWith("YOUR_CLIENT_ID")){
-    alert("Add your Google OAuth Client ID in the script before signing in. See the comment at the top of the <script> block.");
-    return;
+function signOutAgent(){
+  agentIdToken = null;
+  agentProfile = null;
+  if(window.google && google.accounts && google.accounts.id){
+    google.accounts.id.disableAutoSelect();
   }
-  tokenClient.requestAccessToken();
-}
-
-el('signin-btn').addEventListener('click', requestSignIn);
-el('signin-btn-2').addEventListener('click', requestSignIn);
-el('signout-btn').addEventListener('click', () => {
-  if(accessToken){
-    google.accounts.oauth2.revoke(accessToken, () => {});
-  }
-  accessToken = null;
   el('app-shell').style.display = 'none';
   el('signin-screen').style.display = 'flex';
-  el('signin-btn').style.display = 'inline-block';
-  el('signout-btn').style.display = 'none';
+  el('agent-label').style.display = 'none';
+  el('agent-signout-btn').style.display = 'none';
   el('account-email').textContent = '';
-});
+}
 
-async function onSignedIn(){
-  el('signin-screen').style.display = 'none';
-  el('app-shell').style.display = 'flex';
-  el('signin-btn').style.display = 'none';
-  el('signout-btn').style.display = 'inline-block';
+el('agent-signout-btn').addEventListener('click', signOutAgent);
 
-  try{
-    const profile = await gmailFetch('/gmail/v1/users/me/profile');
-    el('account-email').textContent = profile.emailAddress;
-  }catch(e){ console.error(e); }
-
-  loadFolder('INBOX');
-  loadFolder('SENT', true); // preload counts silently
+function initAgentSignIn(){
+  google.accounts.id.initialize({
+    client_id: SIGNIN_CLIENT_ID,
+    callback: handleCredentialResponse
+  });
+  google.accounts.id.renderButton(el('g_id_signin'), { theme: 'outline', size: 'large', width: 260 });
 }
 
 async function gmailFetch(path, options = {}){
-  const res = await fetch('https://www.googleapis.com' + path, {
+  const res = await fetch(WORKER_BASE_URL + path, {
     ...options,
     headers: {
       ...(options.headers || {}),
-      Authorization: 'Bearer ' + accessToken
+      'x-api-key': PROXY_API_KEY,
+      'x-agent-token': agentIdToken || ''
     }
   });
   if(!res.ok){
     const text = await res.text();
-    throw new Error('Gmail API error ' + res.status + ': ' + text);
+    throw new Error('Proxy error ' + res.status + ': ' + text);
   }
   return res.json();
+}
+
+async function boot(){
+  const profile = await gmailFetch('/gmail/v1/users/me/profile');
+  el('account-email').textContent = 'Sending as ' + profile.emailAddress;
+
+  loadFolder('INBOX');
+  loadFolder('SENT', true);
 }
 
 function headerVal(headers, name){
@@ -751,6 +766,10 @@ function resetForm(){
   attachedFiles = [];
   renderFileList();
   el('send-status').textContent = '';
+
+  if(agentProfile){
+    el('field-agent').value = agentProfile.name || agentProfile.email || '';
+  }
 }
 
 function openCompose(){
@@ -865,11 +884,10 @@ el('send-btn').addEventListener('click', async () => {
 /* ---------------- Boot ---------------- */
 window.addEventListener('load', () => {
   showConfigWarningIfNeeded();
-  // google script loads async; poll briefly until available
   const wait = setInterval(() => {
-    if(window.google && google.accounts){
+    if(window.google && google.accounts && google.accounts.id){
       clearInterval(wait);
-      initGoogle();
+      initAgentSignIn();
     }
   }, 100);
 });
