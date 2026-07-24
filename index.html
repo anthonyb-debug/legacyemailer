@@ -619,13 +619,37 @@ function decodeJwtPayload(token){
   return JSON.parse(decodeURIComponent(escape(atob(padded))));
 }
 
-function handleCredentialResponse(response){
-  agentIdToken = response.credential;
-  agentProfile = decodeJwtPayload(agentIdToken);
-  el('agent-error').style.display = 'none';
+const AGENT_SESSION_KEY = 'leadmail-agent-token';
 
+function persistAgentSession(){
+  try{ sessionStorage.setItem(AGENT_SESSION_KEY, agentIdToken); }catch(e){ /* storage unavailable, ignore */ }
+}
+
+function clearPersistedAgentSession(){
+  try{ sessionStorage.removeItem(AGENT_SESSION_KEY); }catch(e){ /* ignore */ }
+}
+
+// Restores a still-valid session from this browser tab, if one exists —
+// so refreshing the page doesn't force a brand new Google sign-in every time.
+// Cleared automatically when the tab closes, or on explicit sign-out.
+function tryRestoreAgentSession(){
+  try{
+    const saved = sessionStorage.getItem(AGENT_SESSION_KEY);
+    if(!saved) return false;
+    const payload = decodeJwtPayload(saved);
+    if(!payload.exp || (payload.exp * 1000) <= Date.now() + 30000) return false;
+    agentIdToken = saved;
+    agentProfile = payload;
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function applyAgentSessionUI(){
   el('signin-screen').style.display = 'none';
   el('app-shell').style.display = 'flex';
+  el('agent-error').style.display = 'none';
   el('agent-label').textContent = agentProfile.name || agentProfile.email;
   el('agent-label').style.display = 'inline';
   el('agent-signout-btn').style.display = 'inline-block';
@@ -635,6 +659,13 @@ function handleCredentialResponse(response){
     el('agent-avatar').alt = agentProfile.name || agentProfile.email || '';
     el('agent-avatar').style.display = 'inline-block';
   }
+}
+
+function handleCredentialResponse(response){
+  agentIdToken = response.credential;
+  agentProfile = decodeJwtPayload(agentIdToken);
+  persistAgentSession();
+  applyAgentSessionUI();
 
   boot().catch(e => {
     console.error(e);
@@ -647,6 +678,7 @@ function handleCredentialResponse(response){
 function signOutAgent(){
   agentIdToken = null;
   agentProfile = null;
+  clearPersistedAgentSession();
   if(window.google && google.accounts && google.accounts.id){
     google.accounts.id.disableAutoSelect();
   }
@@ -680,6 +712,7 @@ function isAgentTokenExpired(){
 }
 
 function showSessionExpired(){
+  clearPersistedAgentSession();
   el('app-shell').style.display = 'none';
   el('agent-avatar').style.display = 'none';
   el('agent-label').style.display = 'none';
@@ -1779,6 +1812,14 @@ window.addEventListener('load', () => {
     if(window.google && google.accounts && google.accounts.id){
       clearInterval(wait);
       initAgentSignIn();
+
+      if(tryRestoreAgentSession()){
+        applyAgentSessionUI();
+        boot().catch(e => {
+          console.error(e);
+          showSessionExpired();
+        });
+      }
     }
   }, 100);
 });
