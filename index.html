@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Mail</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --ink:#1a2332;
+    --ink-soft:#4a5568;
+    --paper:#fbfaf7;
+    --panel:#ffffff;
+    --line:#e4e0d8;
+    --accent:#2f5d50;
+    --accent-soft:#e8f0ed;
+    --warn:#b5461f;
+    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:var(--sans);
+    background:var(--paper);
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 22px;
+    border-bottom:1px solid var(--line);
+    background:var(--panel);
+    flex-shrink:0;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    width:30px;height:30px;border-radius:8px;
+    background:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-family:var(--mono);font-size:13px;font-weight:600;
+  }
+  .brand-name{font-weight:600;font-size:15px;letter-spacing:-0.01em;}
+  .brand-sub{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-left:6px;}
+  .account-area{display:flex;align-items:center;gap:12px;}
+  .account-email{font-family:var(--mono);font-size:12px;color:var(--ink-soft);}
+  button{
+    font-family:var(--sans);
+    cursor:pointer;
+    border:none;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:500;
+  }
+  .btn-primary{
+    background:var(--accent);color:#fff;padding:9px 16px;
+  }
+  .btn-primary:hover{background:#264c41;}
+  .btn-ghost{
+    background:transparent;color:var(--ink-soft);padding:8px 12px;
+    border:1px solid var(--line);
+  }
+  .btn-ghost:hover{border-color:var(--ink-soft);color:var(--ink);}
+
+  /* ---------- Layout ---------- */
+  .app{
+    display:flex;
+    flex:1;
+    min-height:0;
+  }
+  .sidebar{
+    width:190px;
+    flex-shrink:0;
+    border-right:1px solid var(--line);
+    padding:18px 12px;
+    background:var(--panel);
+  }
+  .compose-btn{
+    width:100%;
+    background:var(--accent);
+    color:#fff;
+    padding:11px 14px;
+    border-radius:10px;
+    font-size:13.5px;
+    font-weight:600;
+    margin-bottom:18px;
+  }
+  .compose-btn:hover{background:#264c41;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 12px;border-radius:8px;
+    font-size:13.5px;color:var(--ink-soft);
+    cursor:pointer;margin-bottom:2px;
+  }
+  .nav-item:hover{background:var(--accent-soft);}
+  .nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:600;}
+  .nav-count{
+    margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-soft);
+  }
+
+  .main{
+    flex:1;
+    display:flex;
+    min-width:0;
+    min-height:0;
+  }
+  .list-pane{
+    width:380px;
+    flex-shrink:0;
+    border-right:1px solid var(--line);
+    overflow-y:auto;
+  }
+  .list-header{
+    padding:14px 18px;
+    font-size:12px;
+    font-family:var(--mono);
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    border-bottom:1px solid var(--line);
+    position:sticky;top:0;background:var(--paper);
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .refresh-link{font-family:var(--sans);cursor:pointer;color:var(--accent);text-transform:none;letter-spacing:0;font-size:12px;}
+  .msg-row{
+    padding:13px 18px;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+  }
+  .msg-row:hover{background:var(--accent-soft);}
+  .msg-row.selected{background:var(--accent-soft);border-left:3px solid var(--accent);padding-left:15px;}
+  .msg-row.unread .msg-from, .msg-row.unread .msg-subject{font-weight:700;}
+  .msg-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:3px;}
+  .msg-from{font-size:13.5px;color:var(--ink);}
+  .msg-date{font-family:var(--mono);font-size:11px;color:var(--ink-soft);flex-shrink:0;}
+  .msg-subject{font-size:13px;color:var(--ink);margin-bottom:2px;}
+  .msg-snippet{font-size:12.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  .reading-pane{
+    flex:1;
+    overflow-y:auto;
+    padding:28px 36px;
+    min-width:0;
+  }
+  .empty-state{
+    height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:var(--ink-soft);text-align:center;gap:8px;
+  }
+  .empty-state .glyph{font-size:28px;opacity:0.5;}
+  .empty-state p{margin:0;font-size:13.5px;max-width:280px;}
+
+  .read-subject{font-size:19px;font-weight:700;letter-spacing:-0.01em;margin-bottom:14px;}
+  .read-meta{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:18px;
+  }
+  .read-from{font-size:13.5px;font-weight:600;}
+  .read-from-email{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);font-weight:400;}
+  .read-date{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);}
+  .read-body{font-size:13.5px;line-height:1.65;color:var(--ink);white-space:pre-wrap;word-wrap:break-word;}
+  .read-body a{color:var(--accent);}
+
+  /* ---------- Sign-in screen ---------- */
+  .signin-screen{
+    flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;
+  }
+  .signin-card{
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:36px 40px;text-align:center;max-width:360px;
+  }
+  .signin-card .brand-mark{margin:0 auto 16px;}
+  .signin-card h1{font-size:17px;margin:0 0 6px;}
+  .signin-card p{font-size:13px;color:var(--ink-soft);margin:0 0 20px;line-height:1.5;}
+
+  /* ---------- Compose modal ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(26,35,50,0.4);
+    display:none;align-items:center;justify-content:center;
+    padding:24px;z-index:50;
+  }
+  .modal-overlay.open{display:flex;}
+  .compose-modal{
+    width:680px;max-width:100%;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.18);
+    display:flex;flex-direction:column;
+    max-height:90vh;
+  }
+  .compose-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 20px;border-bottom:1px solid var(--line);
+    background:var(--ink);border-radius:12px 12px 0 0;
+  }
+  .compose-head span{color:#fff;font-size:13.5px;font-weight:600;}
+  .compose-close{background:transparent;color:#fff;font-size:16px;padding:2px 8px;}
+  .compose-body{padding:18px 20px 4px;overflow-y:auto;flex:1;}
+
+  .form-block{margin-bottom:14px;}
+  .form-label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+  .form-label .req{color:var(--warn);margin-left:2px;}
+  .form-control{
+    width:100%;border:1px solid var(--line);border-radius:8px;
+    padding:9px 12px;font-size:13px;font-family:var(--sans);color:var(--ink);
+    background:var(--panel);outline:none;
+  }
+  .form-control:focus{border-color:var(--accent);}
+  select.form-control{
+    appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%234a5568'/></svg>");
+    background-repeat:no-repeat;background-position:right 12px center;
+    padding-right:30px;
+  }
+  select.form-control:invalid, select.form-control option[value=""]{color:var(--ink-soft);}
+  textarea.form-control{resize:vertical;min-height:80px;line-height:1.5;font-family:var(--sans);}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;}
+  .file-drop{
+    border:1px dashed var(--line);border-radius:8px;padding:10px 12px;
+    display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-soft);
+  }
+  .file-drop input[type=file]{display:none;}
+  .file-drop-btn{
+    background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    padding:7px 12px;font-size:12.5px;border-radius:7px;flex-shrink:0;
+  }
+  .file-drop-btn:hover{border-color:var(--ink-soft);}
+  .file-list{margin-top:8px;display:flex;flex-direction:column;gap:5px;}
+  .file-chip{
+    display:flex;align-items:center;justify-content:space-between;
+    font-size:12px;color:var(--ink-soft);background:var(--accent-soft);
+    padding:5px 9px;border-radius:6px;
+  }
+  .file-chip button{background:transparent;color:var(--warn);font-size:12px;padding:0 4px;}
+
+  .compose-foot{
+    padding:14px 20px;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+  }
+  .send-status{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);}
+  .foot-actions{display:flex;gap:8px;align-items:center;}
+
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+
+  .banner{
+    padding:10px 22px;font-size:12.5px;font-family:var(--mono);
+    background:#fdf3ec;color:var(--warn);border-bottom:1px solid var(--line);
+    display:none;
+  }
+  .banner.show{display:block;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">L</div>
+    <div class="brand-name">Lead Mail</div>
+    <div class="brand-sub" id="acct-label"></div>
+  </div>
+  <div class="account-area">
+    <span class="account-email" id="account-email"></span>
+    <button class="btn-ghost" id="signout-btn" style="display:none;">Sign out</button>
+    <button class="btn-primary" id="signin-btn">Sign in with Google</button>
+  </div>
+</div>
+
+<div class="banner" id="config-banner">
+  Set CLIENT_ID in the script before this will work — see comment at top of &lt;script&gt; block.
+</div>
+
+<div class="app" id="app-shell" style="display:none;">
+  <div class="sidebar">
+    <button class="compose-btn" id="compose-open-btn">Compose</button>
+    <div class="nav-item active" data-folder="INBOX">
+      Inbox <span class="nav-count" id="count-inbox"></span>
+    </div>
+    <div class="nav-item" data-folder="SENT">
+      Sent <span class="nav-count" id="count-sent"></span>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="list-pane">
+      <div class="list-header">
+        <span id="list-title">Inbox</span>
+        <span class="refresh-link" id="refresh-btn">Refresh</span>
+      </div>
+      <div id="msg-list"></div>
+    </div>
+    <div class="reading-pane" id="reading-pane">
+      <div class="empty-state">
+        <div class="glyph">✉</div>
+        <p>Select a message to read it here.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="signin-screen" id="signin-screen">
+  <div class="signin-card">
+    <div class="brand-mark">L</div>
+    <h1>Lead Mail</h1>
+    <p>Sign in with the shared Gmail account to view its inbox, sent items, and send new mail.</p>
+    <button class="btn-primary" id="signin-btn-2" style="width:100%;padding:11px;">Sign in with Google</button>
+  </div>
+</div>
+
+<!-- Compose modal -->
+<div class="modal-overlay" id="compose-overlay">
+  <div class="compose-modal">
+    <div class="compose-head">
+      <span>New message</span>
+      <button class="compose-close" id="compose-close-btn">✕</button>
+    </div>
+    <div class="compose-body">
+      <div class="form-block">
+        <label class="form-label">Recipient</label>
+        <select class="form-control" id="field-recipient-select">
+          <option value="" disabled selected>Select recipient</option>
+          <option value="intake@legacyhealing.com">intake@legacyhealing.com</option>
+          <option value="__custom__">Custom…</option>
+        </select>
+        <input type="text" class="form-control" id="field-recipient-custom" placeholder="Enter recipient email" style="display:none;margin-top:8px;">
+      </div>
+
+      <div class="form-block">
+        <label class="form-label">Subject <span class="req">*</span></label>
+        <select class="form-control" id="field-subject-select">
+          <option value="" disabled selected>Select subject</option>
+          <option value="Chat Follow Up">Chat Follow Up</option>
+          <option value="Chat Private Pay">Chat Private Pay</option>
+          <option value="__custom__">Custom…</option>
+        </select>
+        <input type="text" class="form-control" id="field-subject-custom" placeholder="Enter subject" style="display:none;margin-top:8px;">
+      </div>
+
+      <div class="form-grid">
+        <div class="form-block">
+          <label class="form-label">Agent</label>
+          <input type="text" class="form-control" id="field-agent">
+        </div>
+        <div class="form-block">
+          <label class="form-label">Lead Source <span class="req">*</span></label>
+          <select class="form-control" id="field-lead-source">
+            <option value="" disabled selected>Select lead source</option>
+            <option value="Legacy Healing LA Chat">Legacy Healing LA Chat</option>
+            <option value="Legacy Healing Chat">Legacy Healing Chat</option>
+            <option value="DCF Chat">DCF Chat</option>
+          </select>
+        </div>
+
+        <div class="form-block">
+          <label class="form-label">Chat ID</label>
+          <input type="text" class="form-control" id="field-chat-id">
+        </div>
+        <div class="form-block">
+          <label class="form-label">Chatter's First/Last Name</label>
+          <input type="text" class="form-control" id="field-chatter-name">
+        </div>
+
+        <div class="form-block">
+          <label class="form-label">Patient's First/Last Name</label>
+          <input type="text" class="form-control" id="field-patient-name">
+        </div>
+        <div class="form-block">
+          <label class="form-label">Phone</label>
+          <input type="tel" class="form-control" id="field-phone">
+        </div>
+
+        <div class="form-block">
+          <label class="form-label">Date of Birth</label>
+          <input type="date" class="form-control" id="field-dob">
+        </div>
+        <div class="form-block">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" id="field-patient-email">
+        </div>
+
+        <div class="form-block">
+          <label class="form-label">Private Insurance</label>
+          <input type="text" class="form-control" id="field-insurance">
+        </div>
+        <div class="form-block">
+          <label class="form-label">Member ID #</label>
+          <input type="text" class="form-control" id="field-member-id">
+        </div>
+
+        <div class="form-block">
+          <label class="form-label">Insurance Group</label>
+          <input type="text" class="form-control" id="field-insurance-group">
+        </div>
+      </div>
+
+      <div class="form-block">
+        <label class="form-label">Chat landing page</label>
+        <input type="text" class="form-control" id="field-landing-page" placeholder="https://…">
+      </div>
+
+      <div class="form-block">
+        <label class="form-label">Explanation <span class="req">*</span></label>
+        <textarea class="form-control" id="field-explanation" placeholder="Add context or notes…"></textarea>
+      </div>
+
+      <div class="form-block">
+        <label class="form-label">Attachments</label>
+        <div class="file-drop">
+          <button type="button" class="file-drop-btn" id="attach-btn">📎 Attach files</button>
+          <input type="file" id="field-attachments" multiple>
+          <span>Up to 10 files, 10MB each</span>
+        </div>
+        <div class="file-list" id="file-list"></div>
+      </div>
+    </div>
+    <div class="compose-foot">
+      <span class="send-status" id="send-status"></span>
+      <div class="foot-actions">
+        <button class="btn-ghost" id="reset-btn">↺ Reset</button>
+        <button class="btn-ghost" id="copy-btn">⧉ Copy all info</button>
+        <button class="btn-primary" id="send-btn">✈ Send email</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   SETUP REQUIRED BEFORE THIS WORKS:
+   1. Go to Google Cloud Console -> create/select a project.
+   2. Enable the "Gmail API" for that project.
+   3. Create OAuth 2.0 credentials -> Application type: "Web application".
+      - Add your GitHub Pages URL (e.g. https://yourname.github.io/repo/)
+        under "Authorized JavaScript origins".
+   4. On the OAuth consent screen, leave Publishing status = "Testing"
+      and add your generic Gmail address as a "Test user".
+   5. Paste the Client ID below.
+   ========================================================================= */
+const CLIENT_ID = "51238718236-udgujbg2kippeeg63i2u69nrh9d23vq4.apps.googleusercontent.com";
+
+const SCOPES = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send";
+
+let tokenClient;
+let accessToken = null;
+let currentFolder = "INBOX";
+let messagesCache = { INBOX: [], SENT: [] };
+
+const el = (id) => document.getElementById(id);
+
+function showConfigWarningIfNeeded(){
+  if(CLIENT_ID.startsWith("YOUR_CLIENT_ID")){
+    el('config-banner').classList.add('show');
+  }
+}
+
+function initGoogle(){
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: (resp) => {
+      if(resp.error){
+        console.error(resp);
+        return;
+      }
+      accessToken = resp.access_token;
+      onSignedIn();
+    }
+  });
+}
+
+function requestSignIn(){
+  if(CLIENT_ID.startsWith("YOUR_CLIENT_ID")){
+    alert("Add your Google OAuth Client ID in the script before signing in. See the comment at the top of the <script> block.");
+    return;
+  }
+  tokenClient.requestAccessToken();
+}
+
+el('signin-btn').addEventListener('click', requestSignIn);
+el('signin-btn-2').addEventListener('click', requestSignIn);
+el('signout-btn').addEventListener('click', () => {
+  if(accessToken){
+    google.accounts.oauth2.revoke(accessToken, () => {});
+  }
+  accessToken = null;
+  el('app-shell').style.display = 'none';
+  el('signin-screen').style.display = 'flex';
+  el('signin-btn').style.display = 'inline-block';
+  el('signout-btn').style.display = 'none';
+  el('account-email').textContent = '';
+});
+
+async function onSignedIn(){
+  el('signin-screen').style.display = 'none';
+  el('app-shell').style.display = 'flex';
+  el('signin-btn').style.display = 'none';
+  el('signout-btn').style.display = 'inline-block';
+
+  try{
+    const profile = await gmailFetch('/gmail/v1/users/me/profile');
+    el('account-email').textContent = profile.emailAddress;
+  }catch(e){ console.error(e); }
+
+  loadFolder('INBOX');
+  loadFolder('SENT', true); // preload counts silently
+}
+
+async function gmailFetch(path, options = {}){
+  const res = await fetch('https://www.googleapis.com' + path, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: 'Bearer ' + accessToken
+    }
+  });
+  if(!res.ok){
+    const text = await res.text();
+    throw new Error('Gmail API error ' + res.status + ': ' + text);
+  }
+  return res.json();
+}
+
+function headerVal(headers, name){
+  const h = headers.find(h => h.name.toLowerCase() === name.toLowerCase());
+  return h ? h.value : '';
+}
+
+function decodeBody(payload){
+  // Walk MIME parts to find a text/plain or text/html body
+  function findPart(part){
+    if(!part) return null;
+    if(part.mimeType === 'text/plain' && part.body && part.body.data) return { type:'plain', data: part.body.data };
+    if(part.parts){
+      for(const p of part.parts){
+        const found = findPart(p);
+        if(found) return found;
+      }
+    }
+    if(part.mimeType === 'text/html' && part.body && part.body.data) return { type:'html', data: part.body.data };
+    return null;
+  }
+  const found = findPart(payload) || (payload.body && payload.body.data ? {type: payload.mimeType, data: payload.body.data} : null);
+  if(!found) return '(no readable body)';
+  const decoded = decodeURIComponent(atob(found.data.replace(/-/g,'+').replace(/_/g,'/')).split('').map(c =>
+    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+  ).join(''));
+  if(found.type === 'html'){
+    const div = document.createElement('div');
+    div.innerHTML = decoded;
+    return div.textContent || div.innerText || '';
+  }
+  return decoded;
+}
+
+async function loadFolder(folder, silent){
+  if(!silent){
+    el('msg-list').innerHTML = '<div style="padding:20px;color:var(--ink-soft);font-size:13px;">Loading…</div>';
+  }
+  const labelQuery = folder === 'INBOX' ? 'label:inbox' : 'label:sent';
+  const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery)}&maxResults=25`);
+  const ids = (listRes.messages || []).map(m => m.id);
+
+  const full = await Promise.all(ids.map(id =>
+    gmailFetch(`/gmail/v1/users/me/messages/${id}?format=full`)
+  ));
+
+  messagesCache[folder] = full.map(m => {
+    const headers = m.payload.headers;
+    return {
+      id: m.id,
+      from: headerVal(headers, 'From'),
+      to: headerVal(headers, 'To'),
+      subject: headerVal(headers, 'Subject') || '(no subject)',
+      date: headerVal(headers, 'Date'),
+      snippet: m.snippet,
+      unread: (m.labelIds || []).includes('UNREAD'),
+      body: decodeBody(m.payload)
+    };
+  });
+
+  el('count-' + folder.toLowerCase()).textContent = full.length;
+  if(folder === currentFolder && !silent){
+    renderList();
+  }
+}
+
+function renderList(){
+  const list = messagesCache[currentFolder] || [];
+  const container = el('msg-list');
+  if(list.length === 0){
+    container.innerHTML = '<div style="padding:20px;color:var(--ink-soft);font-size:13px;">No messages.</div>';
+    return;
+  }
+  container.innerHTML = list.map((m, i) => `
+    <div class="msg-row ${m.unread ? 'unread' : ''}" data-idx="${i}">
+      <div class="msg-top">
+        <span class="msg-from">${escapeHtml(currentFolder === 'INBOX' ? m.from : m.to)}</span>
+        <span class="msg-date">${formatDate(m.date)}</span>
+      </div>
+      <div class="msg-subject">${escapeHtml(m.subject)}</div>
+      <div class="msg-snippet">${escapeHtml(m.snippet)}</div>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('.msg-row').forEach(row => {
+    row.addEventListener('click', () => {
+      container.querySelectorAll('.msg-row').forEach(r => r.classList.remove('selected'));
+      row.classList.add('selected');
+      renderReading(list[parseInt(row.dataset.idx)]);
+    });
+  });
+}
+
+function renderReading(m){
+  el('reading-pane').innerHTML = `
+    <div class="read-subject">${escapeHtml(m.subject)}</div>
+    <div class="read-meta">
+      <div>
+        <div class="read-from">${escapeHtml(currentFolder === 'INBOX' ? m.from : m.to)}</div>
+      </div>
+      <div class="read-date">${escapeHtml(m.date)}</div>
+    </div>
+    <div class="read-body">${escapeHtml(m.body)}</div>
+  `;
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+function formatDate(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr);
+  if(isNaN(d)) return dateStr;
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  return sameDay
+    ? d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+    : d.toLocaleDateString([], {month:'short', day:'numeric'});
+}
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    currentFolder = item.dataset.folder;
+    el('list-title').textContent = currentFolder === 'INBOX' ? 'Inbox' : 'Sent';
+    el('reading-pane').innerHTML = `
+      <div class="empty-state">
+        <div class="glyph">✉</div>
+        <p>Select a message to read it here.</p>
+      </div>`;
+    renderList();
+  });
+});
+
+el('refresh-btn').addEventListener('click', () => loadFolder(currentFolder));
+
+/* ---------------- Compose: intake form logic ---------------- */
+const MAX_FILES = 10;
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+let attachedFiles = [];
+
+const FIELD_LABELS = [
+  ['field-agent', 'Agent'],
+  ['field-lead-source', 'Lead Source'],
+  ['field-chat-id', 'Chat ID'],
+  ['field-chatter-name', "Chatter's First/Last Name"],
+  ['field-patient-name', "Patient's First/Last Name"],
+  ['field-phone', 'Phone'],
+  ['field-dob', 'Date of Birth'],
+  ['field-patient-email', 'Email'],
+  ['field-insurance', 'Private Insurance'],
+  ['field-member-id', 'Member ID #'],
+  ['field-insurance-group', 'Insurance Group'],
+  ['field-landing-page', 'Chat landing page']
+];
+
+function getRecipient(){
+  const sel = el('field-recipient-select').value;
+  return sel === '__custom__' ? el('field-recipient-custom').value.trim() : sel;
+}
+function getSubject(){
+  const sel = el('field-subject-select').value;
+  return sel === '__custom__' ? el('field-subject-custom').value.trim() : sel;
+}
+
+el('field-recipient-select').addEventListener('change', () => {
+  const isCustom = el('field-recipient-select').value === '__custom__';
+  el('field-recipient-custom').style.display = isCustom ? 'block' : 'none';
+});
+el('field-subject-select').addEventListener('change', () => {
+  const isCustom = el('field-subject-select').value === '__custom__';
+  el('field-subject-custom').style.display = isCustom ? 'block' : 'none';
+});
+
+function buildBodyText(){
+  const lines = FIELD_LABELS.map(([id, label]) => `${label}: ${el(id).value.trim()}`);
+  const explanation = el('field-explanation').value.trim();
+  return lines.join('\n') + '\n\nExplanation:\n' + explanation;
+}
+
+function renderFileList(){
+  const container = el('file-list');
+  if(attachedFiles.length === 0){ container.innerHTML = ''; return; }
+  container.innerHTML = attachedFiles.map((f, i) => `
+    <div class="file-chip">
+      <span>${escapeHtml(f.name)} (${(f.size / 1024 / 1024).toFixed(1)}MB)</span>
+      <button type="button" data-idx="${i}">Remove</button>
+    </div>
+  `).join('');
+  container.querySelectorAll('button[data-idx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      attachedFiles.splice(parseInt(btn.dataset.idx), 1);
+      renderFileList();
+    });
+  });
+}
+
+el('attach-btn').addEventListener('click', () => el('field-attachments').click());
+el('field-attachments').addEventListener('change', (e) => {
+  const incoming = Array.from(e.target.files);
+  for(const f of incoming){
+    if(attachedFiles.length >= MAX_FILES){
+      el('send-status').textContent = `Max ${MAX_FILES} files.`;
+      break;
+    }
+    if(f.size > MAX_FILE_BYTES){
+      el('send-status').textContent = `${f.name} is over 10MB — skipped.`;
+      continue;
+    }
+    attachedFiles.push(f);
+  }
+  e.target.value = '';
+  renderFileList();
+});
+
+function resetForm(){
+  el('field-recipient-select').value = '';
+  el('field-recipient-custom').value = '';
+  el('field-recipient-custom').style.display = 'none';
+  el('field-subject-select').value = '';
+  el('field-subject-custom').value = '';
+  el('field-subject-custom').style.display = 'none';
+  FIELD_LABELS.forEach(([id]) => { if(el(id).tagName === 'SELECT') el(id).value = ''; else el(id).value = ''; });
+  el('field-explanation').value = '';
+  attachedFiles = [];
+  renderFileList();
+  el('send-status').textContent = '';
+}
+
+function openCompose(){
+  resetForm();
+  el('compose-overlay').classList.add('open');
+}
+
+el('compose-open-btn').addEventListener('click', openCompose);
+el('compose-close-btn').addEventListener('click', () => el('compose-overlay').classList.remove('open'));
+el('reset-btn').addEventListener('click', resetForm);
+
+el('copy-btn').addEventListener('click', async () => {
+  const dump = `Recipient: ${getRecipient()}\nSubject: ${getSubject()}\n\n` + buildBodyText();
+  try{
+    await navigator.clipboard.writeText(dump);
+    el('send-status').textContent = 'Copied to clipboard.';
+  }catch(e){
+    el('send-status').textContent = 'Copy failed — check browser permissions.';
+  }
+});
+
+function readFileAsBase64(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function b64ToUrlSafe(str){
+  return str.replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+async function buildRawMessage(to, subject, bodyText, files){
+  if(files.length === 0){
+    const rawMessage = [
+      `To: ${to}`,
+      `Subject: ${subject}`,
+      'Content-Type: text/plain; charset="UTF-8"',
+      '',
+      bodyText
+    ].join('\r\n');
+    return b64ToUrlSafe(btoa(unescape(encodeURIComponent(rawMessage)))).replace(/=+$/, '');
+  }
+
+  const boundary = 'lead_mail_boundary_' + Date.now();
+  const parts = [];
+  parts.push(
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    '',
+    bodyText,
+    ''
+  );
+
+  for(const file of files){
+    const base64Data = await readFileAsBase64(file);
+    parts.push(
+      `--${boundary}`,
+      `Content-Type: ${file.type || 'application/octet-stream'}`,
+      'Content-Transfer-Encoding: base64',
+      `Content-Disposition: attachment; filename="${file.name}"`,
+      '',
+      base64Data,
+      ''
+    );
+  }
+  parts.push(`--${boundary}--`);
+
+  const rawMessage = [
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    '',
+    parts.join('\r\n')
+  ].join('\r\n');
+
+  return b64ToUrlSafe(btoa(unescape(encodeURIComponent(rawMessage)))).replace(/=+$/, '');
+}
+
+el('send-btn').addEventListener('click', async () => {
+  const to = getRecipient();
+  const subject = getSubject();
+  const leadSource = el('field-lead-source').value;
+  const explanation = el('field-explanation').value.trim();
+
+  if(!to){ el('send-status').textContent = 'Select or enter a recipient.'; return; }
+  if(!subject){ el('send-status').textContent = 'Subject is required.'; return; }
+  if(!leadSource){ el('send-status').textContent = 'Lead Source is required.'; return; }
+  if(!explanation){ el('send-status').textContent = 'Explanation is required.'; return; }
+
+  el('send-status').textContent = 'Sending…';
+  try{
+    const raw = await buildRawMessage(to, subject, buildBodyText(), attachedFiles);
+    await gmailFetch('/gmail/v1/users/me/messages/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw })
+    });
+    el('send-status').textContent = 'Sent.';
+    setTimeout(() => {
+      el('compose-overlay').classList.remove('open');
+      loadFolder('SENT');
+    }, 700);
+  }catch(e){
+    console.error(e);
+    el('send-status').textContent = 'Failed to send — check console.';
+  }
+});
+
+/* ---------------- Boot ---------------- */
+window.addEventListener('load', () => {
+  showConfigWarningIfNeeded();
+  // google script loads async; poll briefly until available
+  const wait = setInterval(() => {
+    if(window.google && google.accounts){
+      clearInterval(wait);
+      initGoogle();
+    }
+  }, 100);
+});
+</script>
+
+</body>
+</html>
