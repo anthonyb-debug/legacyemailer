@@ -3,30 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lead Mail</title>
+<title>Legacy Healing Center Email Center</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root{
-    --ink:#1a2332;
-    --ink-soft:#4a5568;
-    --paper:#fbfaf7;
+    --ink:#0f172a;
+    --ink-soft:#64748b;
+    --paper:#f4f7fb;
     --panel:#ffffff;
-    --line:#e4e0d8;
-    --accent:#2f5d50;
-    --accent-soft:#e8f0ed;
-    --warn:#b5461f;
+    --line:#e2e8f0;
+    --accent:#2563eb;
+    --accent-soft:#eaf1fd;
+    --warn:#dc2626;
     --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
     --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
   html[data-theme="dark"]{
-    --ink:#e8e6e0;
-    --ink-soft:#9aa3ad;
-    --paper:#14181d;
-    --panel:#1b2027;
-    --line:#2a3038;
-    --accent:#5fae9b;
-    --accent-soft:#1f3d35;
-    --warn:#e2734a;
+    --ink:#e2e8f0;
+    --ink-soft:#94a3b8;
+    --paper:#0b1220;
+    --panel:#131b2c;
+    --line:#22304a;
+    --accent:#3b82f6;
+    --accent-soft:#16233c;
+    --warn:#f87171;
   }
   body, .compose-modal, .msg-row, .form-control{
     transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
@@ -50,16 +50,20 @@
     background:var(--panel);
     flex-shrink:0;
   }
-  .brand{display:flex;align-items:center;gap:10px;}
+  .brand{display:flex;align-items:center;gap:10px;min-width:0;flex-shrink:1;}
   .brand-mark{
-    width:30px;height:30px;border-radius:8px;
+    width:32px;height:32px;border-radius:8px;flex-shrink:0;
     background:var(--accent);
     display:flex;align-items:center;justify-content:center;
-    color:#fff;font-family:var(--mono);font-size:13px;font-weight:600;
+    color:#fff;font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:-0.02em;
   }
-  .brand-name{font-weight:600;font-size:15px;letter-spacing:-0.01em;}
+  .brand-name{
+    font-weight:600;font-size:14.5px;letter-spacing:-0.01em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
   .brand-sub{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-left:6px;}
   .account-area{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+  .agent-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid var(--accent-soft);}
   .search-bar{flex:1;max-width:440px;position:relative;margin:0 24px;}
   .search-bar input{
     width:100%;padding:8px 34px 8px 14px;border:1px solid var(--line);border-radius:8px;
@@ -71,7 +75,7 @@
     background:transparent;color:var(--ink-soft);font-size:12px;padding:4px 6px;
   }
   .search-bar button:hover{color:var(--ink);}
-  .account-email{font-family:var(--mono);font-size:12px;color:var(--ink-soft);}
+  .account-email{font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink);}
   button{
     font-family:var(--sans);
     cursor:pointer;
@@ -83,7 +87,7 @@
   .btn-primary{
     background:var(--accent);color:#fff;padding:9px 16px;
   }
-  .btn-primary:hover{background:#264c41;}
+  .btn-primary:hover{background:#1d4ed8;}
   .btn-ghost{
     background:transparent;color:var(--ink-soft);padding:8px 12px;
     border:1px solid var(--line);
@@ -113,7 +117,7 @@
     font-weight:600;
     margin-bottom:18px;
   }
-  .compose-btn:hover{background:#264c41;}
+  .compose-btn:hover{background:#1d4ed8;}
   .nav-item{
     display:flex;align-items:center;gap:10px;
     padding:9px 12px;border-radius:8px;
@@ -238,7 +242,7 @@
 
   /* ---------- Compose modal ---------- */
   .modal-overlay{
-    position:fixed;inset:0;background:rgba(26,35,50,0.4);
+    position:fixed;inset:0;background:rgba(15,23,42,0.45);
     display:none;align-items:center;justify-content:center;
     padding:24px;z-index:50;
   }
@@ -317,9 +321,8 @@
 
 <div class="topbar">
   <div class="brand">
-    <div class="brand-mark">L</div>
-    <div class="brand-name">Lead Mail</div>
-    <div class="brand-sub" id="acct-label"></div>
+    <div class="brand-mark">LH</div>
+    <div class="brand-name">Legacy Healing Center Email Center</div>
   </div>
   <div class="search-bar">
     <input type="text" id="search-input" placeholder="Search mail  (press / to focus)" autocomplete="off">
@@ -327,7 +330,7 @@
   </div>
   <div class="account-area">
     <button class="btn-ghost" id="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
-    <span class="account-email" id="account-email"></span>
+    <img id="agent-avatar" class="agent-avatar" style="display:none;" alt="">
     <span class="account-email" id="agent-label" style="display:none;"></span>
     <button class="btn-ghost" id="agent-signout-btn" style="display:none;">Sign out</button>
   </div>
@@ -368,9 +371,9 @@
 
 <div class="signin-screen" id="signin-screen">
   <div class="signin-card">
-    <div class="brand-mark">L</div>
-    <h1>Lead Mail</h1>
-    <p>Sign in with your work Google account to identify yourself. Mail is always sent and read as legacy@allianceglobalsolutions.com — your personal account is only used to confirm who you are.</p>
+    <div class="brand-mark">LH</div>
+    <h1>Legacy Healing Center Email Center</h1>
+    <p>Sign in with your work Google account to identify yourself. Mail is always sent and read as the shared Legacy Healing inbox — your personal account is only used to confirm who you are.</p>
     <div id="g_id_signin" style="display:flex;justify-content:center;"></div>
     <p id="agent-error" style="color:var(--warn);margin-top:14px;display:none;"></p>
   </div>
@@ -571,6 +574,12 @@ function handleCredentialResponse(response){
   el('agent-label').style.display = 'inline';
   el('agent-signout-btn').style.display = 'inline-block';
 
+  if(agentProfile.picture){
+    el('agent-avatar').src = agentProfile.picture;
+    el('agent-avatar').alt = agentProfile.name || agentProfile.email || '';
+    el('agent-avatar').style.display = 'inline-block';
+  }
+
   boot().catch(e => {
     console.error(e);
     el('agent-error').textContent = 'Signed in, but the mail server rejected this account: ' + e.message;
@@ -589,7 +598,8 @@ function signOutAgent(){
   el('signin-screen').style.display = 'flex';
   el('agent-label').style.display = 'none';
   el('agent-signout-btn').style.display = 'none';
-  el('account-email').textContent = '';
+  el('agent-avatar').style.display = 'none';
+  el('agent-avatar').src = '';
 }
 
 el('agent-signout-btn').addEventListener('click', signOutAgent);
@@ -621,7 +631,6 @@ async function gmailFetch(path, options = {}){
 async function boot(){
   const profile = await gmailFetch('/gmail/v1/users/me/profile');
   legacyEmailAddress = profile.emailAddress;
-  el('account-email').textContent = 'Sending as ' + profile.emailAddress;
 
   loadFolder('INBOX');
   loadFolder('SENT', true);
@@ -955,7 +964,7 @@ function parseAddress(str){
   return { name: str.trim(), email: str.trim() };
 }
 
-const AVATAR_COLORS = ['#2f5d50', '#b5461f', '#4a5568', '#7c5cbf', '#1a7a6b', '#a8562f', '#3d5a80'];
+const AVATAR_COLORS = ['#2563eb', '#0891b2', '#4f46e5', '#0d9488', '#7c3aed', '#0369a1', '#334155'];
 function avatarColor(str){
   let hash = 0;
   for(let i = 0; i < str.length; i++){ hash = str.charCodeAt(i) + ((hash << 5) - hash); }
