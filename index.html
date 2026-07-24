@@ -163,6 +163,7 @@
   .read-date{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);}
   .read-body{font-size:13.5px;line-height:1.65;color:var(--ink);white-space:pre-wrap;word-wrap:break-word;}
   .read-body a{color:var(--accent);}
+  .read-actions{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);display:flex;gap:8px;}
 
   /* ---------- Sign-in screen ---------- */
   .signin-screen{
@@ -339,71 +340,80 @@
         <input type="text" class="form-control" id="field-subject-custom" placeholder="Enter subject" style="display:none;margin-top:8px;">
       </div>
 
-      <div class="form-grid">
-        <div class="form-block">
-          <label class="form-label">Agent</label>
-          <input type="text" class="form-control" id="field-agent">
-        </div>
-        <div class="form-block">
-          <label class="form-label">Lead Source <span class="req">*</span></label>
-          <select class="form-control" id="field-lead-source">
-            <option value="" disabled selected>Select lead source</option>
-            <option value="Legacy Healing LA Chat">Legacy Healing LA Chat</option>
-            <option value="Legacy Healing Chat">Legacy Healing Chat</option>
-            <option value="DCF Chat">DCF Chat</option>
-          </select>
+      <div id="lead-fields-block">
+        <div class="form-grid">
+          <div class="form-block">
+            <label class="form-label">Agent</label>
+            <input type="text" class="form-control" id="field-agent">
+          </div>
+          <div class="form-block">
+            <label class="form-label">Lead Source <span class="req">*</span></label>
+            <select class="form-control" id="field-lead-source">
+              <option value="" disabled selected>Select lead source</option>
+              <option value="Legacy Healing LA Chat">Legacy Healing LA Chat</option>
+              <option value="Legacy Healing Chat">Legacy Healing Chat</option>
+              <option value="DCF Chat">DCF Chat</option>
+            </select>
+          </div>
+
+          <div class="form-block">
+            <label class="form-label">Chat ID</label>
+            <input type="text" class="form-control" id="field-chat-id">
+          </div>
+          <div class="form-block">
+            <label class="form-label">Chatter's First/Last Name</label>
+            <input type="text" class="form-control" id="field-chatter-name">
+          </div>
+
+          <div class="form-block">
+            <label class="form-label">Patient's First/Last Name</label>
+            <input type="text" class="form-control" id="field-patient-name">
+          </div>
+          <div class="form-block">
+            <label class="form-label">Phone</label>
+            <input type="tel" class="form-control" id="field-phone">
+          </div>
+
+          <div class="form-block">
+            <label class="form-label">Date of Birth</label>
+            <input type="date" class="form-control" id="field-dob">
+          </div>
+          <div class="form-block">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" id="field-patient-email">
+          </div>
+
+          <div class="form-block">
+            <label class="form-label">Private Insurance</label>
+            <input type="text" class="form-control" id="field-insurance">
+          </div>
+          <div class="form-block">
+            <label class="form-label">Member ID #</label>
+            <input type="text" class="form-control" id="field-member-id">
+          </div>
+
+          <div class="form-block">
+            <label class="form-label">Insurance Group</label>
+            <input type="text" class="form-control" id="field-insurance-group">
+          </div>
         </div>
 
         <div class="form-block">
-          <label class="form-label">Chat ID</label>
-          <input type="text" class="form-control" id="field-chat-id">
-        </div>
-        <div class="form-block">
-          <label class="form-label">Chatter's First/Last Name</label>
-          <input type="text" class="form-control" id="field-chatter-name">
+          <label class="form-label">Chat landing page</label>
+          <input type="text" class="form-control" id="field-landing-page" placeholder="https://…">
         </div>
 
         <div class="form-block">
-          <label class="form-label">Patient's First/Last Name</label>
-          <input type="text" class="form-control" id="field-patient-name">
-        </div>
-        <div class="form-block">
-          <label class="form-label">Phone</label>
-          <input type="tel" class="form-control" id="field-phone">
-        </div>
-
-        <div class="form-block">
-          <label class="form-label">Date of Birth</label>
-          <input type="date" class="form-control" id="field-dob">
-        </div>
-        <div class="form-block">
-          <label class="form-label">Email</label>
-          <input type="email" class="form-control" id="field-patient-email">
-        </div>
-
-        <div class="form-block">
-          <label class="form-label">Private Insurance</label>
-          <input type="text" class="form-control" id="field-insurance">
-        </div>
-        <div class="form-block">
-          <label class="form-label">Member ID #</label>
-          <input type="text" class="form-control" id="field-member-id">
-        </div>
-
-        <div class="form-block">
-          <label class="form-label">Insurance Group</label>
-          <input type="text" class="form-control" id="field-insurance-group">
+          <label class="form-label">Explanation <span class="req">*</span></label>
+          <textarea class="form-control" id="field-explanation" placeholder="Add context or notes…"></textarea>
         </div>
       </div>
 
-      <div class="form-block">
-        <label class="form-label">Chat landing page</label>
-        <input type="text" class="form-control" id="field-landing-page" placeholder="https://…">
-      </div>
-
-      <div class="form-block">
-        <label class="form-label">Explanation <span class="req">*</span></label>
-        <textarea class="form-control" id="field-explanation" placeholder="Add context or notes…"></textarea>
+      <div id="reply-message-block" style="display:none;">
+        <div class="form-block">
+          <label class="form-label">Message</label>
+          <textarea class="form-control" id="field-reply-body" placeholder="Write your reply…" style="min-height:160px;"></textarea>
+        </div>
       </div>
 
       <div class="form-block">
@@ -454,6 +464,7 @@ let currentFolder = "INBOX";
 let messagesCache = { INBOX: [], SENT: [] };
 let agentIdToken = null;
 let agentProfile = null;
+let legacyEmailAddress = '';
 
 const el = (id) => document.getElementById(id);
 
@@ -531,6 +542,7 @@ async function gmailFetch(path, options = {}){
 
 async function boot(){
   const profile = await gmailFetch('/gmail/v1/users/me/profile');
+  legacyEmailAddress = profile.emailAddress;
   el('account-email').textContent = 'Sending as ' + profile.emailAddress;
 
   loadFolder('INBOX');
@@ -585,8 +597,12 @@ async function loadFolder(folder, silent){
     const headers = m.payload.headers;
     return {
       id: m.id,
+      threadId: m.threadId,
+      messageIdHeader: headerVal(headers, 'Message-ID'),
+      references: headerVal(headers, 'References'),
       from: headerVal(headers, 'From'),
       to: headerVal(headers, 'To'),
+      cc: headerVal(headers, 'Cc'),
       subject: headerVal(headers, 'Subject') || '(no subject)',
       date: headerVal(headers, 'Date'),
       snippet: m.snippet,
@@ -638,7 +654,13 @@ function renderReading(m){
       <div class="read-date">${escapeHtml(m.date)}</div>
     </div>
     <div class="read-body">${escapeHtml(m.body)}</div>
+    <div class="read-actions">
+      <button class="btn-ghost" id="reply-btn">↩ Reply</button>
+      <button class="btn-ghost" id="reply-all-btn">↩↩ Reply All</button>
+    </div>
   `;
+  el('reply-btn').addEventListener('click', () => openReplyCompose(m, false));
+  el('reply-all-btn').addEventListener('click', () => openReplyCompose(m, true));
 }
 
 function escapeHtml(str){
@@ -763,6 +785,7 @@ function resetForm(){
   el('field-subject-custom').style.display = 'none';
   FIELD_LABELS.forEach(([id]) => { if(el(id).tagName === 'SELECT') el(id).value = ''; else el(id).value = ''; });
   el('field-explanation').value = '';
+  el('field-reply-body').value = '';
   attachedFiles = [];
   renderFileList();
   el('send-status').textContent = '';
@@ -772,8 +795,64 @@ function resetForm(){
   }
 }
 
+let isReplyMode = false;
+let replyContext = null;
+
+function extractEmail(str){
+  if(!str) return '';
+  const match = str.match(/<([^>]+)>/);
+  return match ? match[1].trim() : str.trim();
+}
+
+function parseAddressList(str){
+  if(!str) return [];
+  return str.split(',').map(s => extractEmail(s)).filter(Boolean);
+}
+
 function openCompose(){
   resetForm();
+  isReplyMode = false;
+  replyContext = null;
+  el('reply-message-block').style.display = 'none';
+  el('lead-fields-block').style.display = 'block';
+  el('compose-overlay').classList.add('open');
+}
+
+function openReplyCompose(m, replyAll){
+  resetForm();
+  isReplyMode = true;
+  replyContext = {
+    threadId: m.threadId,
+    inReplyTo: m.messageIdHeader,
+    references: [m.references, m.messageIdHeader].filter(Boolean).join(' ')
+  };
+
+  const isInbox = currentFolder === 'INBOX';
+  let toList = isInbox ? parseAddressList(m.from) : parseAddressList(m.to);
+
+  if(replyAll){
+    const extra = [
+      ...(isInbox ? parseAddressList(m.to) : []),
+      ...parseAddressList(m.cc)
+    ];
+    toList = [...new Set([...toList, ...extra])];
+  }
+
+  const legacyLower = (legacyEmailAddress || '').toLowerCase();
+  toList = toList.filter(addr => addr.toLowerCase() !== legacyLower);
+
+  el('field-recipient-select').value = '__custom__';
+  el('field-recipient-custom').style.display = 'block';
+  el('field-recipient-custom').value = toList.join(', ');
+
+  el('field-subject-select').value = '__custom__';
+  el('field-subject-custom').style.display = 'block';
+  const subj = m.subject || '';
+  el('field-subject-custom').value = /^re:/i.test(subj) ? subj : 'Re: ' + subj;
+
+  el('reply-message-block').style.display = 'block';
+  el('lead-fields-block').style.display = 'none';
+
   el('compose-overlay').classList.add('open');
 }
 
@@ -804,11 +883,20 @@ function b64ToUrlSafe(str){
   return str.replace(/\+/g, '-').replace(/\//g, '_');
 }
 
-async function buildRawMessage(to, subject, bodyText, files){
+async function buildRawMessage(to, subject, bodyText, files, replyCtx){
+  const extraHeaders = [];
+  if(replyCtx && replyCtx.inReplyTo){
+    extraHeaders.push(`In-Reply-To: ${replyCtx.inReplyTo}`);
+  }
+  if(replyCtx && replyCtx.references){
+    extraHeaders.push(`References: ${replyCtx.references}`);
+  }
+
   if(files.length === 0){
     const rawMessage = [
       `To: ${to}`,
       `Subject: ${subject}`,
+      ...extraHeaders,
       'Content-Type: text/plain; charset="UTF-8"',
       '',
       bodyText
@@ -843,6 +931,7 @@ async function buildRawMessage(to, subject, bodyText, files){
   const rawMessage = [
     `To: ${to}`,
     `Subject: ${subject}`,
+    ...extraHeaders,
     `Content-Type: multipart/mixed; boundary="${boundary}"`,
     '',
     parts.join('\r\n')
@@ -854,21 +943,33 @@ async function buildRawMessage(to, subject, bodyText, files){
 el('send-btn').addEventListener('click', async () => {
   const to = getRecipient();
   const subject = getSubject();
-  const leadSource = el('field-lead-source').value;
-  const explanation = el('field-explanation').value.trim();
 
   if(!to){ el('send-status').textContent = 'Select or enter a recipient.'; return; }
   if(!subject){ el('send-status').textContent = 'Subject is required.'; return; }
-  if(!leadSource){ el('send-status').textContent = 'Lead Source is required.'; return; }
-  if(!explanation){ el('send-status').textContent = 'Explanation is required.'; return; }
+
+  let bodyText;
+  if(isReplyMode){
+    bodyText = el('field-reply-body').value.trim();
+    if(!bodyText){ el('send-status').textContent = 'Write a reply message.'; return; }
+  }else{
+    const leadSource = el('field-lead-source').value;
+    const explanation = el('field-explanation').value.trim();
+    if(!leadSource){ el('send-status').textContent = 'Lead Source is required.'; return; }
+    if(!explanation){ el('send-status').textContent = 'Explanation is required.'; return; }
+    bodyText = buildBodyText();
+  }
 
   el('send-status').textContent = 'Sending…';
   try{
-    const raw = await buildRawMessage(to, subject, buildBodyText(), attachedFiles);
+    const raw = await buildRawMessage(to, subject, bodyText, attachedFiles, isReplyMode ? replyContext : null);
+    const payload = { raw };
+    if(isReplyMode && replyContext && replyContext.threadId){
+      payload.threadId = replyContext.threadId;
+    }
     await gmailFetch('/gmail/v1/users/me/messages/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ raw })
+      body: JSON.stringify(payload)
     });
     el('send-status').textContent = 'Sent.';
     setTimeout(() => {
