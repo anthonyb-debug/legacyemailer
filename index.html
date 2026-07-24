@@ -7,85 +7,124 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 <style>
+  /* =========================================================================
+     DESIGN TOKENS
+     Palette per design spec: light, clean, enterprise SaaS look.
+     Variable NAMES are unchanged from before (--paper, --warn, etc.) so no
+     other CSS or JS needed to be touched — only their values changed, plus
+     two new tokens (--success, --warning) were added for future use.
+     ========================================================================= */
   :root{
-    --ink:#e2e8f0;
-    --ink-soft:#94a3b8;
-    --paper:#0b1220;
-    --paper-gradient: linear-gradient(160deg, #0a0f1e 0%, #101c36 50%, #0a1120 100%);
-    --panel:#131b2c;
-    --line:#22304a;
-    --accent:#3b82f6;
-    --accent-soft:#16233c;
-    --warn:#f87171;
+    --ink:#111827;          /* primary text */
+    --ink-soft:#6b7280;     /* secondary text */
+    --paper:#f8fafc;        /* app background */
+    --panel:#ffffff;        /* card / surface background */
+    --line:#e5e7eb;         /* borders */
+    --accent:#2563eb;       /* primary action color */
+    --accent-hover:#1d4ed8;
+    --accent-soft:#eff6ff;  /* light tint for hover/selected rows */
+    --success:#22c55e;
+    --warning:#f59e0b;      /* true "heads up" warnings (e.g. setup banner) */
+    --warn:#ef4444;         /* danger / error (kept as --warn to avoid touching
+                                the many existing rules already using it) */
+    --radius-sm:8px;
+    --radius-md:10px;
+    --radius-lg:12px;
+    --shadow-sm:0 1px 2px rgba(17,24,39,0.06);
+    --shadow-md:0 4px 12px rgba(17,24,39,0.08);
+    --shadow-lg:0 20px 48px rgba(17,24,39,0.14);
     --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
     --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
-  body, .compose-modal, .msg-row, .form-control{
-    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-  }
+
   *{box-sizing:border-box;}
   html,body{height:100%;margin:0;}
   body{
     font-family:var(--sans);
-    background:var(--paper-gradient);
-    background-attachment:fixed;
+    background:var(--paper);
     color:var(--ink);
     display:flex;
     flex-direction:column;
     overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* Subtle, consistent transitions everywhere — 150ms, nothing fancier */
+  button, .msg-row, .form-control, .nav-item, .compose-btn, a, .refresh-link{
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+  }
+
+  /* Clear, consistent focus state for every real interactive element */
+  button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
   }
 
   /* ---------- Top bar ---------- */
   .topbar{
     display:flex;align-items:center;justify-content:space-between;
-    padding:14px 22px;
+    padding:12px 24px;
     border-bottom:1px solid var(--line);
     background:var(--panel);
     flex-shrink:0;
   }
   .brand{display:flex;align-items:center;gap:10px;min-width:0;flex-shrink:1;}
   .brand-mark{
-    width:32px;height:32px;border-radius:8px;flex-shrink:0;
+    width:32px;height:32px;border-radius:var(--radius-sm);flex-shrink:0;
     background:var(--accent);
     display:flex;align-items:center;justify-content:center;
     color:#fff;font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:-0.02em;
   }
   .brand-name{
-    font-weight:600;font-size:14.5px;letter-spacing:-0.01em;
+    font-weight:600;font-size:15px;letter-spacing:-0.01em;color:var(--ink);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .brand-sub{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-left:6px;}
   .account-area{display:flex;align-items:center;gap:12px;flex-shrink:0;}
-  .agent-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid var(--accent-soft);}
+  .agent-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid var(--line);}
   .search-bar{flex:1;max-width:440px;position:relative;margin:0 24px;}
   .search-bar input{
-    width:100%;padding:8px 34px 8px 14px;border:1px solid var(--line);border-radius:8px;
+    width:100%;padding:8px 34px 8px 14px;border:1px solid var(--line);border-radius:var(--radius-sm);
     font-size:13px;font-family:var(--sans);color:var(--ink);outline:none;background:var(--paper);
+    transition:border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
   }
-  .search-bar input:focus{border-color:var(--accent);background:var(--panel);}
+  .search-bar input:focus{border-color:var(--accent);background:var(--panel);box-shadow:0 0 0 3px var(--accent-soft);}
   .search-bar button{
     position:absolute;right:6px;top:50%;transform:translateY(-50%);
-    background:transparent;color:var(--ink-soft);font-size:12px;padding:4px 6px;
+    background:transparent;color:var(--ink-soft);font-size:12px;padding:4px 6px;border-radius:6px;
   }
-  .search-bar button:hover{color:var(--ink);}
+  .search-bar button:hover{color:var(--ink);background:var(--line);}
   .account-email{font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink);}
+
+  /* ---------- Buttons: three consistent styles (primary / secondary / danger) ---------- */
   button{
     font-family:var(--sans);
     cursor:pointer;
     border:none;
-    border-radius:8px;
+    border-radius:var(--radius-sm);
     font-size:13px;
     font-weight:500;
   }
   .btn-primary{
-    background:var(--accent);color:#fff;padding:9px 16px;
+    background:var(--accent);color:#fff;padding:9px 16px;box-shadow:var(--shadow-sm);
   }
-  .btn-primary:hover{background:#1d4ed8;}
+  .btn-primary:hover{background:var(--accent-hover);}
+  .btn-primary:active{transform:translateY(0.5px);}
+  /* "Secondary" style — used throughout as .btn-ghost (name kept as-is since
+     it's already referenced across the app; visually it now reads as a
+     proper bordered secondary button rather than a bare-bones ghost link) */
   .btn-ghost{
-    background:transparent;color:var(--ink-soft);padding:8px 12px;
+    background:var(--panel);color:var(--ink);padding:8px 12px;
     border:1px solid var(--line);
   }
-  .btn-ghost:hover{border-color:var(--ink-soft);color:var(--ink);}
+  .btn-ghost:hover{border-color:#c9cfd8;background:#fbfcfe;}
+  /* "Danger" style — used only where an action is destructive-ish (e.g. the
+     compose Reset button, which discards entered data) */
+  .btn-danger{
+    background:var(--panel);color:var(--warn);padding:8px 12px;
+    border:1px solid #fecaca;
+  }
+  .btn-danger:hover{background:#fef2f2;border-color:var(--warn);}
 
   /* ---------- Layout ---------- */
   .app{
@@ -94,10 +133,10 @@
     min-height:0;
   }
   .sidebar{
-    width:190px;
+    width:196px;
     flex-shrink:0;
     border-right:1px solid var(--line);
-    padding:18px 12px;
+    padding:20px 14px;
     background:var(--panel);
     display:flex;
     flex-direction:column;
@@ -112,9 +151,7 @@
     display:inline-flex;
     align-items:center;
     padding:6px 8px;
-    border-radius:8px;
-    background:rgba(255,255,255,0.94);
-    box-shadow:0 1px 3px rgba(0,0,0,0.25);
+    border-radius:var(--radius-sm);
   }
   .sidebar-logo img{
     height:30px;
@@ -126,23 +163,25 @@
     background:var(--accent);
     color:#fff;
     padding:11px 14px;
-    border-radius:10px;
+    border-radius:var(--radius-md);
     font-size:13.5px;
     font-weight:600;
-    margin-bottom:18px;
+    margin-bottom:10px;
+    box-shadow:var(--shadow-sm);
   }
-  .compose-btn:hover{background:#1d4ed8;}
+  .compose-btn:hover{background:var(--accent-hover);}
   .nav-item{
     display:flex;align-items:center;gap:10px;
-    padding:9px 12px;border-radius:8px;
+    padding:9px 12px;border-radius:var(--radius-sm);
     font-size:13.5px;color:var(--ink-soft);
     cursor:pointer;margin-bottom:2px;
   }
-  .nav-item:hover{background:var(--accent-soft);}
+  .nav-item:hover{background:var(--paper);color:var(--ink);}
   .nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:600;}
   .nav-count{
     margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-soft);
   }
+  .nav-item.active .nav-count{color:var(--accent);}
 
   .main{
     flex:1;
@@ -155,61 +194,84 @@
     flex-shrink:0;
     border-right:1px solid var(--line);
     overflow-y:auto;
+    background:var(--panel);
   }
   .list-header{
     padding:14px 18px;
-    font-size:12px;
+    font-size:11.5px;
     font-family:var(--mono);
     color:var(--ink-soft);
     text-transform:uppercase;
     letter-spacing:0.04em;
     border-bottom:1px solid var(--line);
-    position:sticky;top:0;background:var(--paper);
+    position:sticky;top:0;background:var(--panel);
     display:flex;justify-content:space-between;align-items:center;
+    z-index:1;
   }
   .refresh-link{font-family:var(--sans);cursor:pointer;color:var(--accent);text-transform:none;letter-spacing:0;font-size:12px;}
+  .refresh-link:hover{text-decoration:underline;}
   .list-header-left{display:flex;align-items:center;gap:10px;}
   .list-header-actions{display:flex;align-items:center;gap:12px;}
   .selection-info{font-family:var(--sans);font-size:12px;color:var(--ink-soft);text-transform:none;letter-spacing:0;}
+
+  /* ---------- Email list ---------- */
   .msg-row{
-    padding:13px 18px;
+    padding:14px 18px;
     border-bottom:1px solid var(--line);
     cursor:pointer;
     display:flex;
     align-items:flex-start;
-    gap:10px;
+    gap:11px;
   }
-  .msg-row:hover{background:var(--accent-soft);}
+  .msg-row:hover{background:var(--paper);}
   .msg-row.selected{background:var(--accent-soft);border-left:3px solid var(--accent);padding-left:15px;}
-  .msg-row.unread .msg-from, .msg-row.unread .msg-subject{font-weight:700;}
+  .msg-row.unread{position:relative;}
+  .msg-row.unread::before{
+    content:"";position:absolute;left:6px;top:50%;transform:translateY(-50%);
+    width:6px;height:6px;border-radius:50%;background:var(--accent);
+  }
+  .msg-row.unread.selected::before{display:none;} /* selected border already signals state */
+  .msg-row.unread .msg-from, .msg-row.unread .msg-subject{font-weight:700;color:var(--ink);}
   .msg-checkbox{margin-top:3px;flex-shrink:0;cursor:pointer;accent-color:var(--accent);width:16px;height:16px;}
   .msg-content{flex:1;min-width:0;}
   .msg-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:3px;}
-  .msg-from{font-size:13.5px;color:var(--ink);}
+  .msg-from{font-size:13.5px;font-weight:500;color:var(--ink);}
   .msg-date{font-family:var(--mono);font-size:11px;color:var(--ink-soft);flex-shrink:0;}
-  .msg-subject{font-size:13px;color:var(--ink);margin-bottom:2px;}
+  .msg-subject{font-size:13px;color:var(--ink);margin-bottom:3px;}
   .thread-count{
     background:var(--accent-soft);color:var(--accent);font-family:var(--mono);
-    font-size:10.5px;padding:1px 6px;border-radius:8px;margin-left:6px;
+    font-size:10.5px;padding:1px 6px;border-radius:999px;margin-left:6px;
   }
   .attachment-flag{margin-left:6px;font-size:11px;}
   .msg-snippet{font-size:12.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
+  /* Shared placeholder style for Loading / Searching / No messages / errors —
+     replaces several near-identical inline styles that used to be repeated
+     directly in the JS template strings. */
+  .list-placeholder{padding:24px 20px;color:var(--ink-soft);font-size:13px;text-align:center;}
+  .list-placeholder.is-error{color:var(--warn);}
+
+  /* ---------- Reading pane ---------- */
   .reading-pane{
     flex:1;
     overflow-y:auto;
-    padding:28px 36px;
+    padding:32px 40px;
     min-width:0;
+    background:var(--paper);
   }
   .empty-state{
     height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    color:var(--ink-soft);text-align:center;gap:8px;
+    color:var(--ink-soft);text-align:center;gap:10px;
   }
-  .empty-state .glyph{font-size:28px;opacity:0.5;}
+  .empty-state .glyph{
+    font-size:30px;opacity:0.6;
+    width:56px;height:56px;border-radius:50%;background:var(--panel);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+  }
   .empty-state p{margin:0;font-size:13.5px;max-width:280px;}
 
   .read-topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px;}
-  .read-subject{font-size:20px;font-weight:700;letter-spacing:-0.01em;}
+  .read-subject{font-size:20px;font-weight:700;letter-spacing:-0.01em;color:var(--ink);}
   .read-actions-top{display:flex;gap:8px;flex-shrink:0;}
 
   .read-header-row{
@@ -234,11 +296,11 @@
   .read-body a{color:var(--accent);}
 
   .read-body-html{
-    font-size:14px;line-height:1.6;word-wrap:break-word;overflow-wrap:break-word;
-    background:rgba(255,255,255,0.96);
-    color:#1a1a1a;
-    padding:16px;
-    border-radius:10px;
+    font-size:14px;line-height:1.65;color:var(--ink);word-wrap:break-word;overflow-wrap:break-word;
+    background:var(--panel);
+    border:1px solid var(--line);
+    padding:18px;
+    border-radius:var(--radius-md);
   }
   .read-body-html img{max-width:100%;height:auto;}
   .read-body-html img[data-cid]:not([src]){
@@ -258,101 +320,107 @@
   .attachment-list{margin-top:16px;display:flex;flex-direction:column;gap:8px;}
   .attachment-chip{
     display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-    font-size:12.5px;color:var(--ink-soft);background:var(--accent-soft);
-    padding:8px 12px;border-radius:8px;
+    font-size:12.5px;color:var(--ink-soft);background:var(--panel);
+    border:1px solid var(--line);
+    padding:9px 12px;border-radius:var(--radius-sm);
   }
   .attachment-size{color:var(--ink-soft);font-family:var(--mono);font-size:11px;}
   .attachment-download-btn{
     background:var(--panel);border:1px solid var(--line);color:var(--accent);
     padding:4px 10px;font-size:11.5px;border-radius:6px;margin-left:auto;
   }
-  .attachment-download-btn:hover{border-color:var(--accent);}
+  .attachment-download-btn:hover{border-color:var(--accent);background:var(--accent-soft);}
 
   /* ---------- Sign-in screen ---------- */
   .signin-screen{
     flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;
+    background:var(--paper);
   }
   .signin-card{
-    background:var(--panel);border:1px solid var(--line);border-radius:14px;
-    padding:36px 40px;text-align:center;max-width:360px;
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);
+    padding:40px 44px;text-align:center;max-width:380px;
+    box-shadow:var(--shadow-md);
   }
-  .signin-card .brand-mark{margin:0 auto 16px;}
-  .signin-card h1{font-size:17px;margin:0 0 6px;}
-  .signin-card p{font-size:13px;color:var(--ink-soft);margin:0 0 20px;line-height:1.5;}
+  .signin-card .brand-mark{margin:0 auto 18px;}
+  .signin-card h1{font-size:18px;margin:0 0 8px;color:var(--ink);}
+  .signin-card p{font-size:13.5px;color:var(--ink-soft);margin:0 0 22px;line-height:1.55;}
 
   /* ---------- Compose modal ---------- */
   .modal-overlay{
-    position:fixed;inset:0;background:rgba(15,23,42,0.45);
+    position:fixed;inset:0;background:rgba(17,24,39,0.4);
     display:none;align-items:center;justify-content:center;
     padding:24px;z-index:50;
   }
   .modal-overlay.open{display:flex;}
   .compose-modal{
     width:760px;max-width:100%;
-    background:var(--panel);border:1px solid var(--line);border-radius:12px;
-    box-shadow:0 12px 40px rgba(0,0,0,0.18);
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-lg);
     display:flex;flex-direction:column;
     max-height:95vh;
   }
   .compose-head{
     display:flex;justify-content:space-between;align-items:center;
-    padding:11px 20px;border-bottom:1px solid var(--line);
-    background:var(--ink);border-radius:12px 12px 0 0;
+    padding:14px 20px;border-bottom:1px solid var(--line);
+    background:var(--ink);border-radius:var(--radius-lg) var(--radius-lg) 0 0;
   }
   .compose-head span{color:#fff;font-size:13.5px;font-weight:600;}
-  .compose-close{background:transparent;color:#fff;font-size:16px;padding:2px 8px;}
-  .compose-body{padding:14px 20px 2px;overflow-y:auto;flex:1;}
+  .compose-close{background:transparent;color:#fff;font-size:16px;padding:2px 8px;border-radius:6px;}
+  .compose-close:hover{background:rgba(255,255,255,0.12);}
+  .compose-body{padding:16px 20px 4px;overflow-y:auto;flex:1;}
 
-  .form-block{margin-bottom:9px;}
-  .form-label{display:block;font-size:11.5px;font-weight:600;color:var(--ink);margin-bottom:3px;}
+  .form-block{margin-bottom:12px;}
+  .form-label{display:block;font-size:11.5px;font-weight:600;color:var(--ink);margin-bottom:4px;}
   .form-label .req{color:var(--warn);margin-left:2px;}
   .form-control{
-    width:100%;border:1px solid var(--line);border-radius:7px;
-    padding:6px 10px;font-size:12.5px;font-family:var(--sans);color:var(--ink);
+    width:100%;border:1px solid var(--line);border-radius:var(--radius-sm);
+    padding:7px 11px;font-size:12.5px;font-family:var(--sans);color:var(--ink);
     background:var(--panel);outline:none;
   }
-  .form-control:focus{border-color:var(--accent);}
+  .form-control:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
   select.form-control{
     appearance:none;cursor:pointer;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%234a5568'/></svg>");
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%236b7280'/></svg>");
     background-repeat:no-repeat;background-position:right 12px center;
     padding-right:30px;
   }
   select.form-control:invalid, select.form-control option[value=""]{color:var(--ink-soft);}
-  textarea.form-control{resize:vertical;min-height:52px;line-height:1.45;font-family:var(--sans);}
+  textarea.form-control{resize:vertical;min-height:56px;line-height:1.5;font-family:var(--sans);}
   .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;}
-  .form-grid .form-block{margin-bottom:9px;}
+  .form-grid .form-block{margin-bottom:12px;}
   .file-drop{
-    border:1px dashed var(--line);border-radius:8px;padding:7px 10px;
+    border:1px dashed var(--line);border-radius:var(--radius-sm);padding:8px 11px;
     display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink-soft);
   }
   .file-drop input[type=file]{display:none;}
   .file-drop-btn{
     background:var(--panel);border:1px solid var(--line);color:var(--ink);
-    padding:5px 10px;font-size:12px;border-radius:6px;flex-shrink:0;
+    padding:5px 10px;font-size:12px;border-radius:var(--radius-sm);flex-shrink:0;
   }
-  .file-drop-btn:hover{border-color:var(--ink-soft);}
-  .file-list{margin-top:6px;display:flex;flex-direction:column;gap:4px;}
+  .file-drop-btn:hover{border-color:#c9cfd8;background:var(--paper);}
+  .file-list{margin-top:8px;display:flex;flex-direction:column;gap:5px;}
   .file-chip{
     display:flex;align-items:center;justify-content:space-between;
-    font-size:11.5px;color:var(--ink-soft);background:var(--accent-soft);
-    padding:4px 8px;border-radius:6px;
+    font-size:11.5px;color:var(--ink-soft);background:var(--paper);
+    border:1px solid var(--line);
+    padding:5px 9px;border-radius:var(--radius-sm);
   }
   .file-chip button{background:transparent;color:var(--warn);font-size:12px;padding:0 4px;}
 
   .compose-foot{
-    padding:10px 20px;border-top:1px solid var(--line);
+    padding:12px 20px;border-top:1px solid var(--line);
     display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
   }
   .send-status{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);}
   .foot-actions{display:flex;gap:8px;align-items:center;}
 
-  ::-webkit-scrollbar{width:8px;}
-  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+  ::-webkit-scrollbar{width:9px;}
+  ::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:6px;}
+  ::-webkit-scrollbar-thumb:hover{background:#b0b7c1;}
 
   .banner{
     padding:10px 22px;font-size:12.5px;font-family:var(--mono);
-    background:#fdf3ec;color:var(--warn);border-bottom:1px solid var(--line);
+    background:#fffbeb;color:#92400e;border-bottom:1px solid #fde68a;
     display:none;
   }
   .banner.show{display:block;}
@@ -566,7 +634,7 @@
     <div class="compose-foot">
       <span class="send-status" id="send-status"></span>
       <div class="foot-actions">
-        <button class="btn-ghost" id="reset-btn" aria-label="Reset form">↺ Reset</button>
+        <button class="btn-danger" id="reset-btn" aria-label="Reset form">↺ Reset</button>
         <button class="btn-ghost" id="copy-btn" aria-label="Copy all info to clipboard">⧉ Copy all info</button>
         <button class="btn-primary" id="send-btn" aria-label="Send email">✈ Send email</button>
       </div>
@@ -915,7 +983,7 @@ const PAGE_SIZE = 25;
 
 async function loadFolder(folder, silent){
   if(!silent){
-    el('msg-list').innerHTML = '<div style="padding:20px;color:var(--ink-soft);font-size:13px;">Loading…</div>';
+    el('msg-list').innerHTML = '<div class="list-placeholder">Loading…</div>';
   }
   try{
     const labelQuery = folder === 'INBOX' ? 'label:inbox' : 'label:sent';
@@ -940,7 +1008,7 @@ async function loadFolder(folder, silent){
     console.error(e);
     if(folder === currentFolder && !silent){
       el('msg-list').innerHTML = `
-        <div style="padding:20px;color:var(--warn);font-size:13px;">
+        <div class="list-placeholder is-error">
           Couldn't load this folder.
           <div style="margin-top:10px;"><button class="btn-ghost" id="retry-load-btn">Try again</button></div>
         </div>`;
@@ -1109,7 +1177,7 @@ async function performSearch(term){
   searchActive = true;
   el('search-clear-btn').style.display = 'inline-block';
   el('list-title').textContent = `Search: "${term}"`;
-  el('msg-list').innerHTML = '<div style="padding:20px;color:var(--ink-soft);font-size:13px;">Searching…</div>';
+  el('msg-list').innerHTML = '<div class="list-placeholder">Searching…</div>';
 
   const labelQuery = currentFolder === 'INBOX' ? 'label:inbox' : 'label:sent';
   const q = `${labelQuery} ${term}`;
@@ -1133,7 +1201,7 @@ async function performSearch(term){
     if(requestId !== searchRequestId) return;
     console.error(e);
     el('msg-list').innerHTML = `
-      <div style="padding:20px;color:var(--warn);font-size:13px;">
+      <div class="list-placeholder is-error">
         Search failed.
         <div style="margin-top:10px;"><button class="btn-ghost" id="retry-search-btn">Try again</button></div>
       </div>`;
@@ -1195,7 +1263,7 @@ function renderList(){
   lastRenderedGroups = groups;
   const container = el('msg-list');
   if(groups.length === 0){
-    container.innerHTML = '<div style="padding:20px;color:var(--ink-soft);font-size:13px;">No messages.</div>';
+    container.innerHTML = '<div class="list-placeholder">No messages.</div>';
     updateSelectAllCheckboxState();
     return;
   }
