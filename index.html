@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Legacy Healing Center Email Portal</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 <style>
   :root{
     --ink:#0f172a;
@@ -234,6 +235,20 @@
 
   .read-body{font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap;word-wrap:break-word;}
   .read-body a{color:var(--accent);}
+
+  .read-body-html{font-size:14px;line-height:1.6;color:var(--ink);word-wrap:break-word;overflow-wrap:break-word;}
+  .read-body-html img{max-width:100%;height:auto;}
+  .read-body-html table{max-width:100%;border-collapse:collapse;}
+  .read-body-html a{color:var(--accent);}
+  .read-body-html blockquote{
+    margin:8px 0;padding-left:12px;border-left:2px solid var(--line);color:var(--ink-soft);
+  }
+  html[data-theme="dark"] .read-body-html{
+    background:rgba(255,255,255,0.96);
+    color:#1a1a1a;
+    padding:16px;
+    border-radius:10px;
+  }
 
   .thread-message{padding-bottom:24px;margin-bottom:24px;border-bottom:1px solid var(--line);}
   .thread-message:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
@@ -672,49 +687,65 @@ function headerVal(headers, name){
   return h ? h.value : '';
 }
 
-function decodeBody(payload){
-  // Walk MIME parts to find a text/plain or text/html body
-  function findPart(part){
-    if(!part) return null;
-    if(part.mimeType === 'text/plain' && part.body && part.body.data) return { type:'plain', data: part.body.data };
-    if(part.parts){
-      for(const p of part.parts){
-        const found = findPart(p);
-        if(found) return found;
-      }
-    }
-    if(part.mimeType === 'text/html' && part.body && part.body.data) return { type:'html', data: part.body.data };
-    return null;
-  }
-  const found = findPart(payload) || (payload.body && payload.body.data ? {type: payload.mimeType, data: payload.body.data} : null);
-  if(!found) return '(no readable body)';
-  const decoded = decodeURIComponent(atob(found.data.replace(/-/g,'+').replace(/_/g,'/')).split('').map(c =>
-    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-  ).join(''));
-  if(found.type === 'html'){
-    const div = document.createElement('div');
-    div.innerHTML = decoded;
-    return div.textContent || div.innerText || '';
-  }
-  return decoded;
+function base64UrlToStdBase64(data){
+  return data.replace(/-/g, '+').replace(/_/g, '/');
 }
 
-function extractAttachments(payload){
-  const results = [];
+function base64UrlDecodeToUtf8(data){
+  return decodeURIComponent(atob(base64UrlToStdBase64(data)).split('').map(c =>
+    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+  ).join(''));
+}
+
+function getContentId(part){
+  if(!part.headers) return null;
+  const h = part.headers.find(h => h.name.toLowerCase() === 'content-id');
+  if(!h) return null;
+  return h.value.replace(/^<|>$/g, '');
+}
+
+// Walks the MIME tree once, returning the plain-text body, the raw HTML
+// body (if present), the list of real downloadable attachments, and the
+// list of inline images (logo/signature images referenced via cid: in
+// the HTML) separately — inline images are resolved and embedded rather
+// than shown as attachment chips.
+function extractParts(payload){
+  let html = null;
+  let text = null;
+  const attachments = [];
+  const inlineImages = [];
+
   function walk(part){
     if(!part) return;
+    if(part.mimeType === 'text/html' && part.body && part.body.data && html === null){
+      html = part.body.data;
+    }
+    if(part.mimeType === 'text/plain' && part.body && part.body.data && text === null){
+      text = part.body.data;
+    }
     if(part.filename && part.filename.length > 0 && part.body && part.body.attachmentId){
-      results.push({
-        filename: part.filename,
-        mimeType: part.mimeType || 'application/octet-stream',
-        attachmentId: part.body.attachmentId,
-        size: part.body.size || 0
-      });
+      const cid = getContentId(part);
+      if(cid){
+        inlineImages.push({ contentId: cid, attachmentId: part.body.attachmentId, mimeType: part.mimeType || 'application/octet-stream' });
+      }else{
+        attachments.push({
+          filename: part.filename,
+          mimeType: part.mimeType || 'application/octet-stream',
+          attachmentId: part.body.attachmentId,
+          size: part.body.size || 0
+        });
+      }
     }
     if(part.parts){ part.parts.forEach(walk); }
   }
   walk(payload);
-  return results;
+
+  if(html === null && text === null && payload.body && payload.body.data){
+    if(payload.mimeType === 'text/html') html = payload.body.data;
+    else text = payload.body.data;
+  }
+
+  return { html, text, attachments, inlineImages };
 }
 
 // Lightweight fields used for the list view — headers + attachment metadata
@@ -735,18 +766,42 @@ function parseMessageMetadata(m){
     date: headerVal(headers, 'Date'),
     snippet: m.snippet,
     unread: (m.labelIds || []).includes('UNREAD'),
-    hasAttachments: extractAttachments(m.payload || {}).length > 0,
+    hasAttachments: extractParts(m.payload || {}).attachments.length > 0,
+    hydrated: false,
     body: null,
+    bodyHtml: null,
     attachments: null
   };
 }
 
 // Full body + attachment list, fetched only when a message is actually opened.
+// Prefers the HTML version of the email (resolving any inline cid: images
+// to real data so logos/signatures render), falling back to plain text.
 async function hydrateMessage(m){
-  if(m.body !== null) return m;
+  if(m.hydrated) return m;
   const full = await gmailFetch(`/gmail/v1/users/me/messages/${m.id}?format=full`);
-  m.body = decodeBody(full.payload);
-  m.attachments = extractAttachments(full.payload);
+  const { html, text, attachments, inlineImages } = extractParts(full.payload);
+
+  let resolvedHtml = null;
+  if(html){
+    let htmlStr = base64UrlDecodeToUtf8(html);
+    for(const img of inlineImages){
+      try{
+        const res = await gmailFetch(`/gmail/v1/users/me/messages/${m.id}/attachments/${img.attachmentId}`);
+        const dataUri = `data:${img.mimeType};base64,${base64UrlToStdBase64(res.data)}`;
+        const escapedCid = img.contentId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        htmlStr = htmlStr.replace(new RegExp(`cid:${escapedCid}`, 'g'), dataUri);
+      }catch(e){
+        console.error('Inline image fetch failed', e);
+      }
+    }
+    resolvedHtml = window.DOMPurify ? DOMPurify.sanitize(htmlStr, { ADD_ATTR: ['target'] }) : htmlStr;
+  }
+
+  m.bodyHtml = resolvedHtml;
+  m.body = text ? base64UrlDecodeToUtf8(text) : (resolvedHtml ? null : '(no readable body)');
+  m.attachments = attachments;
+  m.hydrated = true;
   return m;
 }
 
@@ -1047,6 +1102,10 @@ function renderReadingThread(messages){
       </div>
     ` : '';
 
+    const bodyHtml = m.bodyHtml
+      ? `<div class="read-body-html">${m.bodyHtml}</div>`
+      : `<div class="read-body">${escapeHtml(m.body || '')}</div>`;
+
     return `
       <div class="thread-message">
         <div class="read-header-row">
@@ -1057,7 +1116,7 @@ function renderReadingThread(messages){
           </div>
           <div class="read-date">${escapeHtml(formatFullDate(m.date))}</div>
         </div>
-        <div class="read-body">${escapeHtml(m.body || '')}</div>
+        ${bodyHtml}
         ${attachmentsHtml}
       </div>
     `;
