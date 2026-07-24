@@ -46,7 +46,18 @@
   }
   .brand-name{font-weight:600;font-size:15px;letter-spacing:-0.01em;}
   .brand-sub{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-left:6px;}
-  .account-area{display:flex;align-items:center;gap:12px;}
+  .account-area{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+  .search-bar{flex:1;max-width:440px;position:relative;margin:0 24px;}
+  .search-bar input{
+    width:100%;padding:8px 34px 8px 14px;border:1px solid var(--line);border-radius:8px;
+    font-size:13px;font-family:var(--sans);color:var(--ink);outline:none;background:var(--paper);
+  }
+  .search-bar input:focus{border-color:var(--accent);background:var(--panel);}
+  .search-bar button{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    background:transparent;color:var(--ink-soft);font-size:12px;padding:4px 6px;
+  }
+  .search-bar button:hover{color:var(--ink);}
   .account-email{font-family:var(--mono);font-size:12px;color:var(--ink-soft);}
   button{
     font-family:var(--sans);
@@ -153,17 +164,30 @@
   .empty-state .glyph{font-size:28px;opacity:0.5;}
   .empty-state p{margin:0;font-size:13.5px;max-width:280px;}
 
-  .read-subject{font-size:19px;font-weight:700;letter-spacing:-0.01em;margin-bottom:14px;}
-  .read-meta{
-    display:flex;justify-content:space-between;align-items:flex-start;
-    padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:18px;
+  .read-topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px;}
+  .read-subject{font-size:20px;font-weight:700;letter-spacing:-0.01em;}
+  .read-actions-top{display:flex;gap:8px;flex-shrink:0;}
+
+  .read-header-row{
+    display:flex;align-items:flex-start;gap:14px;
+    padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:22px;
   }
-  .read-from{font-size:13.5px;font-weight:600;}
-  .read-from-email{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);font-weight:400;}
-  .read-date{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);}
-  .read-body{font-size:13.5px;line-height:1.65;color:var(--ink);white-space:pre-wrap;word-wrap:break-word;}
+  .read-avatar{
+    width:42px;height:42px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;font-size:16px;font-family:var(--sans);
+  }
+  .read-sender-block{flex:1;min-width:0;}
+  .read-sender-name{font-size:14.5px;font-weight:700;color:var(--ink);}
+  .read-sender-email{font-weight:400;color:var(--ink-soft);font-size:12.5px;margin-left:2px;}
+  .read-to-line{font-size:12px;color:var(--ink-soft);margin-top:3px;}
+  .read-date{
+    font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);
+    white-space:nowrap;flex-shrink:0;padding-top:3px;
+  }
+
+  .read-body{font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap;word-wrap:break-word;}
   .read-body a{color:var(--accent);}
-  .read-actions{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);display:flex;gap:8px;}
 
   /* ---------- Sign-in screen ---------- */
   .signin-screen{
@@ -262,6 +286,10 @@
     <div class="brand-name">Lead Mail</div>
     <div class="brand-sub" id="acct-label"></div>
   </div>
+  <div class="search-bar">
+    <input type="text" id="search-input" placeholder="Search mail" autocomplete="off">
+    <button type="button" id="search-clear-btn" style="display:none;">✕</button>
+  </div>
   <div class="account-area">
     <span class="account-email" id="account-email"></span>
     <span class="account-email" id="agent-label" style="display:none;"></span>
@@ -319,25 +347,38 @@
       <button class="compose-close" id="compose-close-btn">✕</button>
     </div>
     <div class="compose-body">
-      <div class="form-block">
-        <label class="form-label">Recipient</label>
-        <select class="form-control" id="field-recipient-select">
-          <option value="" disabled selected>Select recipient</option>
-          <option value="intake@legacyhealing.com">intake@legacyhealing.com</option>
-          <option value="__custom__">Custom…</option>
-        </select>
-        <input type="text" class="form-control" id="field-recipient-custom" placeholder="Enter recipient email" style="display:none;margin-top:8px;">
+      <div id="lead-recipient-subject-block">
+        <div class="form-block">
+          <label class="form-label">Recipient</label>
+          <select class="form-control" id="field-recipient-select">
+            <option value="" disabled selected>Select recipient</option>
+            <option value="intake@legacyhealing.com">intake@legacyhealing.com</option>
+            <option value="__custom__">Custom…</option>
+          </select>
+          <input type="text" class="form-control" id="field-recipient-custom" placeholder="Enter recipient email" style="display:none;margin-top:8px;">
+        </div>
+
+        <div class="form-block">
+          <label class="form-label">Subject <span class="req">*</span></label>
+          <select class="form-control" id="field-subject-select">
+            <option value="" disabled selected>Select subject</option>
+            <option value="Chat Follow Up">Chat Follow Up</option>
+            <option value="Chat Private Pay">Chat Private Pay</option>
+            <option value="__custom__">Custom…</option>
+          </select>
+          <input type="text" class="form-control" id="field-subject-custom" placeholder="Enter subject" style="display:none;margin-top:8px;">
+        </div>
       </div>
 
-      <div class="form-block">
-        <label class="form-label">Subject <span class="req">*</span></label>
-        <select class="form-control" id="field-subject-select">
-          <option value="" disabled selected>Select subject</option>
-          <option value="Chat Follow Up">Chat Follow Up</option>
-          <option value="Chat Private Pay">Chat Private Pay</option>
-          <option value="__custom__">Custom…</option>
-        </select>
-        <input type="text" class="form-control" id="field-subject-custom" placeholder="Enter subject" style="display:none;margin-top:8px;">
+      <div id="reply-recipient-subject-block" style="display:none;">
+        <div class="form-block">
+          <label class="form-label">To</label>
+          <input type="text" class="form-control" id="field-reply-to" placeholder="recipient@example.com">
+        </div>
+        <div class="form-block">
+          <label class="form-label">Subject</label>
+          <input type="text" class="form-control" id="field-reply-subject" placeholder="Subject">
+        </div>
       </div>
 
       <div id="lead-fields-block">
@@ -581,35 +622,41 @@ function decodeBody(payload){
   return decoded;
 }
 
+function parseMessage(m){
+  const headers = m.payload.headers;
+  return {
+    id: m.id,
+    threadId: m.threadId,
+    messageIdHeader: headerVal(headers, 'Message-ID'),
+    references: headerVal(headers, 'References'),
+    from: headerVal(headers, 'From'),
+    to: headerVal(headers, 'To'),
+    cc: headerVal(headers, 'Cc'),
+    subject: headerVal(headers, 'Subject') || '(no subject)',
+    date: headerVal(headers, 'Date'),
+    snippet: m.snippet,
+    unread: (m.labelIds || []).includes('UNREAD'),
+    body: decodeBody(m.payload)
+  };
+}
+
+let nextPageTokens = { INBOX: null, SENT: null };
+const PAGE_SIZE = 25;
+
 async function loadFolder(folder, silent){
   if(!silent){
     el('msg-list').innerHTML = '<div style="padding:20px;color:var(--ink-soft);font-size:13px;">Loading…</div>';
   }
   const labelQuery = folder === 'INBOX' ? 'label:inbox' : 'label:sent';
-  const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery)}&maxResults=25`);
+  const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery)}&maxResults=${PAGE_SIZE}`);
   const ids = (listRes.messages || []).map(m => m.id);
 
   const full = await Promise.all(ids.map(id =>
     gmailFetch(`/gmail/v1/users/me/messages/${id}?format=full`)
   ));
 
-  messagesCache[folder] = full.map(m => {
-    const headers = m.payload.headers;
-    return {
-      id: m.id,
-      threadId: m.threadId,
-      messageIdHeader: headerVal(headers, 'Message-ID'),
-      references: headerVal(headers, 'References'),
-      from: headerVal(headers, 'From'),
-      to: headerVal(headers, 'To'),
-      cc: headerVal(headers, 'Cc'),
-      subject: headerVal(headers, 'Subject') || '(no subject)',
-      date: headerVal(headers, 'Date'),
-      snippet: m.snippet,
-      unread: (m.labelIds || []).includes('UNREAD'),
-      body: decodeBody(m.payload)
-    };
-  });
+  messagesCache[folder] = full.map(parseMessage);
+  nextPageTokens[folder] = listRes.nextPageToken || null;
 
   el('count-' + folder.toLowerCase()).textContent = full.length;
   if(folder === currentFolder && !silent){
@@ -617,23 +664,96 @@ async function loadFolder(folder, silent){
   }
 }
 
+async function loadMoreFolder(folder){
+  if(!nextPageTokens[folder]) return;
+  const labelQuery = folder === 'INBOX' ? 'label:inbox' : 'label:sent';
+  const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery)}&maxResults=${PAGE_SIZE}&pageToken=${encodeURIComponent(nextPageTokens[folder])}`);
+  const ids = (listRes.messages || []).map(m => m.id);
+
+  const full = await Promise.all(ids.map(id =>
+    gmailFetch(`/gmail/v1/users/me/messages/${id}?format=full`)
+  ));
+
+  messagesCache[folder] = messagesCache[folder].concat(full.map(parseMessage));
+  nextPageTokens[folder] = listRes.nextPageToken || null;
+
+  el('count-' + folder.toLowerCase()).textContent = messagesCache[folder].length;
+  if(folder === currentFolder){
+    renderList();
+  }
+}
+
+/* ---------------- Search ---------------- */
+let searchActive = false;
+let searchResultsCache = [];
+
+async function performSearch(term){
+  if(!term){
+    clearSearch();
+    return;
+  }
+  searchActive = true;
+  el('search-clear-btn').style.display = 'inline-block';
+  el('list-title').textContent = `Search: "${term}"`;
+  el('msg-list').innerHTML = '<div style="padding:20px;color:var(--ink-soft);font-size:13px;">Searching…</div>';
+
+  const labelQuery = currentFolder === 'INBOX' ? 'label:inbox' : 'label:sent';
+  const q = `${labelQuery} ${term}`;
+  try{
+    const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(q)}&maxResults=50`);
+    const ids = (listRes.messages || []).map(m => m.id);
+    const full = await Promise.all(ids.map(id => gmailFetch(`/gmail/v1/users/me/messages/${id}?format=full`)));
+    searchResultsCache = full.map(parseMessage);
+    renderList();
+  }catch(e){
+    console.error(e);
+    el('msg-list').innerHTML = '<div style="padding:20px;color:var(--warn);font-size:13px;">Search failed — check console.</div>';
+  }
+}
+
+function clearSearch(){
+  searchActive = false;
+  el('search-input').value = '';
+  el('search-clear-btn').style.display = 'none';
+  el('list-title').textContent = currentFolder === 'INBOX' ? 'Inbox' : 'Sent';
+  renderList();
+}
+
+el('search-input').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){
+    performSearch(el('search-input').value.trim());
+  }
+});
+el('search-clear-btn').addEventListener('click', clearSearch);
+
 function renderList(){
-  const list = messagesCache[currentFolder] || [];
+  const list = searchActive ? searchResultsCache : (messagesCache[currentFolder] || []);
   const container = el('msg-list');
   if(list.length === 0){
     container.innerHTML = '<div style="padding:20px;color:var(--ink-soft);font-size:13px;">No messages.</div>';
     return;
   }
-  container.innerHTML = list.map((m, i) => `
+  container.innerHTML = list.map((m, i) => {
+    const addr = parseAddress(currentFolder === 'INBOX' ? m.from : m.to);
+    return `
     <div class="msg-row ${m.unread ? 'unread' : ''}" data-idx="${i}">
       <div class="msg-top">
-        <span class="msg-from">${escapeHtml(currentFolder === 'INBOX' ? m.from : m.to)}</span>
+        <span class="msg-from">${escapeHtml(addr.name || addr.email)}</span>
         <span class="msg-date">${formatDate(m.date)}</span>
       </div>
       <div class="msg-subject">${escapeHtml(m.subject)}</div>
       <div class="msg-snippet">${escapeHtml(m.snippet)}</div>
     </div>
-  `).join('');
+  `;
+  }).join('');
+
+  if(!searchActive && nextPageTokens[currentFolder]){
+    container.innerHTML += `
+      <div style="padding:14px 18px;text-align:center;">
+        <button class="btn-ghost" id="load-more-btn">Load more</button>
+      </div>
+    `;
+  }
 
   container.querySelectorAll('.msg-row').forEach(row => {
     row.addEventListener('click', () => {
@@ -642,22 +762,78 @@ function renderList(){
       renderReading(list[parseInt(row.dataset.idx)]);
     });
   });
+
+  const loadMoreBtn = document.getElementById('load-more-btn');
+  if(loadMoreBtn){
+    loadMoreBtn.addEventListener('click', () => {
+      loadMoreBtn.textContent = 'Loading…';
+      loadMoreFolder(currentFolder);
+    });
+  }
+}
+
+function parseAddress(str){
+  if(!str) return { name: '', email: '' };
+  const match = str.match(/^(.*?)\s*<([^>]+)>$/);
+  if(match){
+    const name = match[1].trim().replace(/^"|"$/g, '');
+    return { name: name || match[2], email: match[2] };
+  }
+  return { name: str.trim(), email: str.trim() };
+}
+
+const AVATAR_COLORS = ['#2f5d50', '#b5461f', '#4a5568', '#7c5cbf', '#1a7a6b', '#a8562f', '#3d5a80'];
+function avatarColor(str){
+  let hash = 0;
+  for(let i = 0; i < str.length; i++){ hash = str.charCodeAt(i) + ((hash << 5) - hash); }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function formatFullDate(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr);
+  if(isNaN(d)) return dateStr;
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+    + ', ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 function renderReading(m){
+  const isInbox = currentFolder === 'INBOX';
+  const legacyLower = (legacyEmailAddress || '').toLowerCase();
+
+  let headerAddr, subLine;
+  if(isInbox){
+    headerAddr = parseAddress(m.from);
+    const toAddr = parseAddress(m.to);
+    const toIsMe = toAddr.email && toAddr.email.toLowerCase() === legacyLower;
+    subLine = 'to ' + (toIsMe ? 'me' : (toAddr.name || toAddr.email || 'me'));
+  }else{
+    headerAddr = { name: 'You', email: legacyEmailAddress };
+    const toAddr = parseAddress(m.to);
+    subLine = 'to ' + (toAddr.name || toAddr.email);
+  }
+
+  const initial = (headerAddr.name || headerAddr.email || '?').trim().charAt(0).toUpperCase();
+  const color = avatarColor(headerAddr.email || headerAddr.name || 'x');
+  const showEmailSeparately = headerAddr.email && headerAddr.name && headerAddr.email !== headerAddr.name;
+
   el('reading-pane').innerHTML = `
-    <div class="read-subject">${escapeHtml(m.subject)}</div>
-    <div class="read-meta">
-      <div>
-        <div class="read-from">${escapeHtml(currentFolder === 'INBOX' ? m.from : m.to)}</div>
+    <div class="read-topbar">
+      <div class="read-subject">${escapeHtml(m.subject)}</div>
+      <div class="read-actions-top">
+        <button class="btn-ghost" id="reply-btn">↩ Reply</button>
+        <button class="btn-ghost" id="reply-all-btn">↩↩ Reply All</button>
       </div>
-      <div class="read-date">${escapeHtml(m.date)}</div>
+    </div>
+    <div class="read-header-row">
+      <div class="read-avatar" style="background:${color};">${escapeHtml(initial)}</div>
+      <div class="read-sender-block">
+        <div class="read-sender-name">${escapeHtml(headerAddr.name)}${showEmailSeparately ? `<span class="read-sender-email">&lt;${escapeHtml(headerAddr.email)}&gt;</span>` : ''}</div>
+        <div class="read-to-line">${escapeHtml(subLine)}</div>
+      </div>
+      <div class="read-date">${escapeHtml(formatFullDate(m.date))}</div>
     </div>
     <div class="read-body">${escapeHtml(m.body)}</div>
-    <div class="read-actions">
-      <button class="btn-ghost" id="reply-btn">↩ Reply</button>
-      <button class="btn-ghost" id="reply-all-btn">↩↩ Reply All</button>
-    </div>
   `;
   el('reply-btn').addEventListener('click', () => openReplyCompose(m, false));
   el('reply-all-btn').addEventListener('click', () => openReplyCompose(m, true));
@@ -685,6 +861,9 @@ document.querySelectorAll('.nav-item').forEach(item => {
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     item.classList.add('active');
     currentFolder = item.dataset.folder;
+    searchActive = false;
+    el('search-input').value = '';
+    el('search-clear-btn').style.display = 'none';
     el('list-title').textContent = currentFolder === 'INBOX' ? 'Inbox' : 'Sent';
     el('reading-pane').innerHTML = `
       <div class="empty-state">
@@ -718,10 +897,12 @@ const FIELD_LABELS = [
 ];
 
 function getRecipient(){
+  if(isReplyMode) return el('field-reply-to').value.trim();
   const sel = el('field-recipient-select').value;
   return sel === '__custom__' ? el('field-recipient-custom').value.trim() : sel;
 }
 function getSubject(){
+  if(isReplyMode) return el('field-reply-subject').value.trim();
   const sel = el('field-subject-select').value;
   return sel === '__custom__' ? el('field-subject-custom').value.trim() : sel;
 }
@@ -783,6 +964,8 @@ function resetForm(){
   el('field-subject-select').value = '';
   el('field-subject-custom').value = '';
   el('field-subject-custom').style.display = 'none';
+  el('field-reply-to').value = '';
+  el('field-reply-subject').value = '';
   FIELD_LABELS.forEach(([id]) => { if(el(id).tagName === 'SELECT') el(id).value = ''; else el(id).value = ''; });
   el('field-explanation').value = '';
   el('field-reply-body').value = '';
@@ -815,6 +998,8 @@ function openCompose(){
   replyContext = null;
   el('reply-message-block').style.display = 'none';
   el('lead-fields-block').style.display = 'block';
+  el('reply-recipient-subject-block').style.display = 'none';
+  el('lead-recipient-subject-block').style.display = 'block';
   el('compose-overlay').classList.add('open');
 }
 
@@ -841,15 +1026,12 @@ function openReplyCompose(m, replyAll){
   const legacyLower = (legacyEmailAddress || '').toLowerCase();
   toList = toList.filter(addr => addr.toLowerCase() !== legacyLower);
 
-  el('field-recipient-select').value = '__custom__';
-  el('field-recipient-custom').style.display = 'block';
-  el('field-recipient-custom').value = toList.join(', ');
-
-  el('field-subject-select').value = '__custom__';
-  el('field-subject-custom').style.display = 'block';
+  el('field-reply-to').value = toList.join(', ');
   const subj = m.subject || '';
-  el('field-subject-custom').value = /^re:/i.test(subj) ? subj : 'Re: ' + subj;
+  el('field-reply-subject').value = /^re:/i.test(subj) ? subj : 'Re: ' + subj;
 
+  el('reply-recipient-subject-block').style.display = 'block';
+  el('lead-recipient-subject-block').style.display = 'none';
   el('reply-message-block').style.display = 'block';
   el('lead-fields-block').style.display = 'none';
 
