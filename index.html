@@ -766,7 +766,7 @@ function extractParts(payload){
 
 // Lightweight fields used for the list view — headers + attachment metadata
 // only, no message body, so opening a folder is fast and cheap.
-const LIST_FIELDS = 'id,threadId,snippet,labelIds,payload/headers,payload/parts(filename,mimeType,body/attachmentId,body/size,parts(filename,mimeType,body/attachmentId,body/size))';
+const LIST_FIELDS = 'id,threadId,snippet,labelIds,payload/headers,payload/parts(filename,mimeType,headers,body/attachmentId,body/size,parts(filename,mimeType,headers,body/attachmentId,body/size))';
 
 function parseMessageMetadata(m){
   const headers = (m.payload && m.payload.headers) || [];
