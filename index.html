@@ -18,6 +18,19 @@
     --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
     --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
+  html[data-theme="dark"]{
+    --ink:#e8e6e0;
+    --ink-soft:#9aa3ad;
+    --paper:#14181d;
+    --panel:#1b2027;
+    --line:#2a3038;
+    --accent:#5fae9b;
+    --accent-soft:#1f3d35;
+    --warn:#e2734a;
+  }
+  body, .compose-modal, .msg-row, .form-control{
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
   *{box-sizing:border-box;}
   html,body{height:100%;margin:0;}
   body{
@@ -149,6 +162,11 @@
   .msg-from{font-size:13.5px;color:var(--ink);}
   .msg-date{font-family:var(--mono);font-size:11px;color:var(--ink-soft);flex-shrink:0;}
   .msg-subject{font-size:13px;color:var(--ink);margin-bottom:2px;}
+  .thread-count{
+    background:var(--accent-soft);color:var(--accent);font-family:var(--mono);
+    font-size:10.5px;padding:1px 6px;border-radius:8px;margin-left:6px;
+  }
+  .attachment-flag{margin-left:6px;font-size:11px;}
   .msg-snippet{font-size:12.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
   .reading-pane{
@@ -188,6 +206,23 @@
 
   .read-body{font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap;word-wrap:break-word;}
   .read-body a{color:var(--accent);}
+
+  .thread-message{padding-bottom:24px;margin-bottom:24px;border-bottom:1px solid var(--line);}
+  .thread-message:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+  .thread-message .read-header-row{border-bottom:none;padding-bottom:0;margin-bottom:14px;}
+
+  .attachment-list{margin-top:16px;display:flex;flex-direction:column;gap:8px;}
+  .attachment-chip{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    font-size:12.5px;color:var(--ink-soft);background:var(--accent-soft);
+    padding:8px 12px;border-radius:8px;
+  }
+  .attachment-size{color:var(--ink-soft);font-family:var(--mono);font-size:11px;}
+  .attachment-download-btn{
+    background:var(--panel);border:1px solid var(--line);color:var(--accent);
+    padding:4px 10px;font-size:11.5px;border-radius:6px;margin-left:auto;
+  }
+  .attachment-download-btn:hover{border-color:var(--accent);}
 
   /* ---------- Sign-in screen ---------- */
   .signin-screen{
@@ -287,10 +322,11 @@
     <div class="brand-sub" id="acct-label"></div>
   </div>
   <div class="search-bar">
-    <input type="text" id="search-input" placeholder="Search mail" autocomplete="off">
-    <button type="button" id="search-clear-btn" style="display:none;">✕</button>
+    <input type="text" id="search-input" placeholder="Search mail  (press / to focus)" autocomplete="off">
+    <button type="button" id="search-clear-btn" style="display:none;" aria-label="Clear search">✕</button>
   </div>
   <div class="account-area">
+    <button class="btn-ghost" id="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
     <span class="account-email" id="account-email"></span>
     <span class="account-email" id="agent-label" style="display:none;"></span>
     <button class="btn-ghost" id="agent-signout-btn" style="display:none;">Sign out</button>
@@ -303,7 +339,8 @@
 
 <div class="app" id="app-shell" style="display:none;">
   <div class="sidebar">
-    <button class="compose-btn" id="compose-open-btn">Compose</button>
+    <button class="compose-btn" id="compose-open-btn">✏️ New Lead</button>
+    <button class="compose-btn" id="quick-compose-open-btn" style="background:var(--ink);margin-bottom:16px;">✉️ Quick Email</button>
     <div class="nav-item active" data-folder="INBOX">
       Inbox <span class="nav-count" id="count-inbox"></span>
     </div>
@@ -344,7 +381,7 @@
   <div class="compose-modal">
     <div class="compose-head">
       <span>New message</span>
-      <button class="compose-close" id="compose-close-btn">✕</button>
+      <button class="compose-close" id="compose-close-btn" aria-label="Close compose window">✕</button>
     </div>
     <div class="compose-body">
       <div id="lead-recipient-subject-block">
@@ -460,7 +497,7 @@
       <div class="form-block">
         <label class="form-label">Attachments</label>
         <div class="file-drop">
-          <button type="button" class="file-drop-btn" id="attach-btn">📎 Attach files</button>
+          <button type="button" class="file-drop-btn" id="attach-btn" aria-label="Attach files">📎 Attach files</button>
           <input type="file" id="field-attachments" multiple>
           <span>Up to 10 files, 10MB each</span>
         </div>
@@ -470,9 +507,9 @@
     <div class="compose-foot">
       <span class="send-status" id="send-status"></span>
       <div class="foot-actions">
-        <button class="btn-ghost" id="reset-btn">↺ Reset</button>
-        <button class="btn-ghost" id="copy-btn">⧉ Copy all info</button>
-        <button class="btn-primary" id="send-btn">✈ Send email</button>
+        <button class="btn-ghost" id="reset-btn" aria-label="Reset form">↺ Reset</button>
+        <button class="btn-ghost" id="copy-btn" aria-label="Copy all info to clipboard">⧉ Copy all info</button>
+        <button class="btn-primary" id="send-btn" aria-label="Send email">✈ Send email</button>
       </div>
     </div>
   </div>
@@ -622,8 +659,30 @@ function decodeBody(payload){
   return decoded;
 }
 
-function parseMessage(m){
-  const headers = m.payload.headers;
+function extractAttachments(payload){
+  const results = [];
+  function walk(part){
+    if(!part) return;
+    if(part.filename && part.filename.length > 0 && part.body && part.body.attachmentId){
+      results.push({
+        filename: part.filename,
+        mimeType: part.mimeType || 'application/octet-stream',
+        attachmentId: part.body.attachmentId,
+        size: part.body.size || 0
+      });
+    }
+    if(part.parts){ part.parts.forEach(walk); }
+  }
+  walk(payload);
+  return results;
+}
+
+// Lightweight fields used for the list view — headers + attachment metadata
+// only, no message body, so opening a folder is fast and cheap.
+const LIST_FIELDS = 'id,threadId,snippet,labelIds,payload/headers,payload/parts(filename,mimeType,body/attachmentId,body/size,parts(filename,mimeType,body/attachmentId,body/size))';
+
+function parseMessageMetadata(m){
+  const headers = (m.payload && m.payload.headers) || [];
   return {
     id: m.id,
     threadId: m.threadId,
@@ -636,8 +695,19 @@ function parseMessage(m){
     date: headerVal(headers, 'Date'),
     snippet: m.snippet,
     unread: (m.labelIds || []).includes('UNREAD'),
-    body: decodeBody(m.payload)
+    hasAttachments: extractAttachments(m.payload || {}).length > 0,
+    body: null,
+    attachments: null
   };
+}
+
+// Full body + attachment list, fetched only when a message is actually opened.
+async function hydrateMessage(m){
+  if(m.body !== null) return m;
+  const full = await gmailFetch(`/gmail/v1/users/me/messages/${m.id}?format=full`);
+  m.body = decodeBody(full.payload);
+  m.attachments = extractAttachments(full.payload);
+  return m;
 }
 
 let nextPageTokens = { INBOX: null, SENT: null };
@@ -647,39 +717,113 @@ async function loadFolder(folder, silent){
   if(!silent){
     el('msg-list').innerHTML = '<div style="padding:20px;color:var(--ink-soft);font-size:13px;">Loading…</div>';
   }
-  const labelQuery = folder === 'INBOX' ? 'label:inbox' : 'label:sent';
-  const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery)}&maxResults=${PAGE_SIZE}`);
-  const ids = (listRes.messages || []).map(m => m.id);
+  try{
+    const labelQuery = folder === 'INBOX' ? 'label:inbox' : 'label:sent';
+    const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery)}&maxResults=${PAGE_SIZE}`);
+    const ids = (listRes.messages || []).map(m => m.id);
 
-  const full = await Promise.all(ids.map(id =>
-    gmailFetch(`/gmail/v1/users/me/messages/${id}?format=full`)
-  ));
+    const full = await Promise.all(ids.map(id =>
+      gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
+    ));
 
-  messagesCache[folder] = full.map(parseMessage);
-  nextPageTokens[folder] = listRes.nextPageToken || null;
+    messagesCache[folder] = full.map(parseMessageMetadata);
+    nextPageTokens[folder] = listRes.nextPageToken || null;
 
-  el('count-' + folder.toLowerCase()).textContent = full.length;
-  if(folder === currentFolder && !silent){
-    renderList();
+    updateNavCounts();
+    if(folder === currentFolder && !silent){
+      renderList();
+    }
+  }catch(e){
+    console.error(e);
+    if(folder === currentFolder && !silent){
+      el('msg-list').innerHTML = `
+        <div style="padding:20px;color:var(--warn);font-size:13px;">
+          Couldn't load this folder.
+          <div style="margin-top:10px;"><button class="btn-ghost" id="retry-load-btn">Try again</button></div>
+        </div>`;
+      const retryBtn = document.getElementById('retry-load-btn');
+      if(retryBtn) retryBtn.addEventListener('click', () => loadFolder(folder));
+    }
   }
 }
 
 async function loadMoreFolder(folder){
   if(!nextPageTokens[folder]) return;
-  const labelQuery = folder === 'INBOX' ? 'label:inbox' : 'label:sent';
-  const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery)}&maxResults=${PAGE_SIZE}&pageToken=${encodeURIComponent(nextPageTokens[folder])}`);
-  const ids = (listRes.messages || []).map(m => m.id);
+  try{
+    const labelQuery = folder === 'INBOX' ? 'label:inbox' : 'label:sent';
+    const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery)}&maxResults=${PAGE_SIZE}&pageToken=${encodeURIComponent(nextPageTokens[folder])}`);
+    const ids = (listRes.messages || []).map(m => m.id);
 
-  const full = await Promise.all(ids.map(id =>
-    gmailFetch(`/gmail/v1/users/me/messages/${id}?format=full`)
-  ));
+    const full = await Promise.all(ids.map(id =>
+      gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
+    ));
 
-  messagesCache[folder] = messagesCache[folder].concat(full.map(parseMessage));
-  nextPageTokens[folder] = listRes.nextPageToken || null;
+    messagesCache[folder] = messagesCache[folder].concat(full.map(parseMessageMetadata));
+    nextPageTokens[folder] = listRes.nextPageToken || null;
 
-  el('count-' + folder.toLowerCase()).textContent = messagesCache[folder].length;
-  if(folder === currentFolder){
-    renderList();
+    updateNavCounts();
+    if(folder === currentFolder){
+      renderList();
+    }
+  }catch(e){
+    console.error(e);
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if(loadMoreBtn) loadMoreBtn.textContent = 'Failed — try again';
+  }
+}
+
+function updateNavCounts(){
+  const inboxUnread = (messagesCache.INBOX || []).filter(m => m.unread).length;
+  el('count-inbox').textContent = inboxUnread > 0 ? inboxUnread : '';
+  const sentCount = (messagesCache.SENT || []).length;
+  el('count-sent').textContent = sentCount > 0 ? sentCount : '';
+}
+
+async function markAsRead(m){
+  if(!m.unread) return;
+  try{
+    await gmailFetch(`/gmail/v1/users/me/messages/${m.id}/modify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ removeLabelIds: ['UNREAD'] })
+    });
+    m.unread = false;
+    updateNavCounts();
+    if(!searchActive){
+      renderList();
+    }
+  }catch(e){
+    console.error('Failed to mark as read', e);
+  }
+}
+
+function formatBytes(bytes){
+  if(!bytes) return '0 KB';
+  const kb = bytes / 1024;
+  if(kb < 1024) return kb.toFixed(1) + ' KB';
+  return (kb / 1024).toFixed(1) + ' MB';
+}
+
+async function downloadAttachment(messageId, att){
+  try{
+    const res = await gmailFetch(`/gmail/v1/users/me/messages/${messageId}/attachments/${att.attachmentId}`);
+    const base64 = res.data.replace(/-/g, '+').replace(/_/g, '/');
+    const byteChars = atob(base64);
+    const byteNumbers = new Array(byteChars.length);
+    for(let i = 0; i < byteChars.length; i++){ byteNumbers[i] = byteChars.charCodeAt(i); }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: att.mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = att.filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }catch(e){
+    console.error('Attachment download failed', e);
+    alert('Could not download this attachment — check your connection and try again.');
   }
 }
 
@@ -702,12 +846,18 @@ async function performSearch(term){
   try{
     const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(q)}&maxResults=50`);
     const ids = (listRes.messages || []).map(m => m.id);
-    const full = await Promise.all(ids.map(id => gmailFetch(`/gmail/v1/users/me/messages/${id}?format=full`)));
-    searchResultsCache = full.map(parseMessage);
+    const full = await Promise.all(ids.map(id => gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)));
+    searchResultsCache = full.map(parseMessageMetadata);
     renderList();
   }catch(e){
     console.error(e);
-    el('msg-list').innerHTML = '<div style="padding:20px;color:var(--warn);font-size:13px;">Search failed — check console.</div>';
+    el('msg-list').innerHTML = `
+      <div style="padding:20px;color:var(--warn);font-size:13px;">
+        Search failed.
+        <div style="margin-top:10px;"><button class="btn-ghost" id="retry-search-btn">Try again</button></div>
+      </div>`;
+    const retryBtn = document.getElementById('retry-search-btn');
+    if(retryBtn) retryBtn.addEventListener('click', () => performSearch(term));
   }
 }
 
@@ -726,23 +876,46 @@ el('search-input').addEventListener('keydown', (e) => {
 });
 el('search-clear-btn').addEventListener('click', clearSearch);
 
+function groupByThread(list){
+  const map = new Map();
+  list.forEach(m => {
+    if(!map.has(m.threadId)) map.set(m.threadId, []);
+    map.get(m.threadId).push(m);
+  });
+  const groups = [];
+  map.forEach(messages => {
+    messages.sort((a, b) => new Date(a.date) - new Date(b.date));
+    groups.push({
+      threadId: messages[0].threadId,
+      messages,
+      latest: messages[messages.length - 1],
+      count: messages.length,
+      unread: messages.some(m => m.unread)
+    });
+  });
+  groups.sort((a, b) => new Date(b.latest.date) - new Date(a.latest.date));
+  return groups;
+}
+
 function renderList(){
-  const list = searchActive ? searchResultsCache : (messagesCache[currentFolder] || []);
+  const flatList = searchActive ? searchResultsCache : (messagesCache[currentFolder] || []);
+  const groups = groupByThread(flatList);
   const container = el('msg-list');
-  if(list.length === 0){
+  if(groups.length === 0){
     container.innerHTML = '<div style="padding:20px;color:var(--ink-soft);font-size:13px;">No messages.</div>';
     return;
   }
-  container.innerHTML = list.map((m, i) => {
-    const addr = parseAddress(currentFolder === 'INBOX' ? m.from : m.to);
+  container.innerHTML = groups.map((g, i) => {
+    const addr = parseAddress(currentFolder === 'INBOX' ? g.latest.from : g.latest.to);
+    const hasAttachment = g.messages.some(m => m.hasAttachments);
     return `
-    <div class="msg-row ${m.unread ? 'unread' : ''}" data-idx="${i}">
+    <div class="msg-row ${g.unread ? 'unread' : ''}" data-idx="${i}">
       <div class="msg-top">
         <span class="msg-from">${escapeHtml(addr.name || addr.email)}</span>
-        <span class="msg-date">${formatDate(m.date)}</span>
+        <span class="msg-date">${formatDate(g.latest.date)}</span>
       </div>
-      <div class="msg-subject">${escapeHtml(m.subject)}</div>
-      <div class="msg-snippet">${escapeHtml(m.snippet)}</div>
+      <div class="msg-subject">${escapeHtml(g.latest.subject)}${g.count > 1 ? `<span class="thread-count">${g.count}</span>` : ''}${hasAttachment ? '<span class="attachment-flag" title="Has attachment">📎</span>' : ''}</div>
+      <div class="msg-snippet">${escapeHtml(g.latest.snippet)}</div>
     </div>
   `;
   }).join('');
@@ -759,7 +932,7 @@ function renderList(){
     row.addEventListener('click', () => {
       container.querySelectorAll('.msg-row').forEach(r => r.classList.remove('selected'));
       row.classList.add('selected');
-      renderReading(list[parseInt(row.dataset.idx)]);
+      openThread(groups[parseInt(row.dataset.idx)]);
     });
   });
 
@@ -797,10 +970,9 @@ function formatFullDate(dateStr){
     + ', ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-function renderReading(m){
+function headerAndSubLineFor(m){
   const isInbox = currentFolder === 'INBOX';
   const legacyLower = (legacyEmailAddress || '').toLowerCase();
-
   let headerAddr, subLine;
   if(isInbox){
     headerAddr = parseAddress(m.from);
@@ -812,31 +984,95 @@ function renderReading(m){
     const toAddr = parseAddress(m.to);
     subLine = 'to ' + (toAddr.name || toAddr.email);
   }
+  return { headerAddr, subLine };
+}
 
-  const initial = (headerAddr.name || headerAddr.email || '?').trim().charAt(0).toUpperCase();
-  const color = avatarColor(headerAddr.email || headerAddr.name || 'x');
-  const showEmailSeparately = headerAddr.email && headerAddr.name && headerAddr.email !== headerAddr.name;
+function renderReadingThread(messages){
+  const latest = messages[messages.length - 1];
+
+  const cardsHtml = messages.map(m => {
+    const { headerAddr, subLine } = headerAndSubLineFor(m);
+    const initial = (headerAddr.name || headerAddr.email || '?').trim().charAt(0).toUpperCase();
+    const color = avatarColor(headerAddr.email || headerAddr.name || 'x');
+    const showEmailSeparately = headerAddr.email && headerAddr.name && headerAddr.email !== headerAddr.name;
+
+    const attachmentsHtml = (m.attachments && m.attachments.length > 0) ? `
+      <div class="attachment-list">
+        ${m.attachments.map(a => `
+          <div class="attachment-chip">
+            📎 ${escapeHtml(a.filename)} <span class="attachment-size">(${formatBytes(a.size)})</span>
+            <button type="button" class="attachment-download-btn" data-msgid="${escapeHtml(m.id)}" data-attid="${escapeHtml(a.attachmentId)}" data-filename="${escapeHtml(a.filename)}" data-mimetype="${escapeHtml(a.mimeType)}">Download</button>
+          </div>
+        `).join('')}
+      </div>
+    ` : '';
+
+    return `
+      <div class="thread-message">
+        <div class="read-header-row">
+          <div class="read-avatar" style="background:${color};">${escapeHtml(initial)}</div>
+          <div class="read-sender-block">
+            <div class="read-sender-name">${escapeHtml(headerAddr.name)}${showEmailSeparately ? `<span class="read-sender-email">&lt;${escapeHtml(headerAddr.email)}&gt;</span>` : ''}</div>
+            <div class="read-to-line">${escapeHtml(subLine)}</div>
+          </div>
+          <div class="read-date">${escapeHtml(formatFullDate(m.date))}</div>
+        </div>
+        <div class="read-body">${escapeHtml(m.body || '')}</div>
+        ${attachmentsHtml}
+      </div>
+    `;
+  }).join('');
 
   el('reading-pane').innerHTML = `
     <div class="read-topbar">
-      <div class="read-subject">${escapeHtml(m.subject)}</div>
+      <div class="read-subject">${escapeHtml(latest.subject)}</div>
       <div class="read-actions-top">
-        <button class="btn-ghost" id="reply-btn">↩ Reply</button>
-        <button class="btn-ghost" id="reply-all-btn">↩↩ Reply All</button>
+        <button class="btn-ghost" id="reply-btn" aria-label="Reply">↩ Reply</button>
+        <button class="btn-ghost" id="reply-all-btn" aria-label="Reply all">↩↩ Reply All</button>
       </div>
     </div>
-    <div class="read-header-row">
-      <div class="read-avatar" style="background:${color};">${escapeHtml(initial)}</div>
-      <div class="read-sender-block">
-        <div class="read-sender-name">${escapeHtml(headerAddr.name)}${showEmailSeparately ? `<span class="read-sender-email">&lt;${escapeHtml(headerAddr.email)}&gt;</span>` : ''}</div>
-        <div class="read-to-line">${escapeHtml(subLine)}</div>
-      </div>
-      <div class="read-date">${escapeHtml(formatFullDate(m.date))}</div>
-    </div>
-    <div class="read-body">${escapeHtml(m.body)}</div>
+    ${cardsHtml}
   `;
-  el('reply-btn').addEventListener('click', () => openReplyCompose(m, false));
-  el('reply-all-btn').addEventListener('click', () => openReplyCompose(m, true));
+
+  el('reply-btn').addEventListener('click', () => openReplyCompose(latest, false));
+  el('reply-all-btn').addEventListener('click', () => openReplyCompose(latest, true));
+
+  el('reading-pane').querySelectorAll('.attachment-download-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      downloadAttachment(btn.dataset.msgid, {
+        attachmentId: btn.dataset.attid,
+        filename: btn.dataset.filename,
+        mimeType: btn.dataset.mimetype
+      });
+    });
+  });
+}
+
+let currentOpenGroup = null;
+
+async function openThread(group){
+  currentOpenGroup = group;
+  el('reading-pane').innerHTML = `
+    <div class="empty-state"><p>Loading…</p></div>
+  `;
+  try{
+    await Promise.all(group.messages.map(hydrateMessage));
+  }catch(e){
+    console.error(e);
+    el('reading-pane').innerHTML = `
+      <div class="empty-state">
+        <p style="color:var(--warn);">Couldn't load this message.</p>
+        <button class="btn-ghost" id="retry-open-btn">Try again</button>
+      </div>
+    `;
+    const retryBtn = document.getElementById('retry-open-btn');
+    if(retryBtn) retryBtn.addEventListener('click', () => openThread(group));
+    return;
+  }
+  renderReadingThread(group.messages);
+  if(currentFolder === 'INBOX'){
+    group.messages.filter(m => m.unread).forEach(m => markAsRead(m));
+  }
 }
 
 function escapeHtml(str){
@@ -862,6 +1098,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
     item.classList.add('active');
     currentFolder = item.dataset.folder;
     searchActive = false;
+    currentOpenGroup = null;
     el('search-input').value = '';
     el('search-clear-btn').style.display = 'none';
     el('list-title').textContent = currentFolder === 'INBOX' ? 'Inbox' : 'Sent';
@@ -979,6 +1216,7 @@ function resetForm(){
 }
 
 let isReplyMode = false;
+let isQuickMode = false;
 let replyContext = null;
 
 function extractEmail(str){
@@ -995,6 +1233,7 @@ function parseAddressList(str){
 function openCompose(){
   resetForm();
   isReplyMode = false;
+  isQuickMode = false;
   replyContext = null;
   el('reply-message-block').style.display = 'none';
   el('lead-fields-block').style.display = 'block';
@@ -1006,6 +1245,7 @@ function openCompose(){
 function openReplyCompose(m, replyAll){
   resetForm();
   isReplyMode = true;
+  isQuickMode = false;
   replyContext = {
     threadId: m.threadId,
     inReplyTo: m.messageIdHeader,
@@ -1038,8 +1278,46 @@ function openReplyCompose(m, replyAll){
   el('compose-overlay').classList.add('open');
 }
 
+function openQuickCompose(){
+  resetForm();
+  isReplyMode = false;
+  isQuickMode = true;
+  replyContext = null;
+
+  el('reply-recipient-subject-block').style.display = 'none';
+  el('lead-recipient-subject-block').style.display = 'block';
+  el('reply-message-block').style.display = 'block';
+  el('lead-fields-block').style.display = 'none';
+
+  el('compose-overlay').classList.add('open');
+}
+
+function isComposeDirty(){
+  const hasBody = el('field-reply-body').value.trim() !== '';
+  if(isReplyMode){
+    return el('field-reply-to').value.trim() !== '' ||
+      el('field-reply-subject').value.trim() !== '' ||
+      hasBody || attachedFiles.length > 0;
+  }
+  if(isQuickMode){
+    return getRecipient() !== '' || getSubject() !== '' || hasBody || attachedFiles.length > 0;
+  }
+  const anyLeadField = FIELD_LABELS.some(([id]) => el(id).value && el(id).value.trim() !== '');
+  return getRecipient() !== '' || getSubject() !== '' || anyLeadField ||
+    el('field-explanation').value.trim() !== '' || attachedFiles.length > 0;
+}
+
+function closeComposeWithConfirm(){
+  if(isComposeDirty() && !window.confirm('Discard this message?')) return;
+  el('compose-overlay').classList.remove('open');
+}
+
 el('compose-open-btn').addEventListener('click', openCompose);
-el('compose-close-btn').addEventListener('click', () => el('compose-overlay').classList.remove('open'));
+el('quick-compose-open-btn').addEventListener('click', openQuickCompose);
+el('compose-close-btn').addEventListener('click', closeComposeWithConfirm);
+el('compose-overlay').addEventListener('click', (e) => {
+  if(e.target === el('compose-overlay')) closeComposeWithConfirm();
+});
 el('reset-btn').addEventListener('click', resetForm);
 
 el('copy-btn').addEventListener('click', async () => {
@@ -1130,9 +1408,9 @@ el('send-btn').addEventListener('click', async () => {
   if(!subject){ el('send-status').textContent = 'Subject is required.'; return; }
 
   let bodyText;
-  if(isReplyMode){
+  if(isReplyMode || isQuickMode){
     bodyText = el('field-reply-body').value.trim();
-    if(!bodyText){ el('send-status').textContent = 'Write a reply message.'; return; }
+    if(!bodyText){ el('send-status').textContent = 'Write a message.'; return; }
   }else{
     const leadSource = el('field-lead-source').value;
     const explanation = el('field-explanation').value.trim();
@@ -1164,9 +1442,76 @@ el('send-btn').addEventListener('click', async () => {
   }
 });
 
+/* ---------------- Dark mode ---------------- */
+function initTheme(){
+  const saved = localStorage.getItem('leadmail-theme');
+  if(saved === 'dark'){
+    document.documentElement.dataset.theme = 'dark';
+    el('theme-toggle-btn').textContent = '☀️';
+  }
+}
+
+function toggleTheme(){
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  const next = isDark ? 'light' : 'dark';
+  if(next === 'dark'){
+    document.documentElement.dataset.theme = 'dark';
+  }else{
+    delete document.documentElement.dataset.theme;
+  }
+  localStorage.setItem('leadmail-theme', next);
+  el('theme-toggle-btn').textContent = next === 'dark' ? '☀️' : '🌙';
+}
+
+el('theme-toggle-btn').addEventListener('click', toggleTheme);
+
+/* ---------------- Keyboard shortcuts ---------------- */
+function navigateList(delta){
+  const rows = Array.from(document.querySelectorAll('.msg-row'));
+  if(rows.length === 0) return;
+  let idx = rows.findIndex(r => r.classList.contains('selected'));
+  idx = idx === -1 ? 0 : Math.min(rows.length - 1, Math.max(0, idx + delta));
+  rows[idx].click();
+  rows[idx].scrollIntoView({ block: 'nearest' });
+}
+
+document.addEventListener('keydown', (e) => {
+  const tag = (e.target.tagName || '').toLowerCase();
+  const isTyping = tag === 'input' || tag === 'textarea' || tag === 'select';
+
+  if(e.key === 'Escape'){
+    if(el('compose-overlay').classList.contains('open')){
+      closeComposeWithConfirm();
+    }else if(searchActive){
+      clearSearch();
+    }
+    return;
+  }
+
+  if(isTyping) return;
+
+  if(e.key === '/'){
+    e.preventDefault();
+    el('search-input').focus();
+    return;
+  }
+
+  if(e.key === 'r' && currentOpenGroup){
+    e.preventDefault();
+    openReplyCompose(currentOpenGroup.latest, false);
+    return;
+  }
+
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault();
+    navigateList(e.key === 'ArrowDown' ? 1 : -1);
+  }
+});
+
 /* ---------------- Boot ---------------- */
 window.addEventListener('load', () => {
   showConfigWarningIfNeeded();
+  initTheme();
   const wait = setInterval(() => {
     if(window.google && google.accounts && google.accounts.id){
       clearInterval(wait);
