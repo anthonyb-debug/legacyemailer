@@ -194,6 +194,11 @@
     margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-soft);
   }
   .nav-item.active .nav-count{color:var(--accent);}
+  .nav-section-label{
+    font-size:10.5px;font-family:var(--mono);color:var(--ink-soft);
+    text-transform:uppercase;letter-spacing:0.04em;
+    margin:16px 12px 6px;
+  }
 
   .main{
     flex:1;
@@ -514,6 +519,10 @@
       <div class="nav-item" data-folder="SENT">
         Sent <span class="nav-count" id="count-sent"></span>
       </div>
+      <div class="nav-section-label">Lead Source</div>
+      <div class="nav-item lead-source-item" data-source="Legacy Healing LA Chat">LA Chat</div>
+      <div class="nav-item lead-source-item" data-source="Legacy Healing Chat">Legacy Chat</div>
+      <div class="nav-item lead-source-item" data-source="DCF Chat">DCF Chat</div>
     </div>
     <div class="sidebar-footer">
       <div class="sidebar-logo">
@@ -1339,6 +1348,7 @@ function clearSearch(){
   el('search-input').value = '';
   el('search-clear-btn').style.display = 'none';
   el('list-title').textContent = currentFolder === 'INBOX' ? 'Inbox' : 'Sent';
+  document.querySelectorAll('.lead-source-item').forEach(i => i.classList.remove('active'));
   clearSelection();
   renderList();
 }
@@ -1651,10 +1661,11 @@ function formatDate(dateStr){
     : d.toLocaleDateString([], {month:'short', day:'numeric'});
 }
 
-document.querySelectorAll('.nav-item').forEach(item => {
+document.querySelectorAll('.nav-item[data-folder]').forEach(item => {
   item.addEventListener('click', () => {
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    document.querySelectorAll('.nav-item[data-folder]').forEach(i => i.classList.remove('active'));
     item.classList.add('active');
+    document.querySelectorAll('.lead-source-item').forEach(i => i.classList.remove('active'));
     currentFolder = item.dataset.folder;
     searchActive = false;
     currentOpenGroup = null;
@@ -1669,6 +1680,16 @@ document.querySelectorAll('.nav-item').forEach(item => {
         <p>Select a message to read it here.</p>
       </div>`;
     renderList();
+  });
+});
+
+document.querySelectorAll('.lead-source-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.lead-source-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    const source = item.dataset.source;
+    el('search-input').value = `"Lead Source: ${source}"`;
+    performSearch(el('search-input').value);
   });
 });
 
