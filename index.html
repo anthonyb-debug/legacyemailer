@@ -1063,7 +1063,14 @@ async function boot(){
   const profile = await gmailFetch('/gmail/v1/users/me/profile');
   legacyEmailAddress = profile.emailAddress;
 
-  loadFolder('INBOX');
+  // Load Inbox first and wait for it to finish before starting Sent.
+  // Previously both fired at once, each fanning out up to 8 concurrent
+  // per-message requests — up to 16 simultaneous requests competing for
+  // the same connections/rate limit right at boot, which is what made
+  // the initial load (and post-refresh) feel laggish. Sent still loads
+  // eagerly in the background so switching tabs stays instant — it just
+  // no longer fights Inbox for bandwidth.
+  await loadFolder('INBOX');
   loadFolder('SENT', true);
 }
 
