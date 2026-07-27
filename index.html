@@ -1828,7 +1828,7 @@ el('field-subject-select').addEventListener('change', () => {
 });
 
 function buildBodyText(){
-  const lines = FIELD_LABELS.map(([id, label]) => `${label}: ${el(id).value.trim()}`);
+  const lines = FIELD_LABELS.map(([id, label]) => `${label}: ${el(id).value.trim() || 'N/A'}`);
   const explanation = el('field-explanation').value.trim();
   return lines.join('\n') + '\n\nExplanation:\n' + explanation;
 }
@@ -1872,6 +1872,37 @@ el('field-attachments').addEventListener('change', (e) => {
   renderFileList();
 });
 
+// Explicit preferred first names per agent — checked before falling back
+// to whatever Google's account profile happens to say (which might be a
+// nickname mismatch, a middle name, etc).
+const AGENT_PREFERRED_NAMES = {
+  'byron@allianceglobalsolutions.com': 'Jake',
+  'ella@allianceglobalsolutions.com': 'Ella',
+  'stephanie@allianceglobalsolutions.com': 'Joanne',
+  'tristan@allianceglobalsolutions.com': 'Tristan',
+  'vincent@allianceglobalsolutions.com': 'John',
+  'julia@allianceglobalsolutions.com': 'Julia',
+  'k.perez@allianceglobalsolutions.com': 'Karen',
+  'larinz@allianceglobalsolutions.com': 'Larinz',
+  'cecille@allianceglobalsolutions.com': 'Cecile',
+  'r.sagun@allianceglobalsolutions.com': 'Rae',
+  'melanie@allianceglobalsolutions.com': 'Melanie',
+  'marian@allianceglobalsolutions.com': 'Marian',
+  'nicole@allianceglobalsolutions.com': 'Nikki',
+  'remington@allianceglobalsolutions.com': 'Tony',
+  'samuel@allianceglobalsolutions.com': 'Sam',
+  's.bernardo@allianceglobalsolutions.com': 'Sean',
+  'y.magbanua@allianceglobalsolutions.com': 'Rubbie'
+};
+
+function getAgentPreferredName(profile){
+  if(!profile) return '';
+  const email = (profile.email || '').toLowerCase();
+  if(AGENT_PREFERRED_NAMES[email]) return AGENT_PREFERRED_NAMES[email];
+  const firstName = profile.given_name || (profile.name || '').trim().split(/\s+/)[0] || '';
+  return firstName || profile.email || '';
+}
+
 function resetForm(){
   el('field-recipient-select').value = '';
   el('field-recipient-custom').value = '';
@@ -1890,7 +1921,7 @@ function resetForm(){
   el('send-status').className = 'send-status';
 
   if(agentProfile){
-    el('field-agent').value = agentProfile.name || agentProfile.email || '';
+    el('field-agent').value = getAgentPreferredName(agentProfile);
   }
 }
 
