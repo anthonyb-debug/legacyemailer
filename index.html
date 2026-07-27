@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Legacy Healing Center Email Portal</title>
+<script>
+  // Runs synchronously, before any CSS paints, so there's no flash of the
+  // wrong theme. Preference: localStorage first, else system preference.
+  (function(){
+    var saved = localStorage.getItem('theme');
+    var theme = (saved === 'light' || saved === 'dark')
+      ? saved
+      : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    if(theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  })();
+</script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 <style>
@@ -27,6 +38,8 @@
     --warning:#f59e0b;      /* true "heads up" warnings (e.g. setup banner) */
     --warn:#ef4444;         /* danger / error (kept as --warn to avoid touching
                                 the many existing rules already using it) */
+    --hover-bg:#f8fafc;     /* generic row/button hover background */
+    --hover-border:#c9cfd8; /* generic hover border */
     --radius-sm:8px;
     --radius-md:10px;
     --radius-lg:12px;
@@ -35,6 +48,27 @@
     --shadow-lg:0 20px 48px rgba(17,24,39,0.14);
     --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
     --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  /* ---------- Dark mode ----------
+     Every rule in this file already reads its colors from the variables
+     above, so overriding them here re-themes the whole app (sidebar,
+     lists, reader, compose, forms, buttons, dropdowns, etc.) without
+     touching a single component rule. */
+  html[data-theme="dark"]{
+    --ink:#F8FAFC;
+    --ink-soft:#94A3B8;
+    --paper:#0F172A;
+    --panel:#1E293B;
+    --line:#334155;
+    --accent:#3B82F6;
+    --accent-hover:#60A5FA;
+    --accent-soft:#1E3A5F;
+    --success:#22c55e;
+    --warning:#f59e0b;
+    --warn:#f87171;
+    --hover-bg:#243247;     /* slightly lighter than --panel, per spec */
+    --hover-border:#475569;
   }
 
   *{box-sizing:border-box;}
@@ -49,8 +83,12 @@
     -webkit-font-smoothing:antialiased;
   }
 
-  /* Subtle, consistent transitions everywhere — 150ms, nothing fancier */
-  button, .msg-row, .form-control, .nav-item, .compose-btn, a, .refresh-link{
+  /* Subtle, consistent transitions everywhere — 150ms, nothing fancier.
+     Limited to background/text/border/shadow, per spec — no layout or
+     transform animation. */
+  button, .msg-row, .form-control, .nav-item, .compose-btn, a, .refresh-link,
+  body, .compose-modal, .signin-card, .list-header, .list-pane, .sidebar,
+  .reading-pane, .attachment-chip, .file-chip, .thread-message-collapsed{
     transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
   }
 
@@ -108,6 +146,18 @@
   }
   .topbar .btn-ghost:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.45);}
 
+  /* Theme toggle — deliberately simple: an icon button, not a switch */
+  .theme-toggle-btn{
+    padding:7px 9px;
+    display:flex;align-items:center;justify-content:center;
+    line-height:1;
+  }
+  .theme-icon{
+    display:inline-block;
+    font-size:15px;
+    transition: transform .18s ease, opacity .18s ease;
+  }
+
   /* ---------- Buttons: three consistent styles (primary / secondary / danger) ---------- */
   button{
     font-family:var(--sans);
@@ -129,7 +179,7 @@
     background:var(--panel);color:var(--ink);padding:8px 12px;
     border:1px solid var(--line);
   }
-  .btn-ghost:hover{border-color:#c9cfd8;background:#fbfcfe;}
+  .btn-ghost:hover{border-color:var(--hover-border);background:var(--hover-bg);}
   /* "Danger" style — used only where an action is destructive-ish (e.g. the
      compose Reset button, which discards entered data) */
   .btn-danger{
@@ -188,7 +238,7 @@
     font-size:13.5px;color:var(--ink-soft);
     cursor:pointer;margin-bottom:2px;
   }
-  .nav-item:hover{background:var(--paper);color:var(--ink);}
+  .nav-item:hover{background:var(--hover-bg);color:var(--ink);}
   .nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:600;}
   .nav-count{
     margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-soft);
@@ -241,7 +291,7 @@
     align-items:flex-start;
     gap:11px;
   }
-  .msg-row:hover{background:var(--paper);}
+  .msg-row:hover{background:var(--hover-bg);}
   .msg-row.selected{background:var(--accent-soft);}
   .msg-row.unread .msg-from, .msg-row.unread .msg-subject{font-weight:700;color:var(--ink);}
   .msg-checkbox{margin-top:3px;flex-shrink:0;cursor:pointer;accent-color:var(--accent);width:16px;height:16px;}
@@ -368,7 +418,7 @@
     border-bottom:1px solid var(--line);
     margin-bottom:4px;
   }
-  .thread-message-collapsed:hover{background:var(--paper);}
+  .thread-message-collapsed:hover{background:var(--hover-bg);}
   .collapsed-avatar{
     width:28px;height:28px;border-radius:50%;flex-shrink:0;
     display:flex;align-items:center;justify-content:center;
@@ -462,7 +512,7 @@
     background:var(--panel);border:1px solid var(--line);color:var(--ink);
     padding:5px 10px;font-size:12px;border-radius:var(--radius-sm);flex-shrink:0;
   }
-  .file-drop-btn:hover{border-color:#c9cfd8;background:var(--paper);}
+  .file-drop-btn:hover{border-color:var(--hover-border);background:var(--hover-bg);}
   .file-list{margin-top:8px;display:flex;flex-direction:column;gap:5px;}
   .file-chip{
     display:flex;align-items:center;justify-content:space-between;
@@ -528,6 +578,9 @@
     <button type="button" id="search-clear-btn" style="display:none;" aria-label="Clear search">✕</button>
   </div>
   <div class="account-area">
+    <button type="button" class="btn-ghost theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <span class="theme-icon" id="theme-icon">🌙</span>
+    </button>
     <img id="agent-avatar" class="agent-avatar" style="display:none;" alt="">
     <span class="account-email" id="agent-label" style="display:none;"></span>
     <button class="btn-ghost" id="agent-signout-btn" style="display:none;">Sign out</button>
@@ -771,6 +824,42 @@ function showConfigWarningIfNeeded(){
     el('config-banner').classList.add('show');
   }
 }
+
+/* ---------------- Theme toggle (light/dark) ----------------
+   The actual <html data-theme="dark"> attribute is already applied
+   synchronously in <head> (before first paint) to avoid a flash of the
+   wrong theme. This just keeps the icon in sync and handles the click. */
+function currentTheme(){
+  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+}
+
+function syncThemeIcon(){
+  el('theme-icon').textContent = currentTheme() === 'dark' ? '☀️' : '🌙';
+}
+
+function toggleTheme(){
+  const icon = el('theme-icon');
+  const next = currentTheme() === 'dark' ? 'light' : 'dark';
+
+  // Brief, smooth icon swap (~150ms) rather than an abrupt flip
+  icon.style.transform = 'scale(0.6) rotate(90deg)';
+  icon.style.opacity = '0';
+
+  setTimeout(() => {
+    if(next === 'dark'){
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }else{
+      document.documentElement.removeAttribute('data-theme');
+    }
+    localStorage.setItem('theme', next);
+    syncThemeIcon();
+    icon.style.transform = 'scale(1) rotate(0deg)';
+    icon.style.opacity = '1';
+  }, 150);
+}
+
+el('theme-toggle-btn').addEventListener('click', toggleTheme);
+syncThemeIcon();
 
 /* ---------------- Agent identity sign-in ---------------- */
 function decodeJwtPayload(token){
