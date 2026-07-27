@@ -391,8 +391,12 @@
   .read-body a{color:var(--accent);}
 
   .read-body-html{
-    font-size:14px;line-height:1.65;color:var(--ink);word-wrap:break-word;overflow-wrap:break-word;
-    background:var(--panel);
+    font-size:14px;line-height:1.65;word-wrap:break-word;overflow-wrap:break-word;
+    /* Always a light card, regardless of app theme — raw email HTML
+       almost always hardcodes its own dark inline text color, so a
+       dark card here would make that text unreadable. */
+    background:#ffffff;
+    color:#1a1a1a;
     border:1px solid var(--line);
     padding:18px;
     border-radius:var(--radius-md);
@@ -477,7 +481,7 @@
   .compose-head{
     display:flex;justify-content:space-between;align-items:center;
     padding:14px 20px;border-bottom:1px solid var(--line);
-    background:var(--ink);border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+    background:#111827;border-radius:var(--radius-lg) var(--radius-lg) 0 0;
   }
   .compose-head span{color:#fff;font-size:13.5px;font-weight:600;}
   .compose-close{background:transparent;color:#fff;font-size:16px;padding:2px 8px;border-radius:6px;}
@@ -549,7 +553,7 @@
     pointer-events:none;
   }
   .toast{
-    background:var(--ink);color:#fff;padding:11px 16px;border-radius:var(--radius-sm);
+    background:#111827;color:#fff;padding:11px 16px;border-radius:var(--radius-sm);
     font-size:13px;box-shadow:var(--shadow-lg);max-width:340px;
     opacity:0;transform:translateY(8px);
     transition:opacity .2s ease, transform .2s ease;
@@ -595,7 +599,7 @@
   <div class="sidebar">
     <div class="sidebar-nav">
       <button class="compose-btn" id="compose-open-btn">✏️ New Lead</button>
-      <button class="compose-btn" id="quick-compose-open-btn" style="background:var(--ink);margin-bottom:16px;">✉️ Quick Email</button>
+      <button class="compose-btn" id="quick-compose-open-btn" style="background:#111827;margin-bottom:16px;">✉️ Quick Email</button>
       <div class="nav-item active" data-folder="INBOX">
         Inbox <span class="nav-count" id="count-inbox"></span>
       </div>
