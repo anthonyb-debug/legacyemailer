@@ -362,6 +362,26 @@
   .thread-message:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
   .thread-message .read-header-row{border-bottom:none;padding-bottom:0;margin-bottom:14px;}
 
+  .thread-message-collapsed{
+    display:flex;align-items:center;gap:12px;
+    padding:11px 4px;cursor:pointer;
+    border-bottom:1px solid var(--line);
+    margin-bottom:4px;
+  }
+  .thread-message-collapsed:hover{background:var(--paper);}
+  .collapsed-avatar{
+    width:28px;height:28px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;font-size:11px;font-family:var(--sans);
+  }
+  .collapsed-info{flex:1;min-width:0;display:flex;align-items:baseline;gap:8px;}
+  .collapsed-name{font-size:13px;font-weight:600;color:var(--ink);flex-shrink:0;}
+  .collapsed-snippet{
+    font-size:12.5px;color:var(--ink-soft);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .collapsed-date{font-family:var(--mono);font-size:11px;color:var(--ink-soft);flex-shrink:0;}
+
   .attachment-list{margin-top:16px;display:flex;flex-direction:column;gap:8px;}
   .attachment-chip{
     display:flex;align-items:center;gap:8px;flex-wrap:wrap;
@@ -893,11 +913,30 @@ async function gmailFetch(path, options = {}){
   return res.json();
 }
 
-// Runs several async calls in parallel but never lets a single flaky one
-// take down the whole batch — returns whatever succeeded, and reports how
-// many failed so the caller can decide whether to show a warning.
-async function fetchAllSettled(items, fn){
-  const results = await Promise.allSettled(items.map(fn));
+// Runs several async calls with limited concurrency (rather than firing
+// them all at once, which can trip Gmail's per-user rate limit on larger
+// batches like search's 50 results) and retries anything that still fails
+// once, after a short pause — most failures here are transient rate-limit
+// blips that succeed a moment later. Never lets remaining failures take
+// down the whole batch; returns whatever ultimately succeeded.
+async function fetchAllSettled(items, fn, concurrency = 8){
+  const results = new Array(items.length);
+  for(let i = 0; i < items.length; i += concurrency){
+    const batch = items.slice(i, i + concurrency);
+    const batchResults = await Promise.allSettled(batch.map(fn));
+    batchResults.forEach((r, j) => { results[i + j] = r; });
+  }
+
+  const failedIndexes = results
+    .map((r, i) => (r.status === 'rejected' ? i : -1))
+    .filter(i => i !== -1);
+
+  if(failedIndexes.length > 0){
+    await new Promise(resolve => setTimeout(resolve, 800));
+    const retryResults = await Promise.allSettled(failedIndexes.map(i => fn(items[i])));
+    retryResults.forEach((r, k) => { results[failedIndexes[k]] = r; });
+  }
+
   const values = [];
   let failures = 0;
   results.forEach(r => {
@@ -1527,7 +1566,8 @@ function headerAndSubLineFor(m){
 function renderReadingThread(messages){
   const latest = messages[messages.length - 1];
 
-  const cardsHtml = messages.map(m => {
+  const cardsHtml = messages.map((m, idx) => {
+    const isLast = idx === messages.length - 1;
     const { headerAddr, subLine } = headerAndSubLineFor(m);
     const initial = (headerAddr.name || headerAddr.email || '?').trim().charAt(0).toUpperCase();
     const color = avatarColor(headerAddr.email || headerAddr.name || 'x');
@@ -1548,8 +1588,8 @@ function renderReadingThread(messages){
       ? `<div class="read-body-html">${m.bodyHtml}</div>`
       : `<div class="read-body">${escapeHtml(m.body || '')}</div>`;
 
-    return `
-      <div class="thread-message" id="msg-card-${escapeHtml(m.id)}">
+    const fullCard = `
+      <div class="thread-message" id="msg-card-${escapeHtml(m.id)}" style="${isLast ? '' : 'display:none;'}">
         <div class="read-header-row">
           <div class="read-avatar" style="background:${color};">${escapeHtml(initial)}</div>
           <div class="read-sender-block">
@@ -1561,6 +1601,23 @@ function renderReadingThread(messages){
         ${bodyHtml}
         ${attachmentsHtml}
       </div>
+    `;
+
+    if(isLast) return fullCard;
+
+    // Collapsed one-line summary for every earlier message in the thread —
+    // click to expand in place, matching Gmail's collapsed-thread pattern.
+    const preview = m.snippet || (m.body ? m.body.slice(0, 120) : '');
+    return `
+      <div class="thread-message-collapsed" id="msg-collapsed-${escapeHtml(m.id)}" data-msgid="${escapeHtml(m.id)}">
+        <div class="collapsed-avatar" style="background:${color};">${escapeHtml(initial)}</div>
+        <div class="collapsed-info">
+          <span class="collapsed-name">${escapeHtml(headerAddr.name)}</span>
+          <span class="collapsed-snippet">${escapeHtml(preview)}</span>
+        </div>
+        <div class="collapsed-date">${escapeHtml(formatDate(m.date))}</div>
+      </div>
+      ${fullCard}
     `;
   }).join('');
 
@@ -1577,6 +1634,17 @@ function renderReadingThread(messages){
 
   el('reply-btn').addEventListener('click', () => openReplyCompose(latest, false));
   el('reply-all-btn').addEventListener('click', () => openReplyCompose(latest, true));
+
+  el('reading-pane').querySelectorAll('.thread-message-collapsed').forEach(row => {
+    row.addEventListener('click', () => {
+      const id = row.dataset.msgid;
+      const cardEl = document.getElementById(`msg-card-${id}`);
+      if(!cardEl) return;
+      const isHidden = cardEl.style.display === 'none';
+      cardEl.style.display = isHidden ? 'block' : 'none';
+      row.style.display = isHidden ? 'none' : 'flex';
+    });
+  });
 
   el('reading-pane').querySelectorAll('.attachment-download-btn').forEach(btn => {
     btn.addEventListener('click', () => {
