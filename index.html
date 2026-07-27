@@ -476,7 +476,9 @@
     padding:12px 20px;border-top:1px solid var(--line);
     display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
   }
-  .send-status{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);}
+  .send-status{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);transition:color .15s ease;}
+  .send-status.is-success{color:var(--success);font-family:var(--sans);font-size:13px;font-weight:700;}
+  .send-status.is-error{color:var(--warn);font-weight:600;}
   .foot-actions{display:flex;gap:8px;align-items:center;}
 
   ::-webkit-scrollbar{width:9px;}
@@ -504,6 +506,14 @@
   }
   .toast.toast-show{opacity:1;transform:translateY(0);}
   .toast.toast-error{background:#7f1d1d;}
+  .toast.toast-success{
+    background:var(--success);color:#fff;font-size:14px;font-weight:600;
+    padding:14px 20px;display:flex;align-items:center;gap:10px;
+  }
+  .toast.toast-success .toast-check{
+    width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.25);
+    display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;
+  }
 </style>
 </head>
 <body>
@@ -664,7 +674,7 @@
 
           <div class="form-block">
             <label class="form-label">Date of Birth</label>
-            <input type="date" class="form-control" id="field-dob">
+            <input type="text" class="form-control" id="field-dob" placeholder="MM/DD/YYYY">
           </div>
           <div class="form-block">
             <label class="form-label">Email</label>
@@ -1239,11 +1249,18 @@ async function bulkSetUnread(unread){
   renderList();
 }
 
-function showToast(text, isError){
+function showToast(text, variant){
   const container = el('toast-container');
   const toast = document.createElement('div');
-  toast.className = 'toast' + (isError ? ' toast-error' : '');
-  toast.textContent = text;
+  const isError = variant === true || variant === 'error';
+  const isSuccess = variant === 'success';
+
+  toast.className = 'toast' + (isError ? ' toast-error' : isSuccess ? ' toast-success' : '');
+  if(isSuccess){
+    toast.innerHTML = `<span class="toast-check">✓</span><span>${escapeHtml(text)}</span>`;
+  }else{
+    toast.textContent = text;
+  }
   toast.setAttribute('role', 'status');
   container.appendChild(toast);
 
@@ -1252,7 +1269,7 @@ function showToast(text, isError){
   setTimeout(() => {
     toast.classList.remove('toast-show');
     setTimeout(() => toast.remove(), 200);
-  }, 4500);
+  }, isSuccess ? 6000 : 4500);
 }
 
 // Kept as a thin alias so every existing call site (folder/search/bulk
@@ -1870,6 +1887,7 @@ function resetForm(){
   attachedFiles = [];
   renderFileList();
   el('send-status').textContent = '';
+  el('send-status').className = 'send-status';
 
   if(agentProfile){
     el('field-agent').value = agentProfile.name || agentProfile.email || '';
@@ -2094,6 +2112,7 @@ el('send-btn').addEventListener('click', async () => {
   }
 
   el('send-status').textContent = 'Sending…';
+  el('send-status').className = 'send-status';
   try{
     const raw = await buildRawMessage(to, subject, bodyText, attachedFiles, isReplyMode ? replyContext : null);
     const payload = { raw };
@@ -2105,14 +2124,17 @@ el('send-btn').addEventListener('click', async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    el('send-status').textContent = 'Sent.';
+    el('send-status').textContent = '✓ Sent!';
+    el('send-status').className = 'send-status is-success';
     setTimeout(() => {
       el('compose-overlay').classList.remove('open');
       loadFolder('SENT');
+      showToast(`Email sent to ${to}`, 'success');
     }, 700);
   }catch(e){
     console.error(e);
     el('send-status').textContent = 'Failed to send — check console.';
+    el('send-status').className = 'send-status is-error';
   }
 });
 
