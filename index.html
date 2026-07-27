@@ -228,23 +228,24 @@
 
   /* ---------- Email list ---------- */
   .msg-row{
-    padding:14px 18px;
+    padding:14px 18px 14px 15px;
     border-bottom:1px solid var(--line);
+    border-left:3px solid transparent;
     cursor:pointer;
     display:flex;
     align-items:flex-start;
     gap:11px;
   }
   .msg-row:hover{background:var(--paper);}
-  .msg-row.selected{background:var(--accent-soft);border-left:3px solid var(--accent);padding-left:15px;}
-  .msg-row.unread{position:relative;}
-  .msg-row.unread::before{
-    content:"";position:absolute;left:6px;top:50%;transform:translateY(-50%);
-    width:6px;height:6px;border-radius:50%;background:var(--accent);
-  }
-  .msg-row.unread.selected::before{display:none;} /* selected border already signals state */
+  .msg-row.selected{background:var(--accent-soft);}
   .msg-row.unread .msg-from, .msg-row.unread .msg-subject{font-weight:700;color:var(--ink);}
   .msg-checkbox{margin-top:3px;flex-shrink:0;cursor:pointer;accent-color:var(--accent);width:16px;height:16px;}
+  .msg-avatar{
+    width:32px;height:32px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;font-size:13px;font-family:var(--sans);
+    margin-top:1px;
+  }
   .msg-content{flex:1;min-width:0;}
   .msg-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:3px;}
   .msg-from{font-size:13.5px;font-weight:500;color:var(--ink);}
@@ -256,12 +257,39 @@
   }
   .attachment-flag{margin-left:6px;font-size:11px;}
   .msg-snippet{font-size:12.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .list-date-header{
+    padding:10px 18px 4px;font-size:11px;font-family:var(--mono);color:var(--ink-soft);
+    text-transform:uppercase;letter-spacing:0.04em;background:var(--panel);
+  }
 
   /* Shared placeholder style for Loading / Searching / No messages / errors —
      replaces several near-identical inline styles that used to be repeated
      directly in the JS template strings. */
   .list-placeholder{padding:24px 20px;color:var(--ink-soft);font-size:13px;text-align:center;}
   .list-placeholder.is-error{color:var(--warn);}
+
+  /* ---------- Skeleton loading ---------- */
+  .skeleton-row{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:7px;}
+  .skeleton-bar{
+    height:10px;border-radius:4px;
+    background:linear-gradient(90deg, var(--line) 25%, #eef1f5 37%, var(--line) 63%);
+    background-size:400% 100%;
+    animation:skeleton-shimmer 1.4s ease infinite;
+  }
+  .skeleton-bar.w-30{width:30%;}
+  .skeleton-bar.w-45{width:45%;}
+  .skeleton-bar.w-70{width:70%;}
+  .skeleton-bar.w-90{width:90%;}
+  .skeleton-avatar{
+    width:42px;height:42px;border-radius:50%;flex-shrink:0;
+    background:linear-gradient(90deg, var(--line) 25%, #eef1f5 37%, var(--line) 63%);
+    background-size:400% 100%;
+    animation:skeleton-shimmer 1.4s ease infinite;
+  }
+  @keyframes skeleton-shimmer{
+    0%{background-position:100% 50%;}
+    100%{background-position:0 50%;}
+  }
 
   /* ---------- Reading pane ---------- */
   .reading-pane{
@@ -379,7 +407,7 @@
   .compose-head span{color:#fff;font-size:13.5px;font-weight:600;}
   .compose-close{background:transparent;color:#fff;font-size:16px;padding:2px 8px;border-radius:6px;}
   .compose-close:hover{background:rgba(255,255,255,0.12);}
-  .compose-body{padding:16px 20px 4px;overflow-y:auto;flex:1;}
+  .compose-body{padding:16px 20px 4px;overflow-y:auto;flex:1;transition:opacity .15s ease;}
 
   .form-block{margin-bottom:12px;}
   .form-label{display:block;font-size:11.5px;font-weight:600;color:var(--ink);margin-bottom:4px;}
@@ -436,6 +464,21 @@
     display:none;
   }
   .banner.show{display:block;}
+
+  /* ---------- Toast notifications ---------- */
+  #toast-container{
+    position:fixed;bottom:20px;right:20px;z-index:100;
+    display:flex;flex-direction:column;gap:8px;
+    pointer-events:none;
+  }
+  .toast{
+    background:var(--ink);color:#fff;padding:11px 16px;border-radius:var(--radius-sm);
+    font-size:13px;box-shadow:var(--shadow-lg);max-width:340px;
+    opacity:0;transform:translateY(8px);
+    transition:opacity .2s ease, transform .2s ease;
+  }
+  .toast.toast-show{opacity:1;transform:translateY(0);}
+  .toast.toast-error{background:#7f1d1d;}
 </style>
 </head>
 <body>
@@ -488,7 +531,6 @@
         </div>
         <div class="list-header-actions">
           <span class="selection-info" id="selection-info" style="display:none;"></span>
-          <span class="selection-info" id="list-status" style="display:none;"></span>
           <span class="refresh-link" id="mark-read-btn" style="display:none;">Mark read</span>
           <span class="refresh-link" id="mark-unread-btn" style="display:none;">Mark unread</span>
           <span class="refresh-link" id="refresh-btn">Refresh</span>
@@ -741,14 +783,31 @@ function applyAgentSessionUI(){
   }
 }
 
+// Retries boot() once after a brief pause before giving up — a one-off
+// network blip right after signing in shouldn't immediately kick the
+// agent back out; only a repeated failure does.
+async function bootWithRetry(onFinalFailure){
+  try{
+    await boot();
+  }catch(e){
+    console.error('Boot failed, retrying once…', e);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    try{
+      await boot();
+    }catch(e2){
+      console.error(e2);
+      onFinalFailure(e2);
+    }
+  }
+}
+
 function handleCredentialResponse(response){
   agentIdToken = response.credential;
   agentProfile = decodeJwtPayload(agentIdToken);
   persistAgentSession();
   applyAgentSessionUI();
 
-  boot().catch(e => {
-    console.error(e);
+  bootWithRetry(e => {
     el('agent-error').textContent = 'Signed in, but the mail server rejected this account: ' + e.message;
     el('agent-error').style.display = 'block';
     signOutAgent();
@@ -939,29 +998,49 @@ function parseMessageMetadata(m){
   };
 }
 
+// Builds a fully-hydrated display message from a raw Gmail API message
+// object that's already been fetched with format=full (used both by
+// hydrateMessage below and by the unified thread fetch in openThread).
+function processFullMessage(m){
+  const headers = m.payload.headers || [];
+  const { html, text, attachments, inlineImages } = extractParts(m.payload);
+
+  let resolvedHtml = null;
+  if(html){
+    let htmlStr = base64UrlDecodeToUtf8(html);
+    htmlStr = htmlStr.replace(/\ssrc=(["'])cid:([^"']+)\1/g, ' data-cid="$2"');
+    resolvedHtml = window.DOMPurify ? DOMPurify.sanitize(htmlStr, { ADD_ATTR: ['target', 'data-cid'] }) : htmlStr;
+  }
+
+  return {
+    id: m.id,
+    threadId: m.threadId,
+    messageIdHeader: headerVal(headers, 'Message-ID'),
+    references: headerVal(headers, 'References'),
+    from: headerVal(headers, 'From'),
+    to: headerVal(headers, 'To'),
+    cc: headerVal(headers, 'Cc'),
+    subject: headerVal(headers, 'Subject') || '(no subject)',
+    date: headerVal(headers, 'Date'),
+    snippet: m.snippet,
+    unread: (m.labelIds || []).includes('UNREAD'),
+    isSent: (m.labelIds || []).includes('SENT'),
+    hasAttachments: attachments.length > 0,
+    hydrated: true,
+    body: text ? base64UrlDecodeToUtf8(text) : (resolvedHtml ? null : '(no readable body)'),
+    bodyHtml: resolvedHtml,
+    attachments,
+    pendingInlineImages: inlineImages
+  };
+}
+
 // Full body + attachment list, fetched only when a message is actually opened.
 // Prefers the HTML version of the email (resolving any inline cid: images
 // to real data so logos/signatures render), falling back to plain text.
 async function hydrateMessage(m){
   if(m.hydrated) return m;
   const full = await gmailFetch(`/gmail/v1/users/me/messages/${m.id}?format=full`);
-  const { html, text, attachments, inlineImages } = extractParts(full.payload);
-
-  let resolvedHtml = null;
-  if(html){
-    let htmlStr = base64UrlDecodeToUtf8(html);
-    // Strip cid: image sources into data-cid placeholders — the actual
-    // image bytes are fetched afterward, in parallel, once the message is
-    // already on screen, so text/layout never waits on image round-trips.
-    htmlStr = htmlStr.replace(/\ssrc=(["'])cid:([^"']+)\1/g, ' data-cid="$2"');
-    resolvedHtml = window.DOMPurify ? DOMPurify.sanitize(htmlStr, { ADD_ATTR: ['target', 'data-cid'] }) : htmlStr;
-  }
-
-  m.bodyHtml = resolvedHtml;
-  m.body = text ? base64UrlDecodeToUtf8(text) : (resolvedHtml ? null : '(no readable body)');
-  m.attachments = attachments;
-  m.pendingInlineImages = inlineImages;
-  m.hydrated = true;
+  Object.assign(m, processFullMessage(full));
   return m;
 }
 
@@ -995,7 +1074,7 @@ const PAGE_SIZE = 25;
 
 async function loadFolder(folder, silent){
   if(!silent){
-    el('msg-list').innerHTML = '<div class="list-placeholder">Loading…</div>';
+    el('msg-list').innerHTML = skeletonRows(6);
   }
   try{
     const labelQuery = folder === 'INBOX' ? 'label:inbox' : 'label:sent';
@@ -1077,19 +1156,6 @@ async function setMessageUnreadState(m, unread){
   m.unread = unread;
 }
 
-async function markAsRead(m){
-  if(!m.unread) return;
-  try{
-    await setMessageUnreadState(m, false);
-    updateNavCounts();
-    if(!searchActive){
-      renderList();
-    }
-  }catch(e){
-    console.error('Failed to mark as read', e);
-  }
-}
-
 /* ---------------- Selection + bulk read/unread ---------------- */
 let selectedThreadIds = new Set();
 
@@ -1125,13 +1191,27 @@ async function bulkSetUnread(unread){
   renderList();
 }
 
+function showToast(text, isError){
+  const container = el('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast' + (isError ? ' toast-error' : '');
+  toast.textContent = text;
+  toast.setAttribute('role', 'status');
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => toast.classList.add('toast-show'));
+
+  setTimeout(() => {
+    toast.classList.remove('toast-show');
+    setTimeout(() => toast.remove(), 200);
+  }, 4500);
+}
+
+// Kept as a thin alias so every existing call site (folder/search/bulk
+// failures) reads naturally as "list status" while actually rendering as
+// a floating toast rather than inline text.
 function showListStatus(text){
-  const statusEl = el('list-status');
-  statusEl.textContent = text;
-  statusEl.style.color = 'var(--warn)';
-  statusEl.style.display = 'inline';
-  clearTimeout(showListStatus._timer);
-  showListStatus._timer = setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
+  showToast(text, true);
 }
 
 el('mark-read-btn').addEventListener('click', () => bulkSetUnread(false));
@@ -1146,6 +1226,36 @@ el('select-all-checkbox').addEventListener('change', () => {
   updateSelectionToolbar();
   renderList();
 });
+
+function skeletonRows(count){
+  let html = '';
+  for(let i = 0; i < count; i++){
+    html += `
+      <div class="skeleton-row">
+        <div class="skeleton-bar w-30"></div>
+        <div class="skeleton-bar w-90"></div>
+        <div class="skeleton-bar w-45"></div>
+      </div>`;
+  }
+  return html;
+}
+
+function skeletonReadingPane(){
+  return `
+    <div class="thread-message">
+      <div class="read-header-row">
+        <div class="skeleton-avatar"></div>
+        <div class="read-sender-block">
+          <div class="skeleton-bar w-30" style="margin-bottom:8px;"></div>
+          <div class="skeleton-bar w-45"></div>
+        </div>
+      </div>
+      <div class="skeleton-bar w-90" style="margin-bottom:10px;"></div>
+      <div class="skeleton-bar w-90" style="margin-bottom:10px;"></div>
+      <div class="skeleton-bar w-70"></div>
+    </div>
+  `;
+}
 
 function formatBytes(bytes){
   if(!bytes) return '0 KB';
@@ -1191,7 +1301,7 @@ async function performSearch(term){
   searchActive = true;
   el('search-clear-btn').style.display = 'inline-block';
   el('list-title').textContent = `Search: "${term}"`;
-  el('msg-list').innerHTML = '<div class="list-placeholder">Searching…</div>';
+  el('msg-list').innerHTML = skeletonRows(4);
 
   const labelQuery = currentFolder === 'INBOX' ? 'label:inbox' : 'label:sent';
   const q = `${labelQuery} ${term}`;
@@ -1271,6 +1381,17 @@ function updateSelectAllCheckboxState(){
   cb.indeterminate = selectedCount > 0 && selectedCount < total;
 }
 
+function dateBucket(dateStr){
+  const d = new Date(dateStr);
+  if(isNaN(d)) return 'Earlier';
+  const startOfDay = (dt) => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  const diffDays = Math.round((startOfDay(new Date()) - startOfDay(d)) / 86400000);
+  if(diffDays === 0) return 'Today';
+  if(diffDays === 1) return 'Yesterday';
+  if(diffDays > 1 && diffDays < 7) return 'This week';
+  return 'Earlier';
+}
+
 function renderList(){
   const flatList = searchActive ? searchResultsCache : (messagesCache[currentFolder] || []);
   const groups = groupByThread(flatList);
@@ -1281,12 +1402,24 @@ function renderList(){
     updateSelectAllCheckboxState();
     return;
   }
+  let lastBucket = null;
   container.innerHTML = groups.map((g, i) => {
     const addr = parseAddress(currentFolder === 'INBOX' ? g.latest.from : g.latest.to);
     const hasAttachment = g.messages.some(m => m.hasAttachments);
-    return `
-    <div class="msg-row ${g.unread ? 'unread' : ''}" data-idx="${i}">
+    const color = avatarColor(addr.email || addr.name || 'x');
+    const initial = (addr.name || addr.email || '?').trim().charAt(0).toUpperCase();
+
+    const bucket = dateBucket(g.latest.date);
+    let bucketHeader = '';
+    if(bucket !== lastBucket){
+      bucketHeader = `<div class="list-date-header">${bucket}</div>`;
+      lastBucket = bucket;
+    }
+
+    return bucketHeader + `
+    <div class="msg-row ${g.unread ? 'unread' : ''}" data-idx="${i}" style="border-left-color:${color};">
       <input type="checkbox" class="msg-checkbox" data-threadid="${escapeHtml(g.threadId)}" aria-label="Select conversation">
+      <div class="msg-avatar" style="background:${color};">${escapeHtml(initial)}</div>
       <div class="msg-content">
         <div class="msg-top">
           <span class="msg-from">${escapeHtml(addr.name || addr.email)}</span>
@@ -1366,18 +1499,17 @@ function formatFullDate(dateStr){
 }
 
 function headerAndSubLineFor(m){
-  const isInbox = currentFolder === 'INBOX';
   const legacyLower = (legacyEmailAddress || '').toLowerCase();
   let headerAddr, subLine;
-  if(isInbox){
+  if(m.isSent){
+    headerAddr = { name: 'You', email: legacyEmailAddress };
+    const toAddr = parseAddress(m.to);
+    subLine = 'to ' + (toAddr.name || toAddr.email);
+  }else{
     headerAddr = parseAddress(m.from);
     const toAddr = parseAddress(m.to);
     const toIsMe = toAddr.email && toAddr.email.toLowerCase() === legacyLower;
     subLine = 'to ' + (toIsMe ? 'me' : (toAddr.name || toAddr.email || 'me'));
-  }else{
-    headerAddr = { name: 'You', email: legacyEmailAddress };
-    const toAddr = parseAddress(m.to);
-    subLine = 'to ' + (toAddr.name || toAddr.email);
   }
   return { headerAddr, subLine };
 }
@@ -1450,16 +1582,34 @@ function renderReadingThread(messages){
 }
 
 let currentOpenGroup = null;
+let currentThreadMessages = [];
+
+// Keeps the folder-scoped list cache (and search cache) in sync after a
+// thread is opened via the unified threads.get fetch, since that returns
+// fresh message objects rather than the same references stored in
+// messagesCache — without this, read/unread state and hydrated content
+// wouldn't be reflected back in the list view.
+function syncMessageIntoCache(freshMsg){
+  const fieldsToSync = ['unread', 'hasAttachments', 'body', 'bodyHtml', 'attachments', 'pendingInlineImages', 'hydrated'];
+  ['INBOX', 'SENT'].forEach(folder => {
+    const cached = (messagesCache[folder] || []).find(m => m.id === freshMsg.id);
+    if(cached) fieldsToSync.forEach(f => { cached[f] = freshMsg[f]; });
+  });
+  const searchHit = searchResultsCache.find(m => m.id === freshMsg.id);
+  if(searchHit) fieldsToSync.forEach(f => { searchHit[f] = freshMsg[f]; });
+}
 
 async function openThread(group){
   currentOpenGroup = group;
-  el('reading-pane').innerHTML = `
-    <div class="empty-state"><p>Loading…</p></div>
-  `;
-  const { failures } = await fetchAllSettled(group.messages, hydrateMessage);
-  const loadedMessages = group.messages.filter(m => m.hydrated);
+  el('reading-pane').innerHTML = skeletonReadingPane();
 
-  if(loadedMessages.length === 0){
+  let messages;
+  try{
+    const threadRes = await gmailFetch(`/gmail/v1/users/me/threads/${group.threadId}?format=full`);
+    messages = (threadRes.messages || []).map(processFullMessage);
+    messages.sort((a, b) => new Date(a.date) - new Date(b.date));
+  }catch(e){
+    console.error(e);
     el('reading-pane').innerHTML = `
       <div class="empty-state">
         <p style="color:var(--warn);">Couldn't load this message.</p>
@@ -1471,12 +1621,16 @@ async function openThread(group){
     return;
   }
 
-  renderReadingThread(loadedMessages);
-  if(failures > 0){
-    showListStatus(`${failures} message(s) in this thread couldn't be loaded.`);
-  }
-  if(currentFolder === 'INBOX'){
-    group.messages.filter(m => m.unread).forEach(m => markAsRead(m));
+  currentThreadMessages = messages;
+  renderReadingThread(messages);
+  messages.forEach(syncMessageIntoCache);
+
+  const unreadOnes = messages.filter(m => m.unread);
+  if(unreadOnes.length > 0){
+    await Promise.allSettled(unreadOnes.map(m => setMessageUnreadState(m, false)));
+    unreadOnes.forEach(syncMessageIntoCache);
+    updateNavCounts();
+    if(!searchActive) renderList();
   }
 }
 
@@ -1504,6 +1658,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
     currentFolder = item.dataset.folder;
     searchActive = false;
     currentOpenGroup = null;
+    currentThreadMessages = [];
     clearSelection();
     el('search-input').value = '';
     el('search-clear-btn').style.display = 'none';
@@ -1540,14 +1695,21 @@ const FIELD_LABELS = [
 ];
 
 function getRecipient(){
-  if(isReplyMode) return el('field-reply-to').value.trim();
+  if(isReplyMode || isQuickMode) return el('field-reply-to').value.trim();
   const sel = el('field-recipient-select').value;
   return sel === '__custom__' ? el('field-recipient-custom').value.trim() : sel;
 }
 function getSubject(){
-  if(isReplyMode) return el('field-reply-subject').value.trim();
+  if(isReplyMode || isQuickMode) return el('field-reply-subject').value.trim();
   const sel = el('field-subject-select').value;
   return sel === '__custom__' ? el('field-subject-custom').value.trim() : sel;
+}
+
+function isValidEmailList(str){
+  const parts = str.split(',').map(s => s.trim()).filter(Boolean);
+  if(parts.length === 0) return false;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return parts.every(p => emailRegex.test(p));
 }
 
 el('field-recipient-select').addEventListener('change', () => {
@@ -1585,16 +1747,20 @@ function renderFileList(){
 el('attach-btn').addEventListener('click', () => el('field-attachments').click());
 el('field-attachments').addEventListener('change', (e) => {
   const incoming = Array.from(e.target.files);
+  const warnings = [];
   for(const f of incoming){
     if(attachedFiles.length >= MAX_FILES){
-      el('send-status').textContent = `Max ${MAX_FILES} files.`;
+      warnings.push(`Max ${MAX_FILES} files reached — remaining files skipped.`);
       break;
     }
     if(f.size > MAX_FILE_BYTES){
-      el('send-status').textContent = `${f.name} is over 10MB — skipped.`;
+      warnings.push(`${f.name} is over 10MB — skipped.`);
       continue;
     }
     attachedFiles.push(f);
+  }
+  if(warnings.length > 0){
+    el('send-status').textContent = warnings.join(' ');
   }
   e.target.value = '';
   renderFileList();
@@ -1636,6 +1802,15 @@ function parseAddressList(str){
   return str.split(',').map(s => extractEmail(s)).filter(Boolean);
 }
 
+function fadeComposeBody(){
+  const body = document.querySelector('.compose-body');
+  if(!body) return;
+  body.style.opacity = '0';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { body.style.opacity = '1'; });
+  });
+}
+
 function openCompose(){
   resetForm();
   isReplyMode = false;
@@ -1645,6 +1820,7 @@ function openCompose(){
   el('lead-fields-block').style.display = 'block';
   el('reply-recipient-subject-block').style.display = 'none';
   el('lead-recipient-subject-block').style.display = 'block';
+  fadeComposeBody();
   el('compose-overlay').classList.add('open');
 }
 
@@ -1658,12 +1834,12 @@ function openReplyCompose(m, replyAll){
     references: [m.references, m.messageIdHeader].filter(Boolean).join(' ')
   };
 
-  const isInbox = currentFolder === 'INBOX';
-  let toList = isInbox ? parseAddressList(m.from) : parseAddressList(m.to);
+  const wasReceived = !m.isSent;
+  let toList = wasReceived ? parseAddressList(m.from) : parseAddressList(m.to);
 
   if(replyAll){
     const extra = [
-      ...(isInbox ? parseAddressList(m.to) : []),
+      ...(wasReceived ? parseAddressList(m.to) : []),
       ...parseAddressList(m.cc)
     ];
     toList = [...new Set([...toList, ...extra])];
@@ -1681,6 +1857,7 @@ function openReplyCompose(m, replyAll){
   el('reply-message-block').style.display = 'block';
   el('lead-fields-block').style.display = 'none';
 
+  fadeComposeBody();
   el('compose-overlay').classList.add('open');
 }
 
@@ -1690,11 +1867,12 @@ function openQuickCompose(){
   isQuickMode = true;
   replyContext = null;
 
-  el('reply-recipient-subject-block').style.display = 'none';
-  el('lead-recipient-subject-block').style.display = 'block';
+  el('reply-recipient-subject-block').style.display = 'block';
+  el('lead-recipient-subject-block').style.display = 'none';
   el('reply-message-block').style.display = 'block';
   el('lead-fields-block').style.display = 'none';
 
+  fadeComposeBody();
   el('compose-overlay').classList.add('open');
 }
 
@@ -1811,6 +1989,7 @@ el('send-btn').addEventListener('click', async () => {
   const subject = getSubject();
 
   if(!to){ el('send-status').textContent = 'Select or enter a recipient.'; return; }
+  if(!isValidEmailList(to)){ el('send-status').textContent = 'Recipient email address looks invalid.'; return; }
   if(!subject){ el('send-status').textContent = 'Subject is required.'; return; }
 
   let bodyText;
@@ -1879,9 +2058,9 @@ document.addEventListener('keydown', (e) => {
     return;
   }
 
-  if(e.key === 'r' && currentOpenGroup){
+  if(e.key === 'r' && currentThreadMessages.length > 0){
     e.preventDefault();
-    openReplyCompose(currentOpenGroup.latest, false);
+    openReplyCompose(currentThreadMessages[currentThreadMessages.length - 1], false);
     return;
   }
 
@@ -1901,15 +2080,14 @@ window.addEventListener('load', () => {
 
       if(tryRestoreAgentSession()){
         applyAgentSessionUI();
-        boot().catch(e => {
-          console.error(e);
-          showSessionExpired();
-        });
+        bootWithRetry(() => showSessionExpired());
       }
     }
   }, 100);
 });
 </script>
+
+<div id="toast-container"></div>
 
 </body>
 </html>
