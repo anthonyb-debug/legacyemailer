@@ -294,6 +294,16 @@
   .msg-row:hover{background:var(--hover-bg);}
   .msg-row.selected{background:var(--accent-soft);}
   .msg-row.unread .msg-from, .msg-row.unread .msg-subject{font-weight:700;color:var(--ink);}
+  /* Unread indicator dot — the bold weight above is a bit too subtle on its
+     own (color doesn't change), so this gives a clear, unmissable signal
+     next to the sender name, the way Gmail/Apple Mail do it. */
+  .unread-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--accent);
+    display:inline-block;
+    flex-shrink:0;
+    margin-right:7px;
+  }
   .msg-checkbox{margin-top:3px;flex-shrink:0;cursor:pointer;accent-color:var(--accent);width:16px;height:16px;}
   .msg-avatar{
     width:32px;height:32px;border-radius:50%;flex-shrink:0;
@@ -1581,7 +1591,10 @@ function renderList(){
       <div class="msg-avatar" style="background:${color};">${escapeHtml(initial)}</div>
       <div class="msg-content">
         <div class="msg-top">
-          <span class="msg-from">${escapeHtml(addr.name || addr.email)}</span>
+          <span style="display:flex;align-items:center;min-width:0;">
+            ${g.unread ? '<span class="unread-dot" aria-hidden="true" title="Unread"></span>' : ''}
+            <span class="msg-from">${escapeHtml(addr.name || addr.email)}</span>
+          </span>
           <span class="msg-date">${formatDate(g.latest.date)}</span>
         </div>
         <div class="msg-subject">${escapeHtml(g.latest.subject)}${g.count > 1 ? `<span class="thread-count">${g.count}</span>` : ''}${hasAttachment ? '<span class="attachment-flag" title="Has attachment">📎</span>' : ''}</div>
