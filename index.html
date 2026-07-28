@@ -1611,12 +1611,16 @@ function renderList(){
   `;
   }).join('');
 
+  // Was `container.innerHTML += ...` — that reparses and rebuilds every
+  // row that was just rendered a second time (innerHTML += reads back the
+  // whole current contents, concatenates, then reconstructs the entire
+  // subtree from scratch). Real DOM append here only adds the one new node.
   if(!searchActive && nextPageTokens[currentFolder]){
-    container.innerHTML += `
-      <div style="padding:14px 18px;text-align:center;">
-        <button class="btn-ghost" id="load-more-btn">Load more</button>
-      </div>
-    `;
+    const loadMoreWrap = document.createElement('div');
+    loadMoreWrap.style.padding = '14px 18px';
+    loadMoreWrap.style.textAlign = 'center';
+    loadMoreWrap.innerHTML = '<button class="btn-ghost" id="load-more-btn">Load more</button>';
+    container.appendChild(loadMoreWrap);
   }
 
   container.querySelectorAll('.msg-row').forEach(row => {
