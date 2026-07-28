@@ -1636,6 +1636,36 @@ function groupByThread(list){
   return groups;
 }
 
+// The set of people in a conversation, in the order they first appear —
+// mirroring Gmail's "Legacy Healing, Adam Brown" style row. The legacy
+// account itself is shown as "me". If a thread turns out to be only us
+// (e.g. an outbound-only thread in the Sent folder), we fall back to showing
+// who it was sent to, which is more useful than a row that just says "me".
+function threadDisplayNames(g){
+  const legacyLower = (legacyEmailAddress || '').toLowerCase();
+  const names = [];
+  const seen = new Set();
+  g.messages.forEach(m => {
+    const a = parseAddress(m.from);
+    const isMe = a.email && a.email.toLowerCase() === legacyLower;
+    const label = isMe ? 'me' : (a.name || a.email || '?');
+    if(!seen.has(label)){ seen.add(label); names.push(label); }
+  });
+  if(names.length === 1 && names[0] === 'me'){
+    const to = parseAddress(g.latest.to);
+    return [to.name || to.email || 'me'];
+  }
+  return names;
+}
+
+// Keeps the row compact: up to three names shown in full; beyond that,
+// collapse the middle the way Gmail does (first, …, last).
+function formatParticipants(names){
+  if(names.length === 0) return '(unknown)';
+  if(names.length <= 3) return names.join(', ');
+  return `${names[0]}, …, ${names[names.length - 1]}`;
+}
+
 let lastRenderedGroups = [];
 
 function updateSelectAllCheckboxState(){
@@ -1697,6 +1727,7 @@ function renderList(){
     const hasAttachment = g.messages.some(m => m.hasAttachments);
     const color = avatarColor(addr.email || addr.name || 'x');
     const initial = (addr.name || addr.email || '?').trim().charAt(0).toUpperCase();
+    const participants = formatParticipants(threadDisplayNames(g));
 
     const bucket = dateBucket(g.latest.date);
     let bucketHeader = '';
@@ -1713,7 +1744,7 @@ function renderList(){
         <div class="msg-top">
           <span style="display:flex;align-items:center;min-width:0;">
             ${g.unread ? '<span class="unread-dot" aria-hidden="true" title="Unread"></span>' : ''}
-            <span class="msg-from">${escapeHtml(addr.name || addr.email)}</span>
+            <span class="msg-from">${escapeHtml(participants)}</span>
           </span>
           <span class="msg-date">${formatDate(g.latest.date)}</span>
         </div>
@@ -2224,8 +2255,12 @@ function openReplyCompose(m, replyAll){
   toList = toList.filter(addr => addr.toLowerCase() !== legacyLower);
 
   el('field-reply-to').value = toList.join(', ');
-  const subj = m.subject || '';
-  el('field-reply-subject').value = /^re:/i.test(subj) ? subj : 'Re: ' + subj;
+  // Strip any existing Re:/RE: prefixes (even repeated ones) and apply a
+  // single clean "Re: ". Gmail only files a sent message into the given
+  // threadId if the subject matches the thread's subject once "Re:" is
+  // stripped, so keeping this normalized avoids accidental new threads.
+  const baseSubj = (m.subject || '').replace(/^\s*(re:\s*)+/i, '').trim();
+  el('field-reply-subject').value = baseSubj ? 'Re: ' + baseSubj : 'Re:';
 
   el('reply-recipient-subject-block').style.display = 'block';
   el('lead-recipient-subject-block').style.display = 'none';
@@ -2361,7 +2396,7 @@ async function buildRawMessage(to, subject, bodyText, files, replyCtx){
 
 el('send-btn').addEventListener('click', async () => {
   const to = getRecipient();
-  const subject = getSubject();
+  let subject = getSubject();
 
   if(!to){ el('send-status').textContent = 'Select or enter a recipient.'; return; }
   if(!isValidEmailList(to)){ el('send-status').textContent = 'Recipient email address looks invalid.'; return; }
@@ -2377,6 +2412,11 @@ el('send-btn').addEventListener('click', async () => {
     if(!leadSource){ el('send-status').textContent = 'Lead Source is required.'; return; }
     if(!explanation){ el('send-status').textContent = 'Explanation is required.'; return; }
     bodyText = buildBodyText();
+
+    // Tack the Chat ID onto the subject line (e.g. "New Lead [Chat ID: 268022]")
+    // so it's visible at a glance in the inbox, not just inside the body.
+    const chatId = el('field-chat-id').value.trim();
+    if(chatId) subject = `${subject} [Chat ID: ${chatId}]`;
   }
 
   el('send-status').textContent = 'Sending…';
@@ -2396,8 +2436,18 @@ el('send-btn').addEventListener('click', async () => {
     el('send-status').className = 'send-status is-success';
     setTimeout(() => {
       el('compose-overlay').classList.remove('open');
-      loadFolder('SENT');
       showToast(`Email sent to ${to}`, 'success');
+      if(isReplyMode && currentOpenGroup){
+        // Stay in the conversation and reload it, so the reply appears nested
+        // at the bottom — the way Gmail shows it (see the "Chat Follow Up"
+        // example) — instead of bouncing to the Sent folder, where the reply
+        // would sit alone, detached from the inbound messages it belongs with.
+        openThread(currentOpenGroup);
+        loadFolder(currentFolder, true); // refresh the list cache quietly
+      }else{
+        // Brand-new email (lead / quick compose): Sent folder is the right place.
+        loadFolder('SENT');
+      }
     }, 700);
   }catch(e){
     console.error(e);
