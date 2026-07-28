@@ -1337,6 +1337,10 @@ function updateSelectionToolbar(){
 
 function clearSelection(){
   selectedThreadIds.clear();
+  // Previously this relied on a full renderList() happening right after to
+  // reset each checkbox's `checked` from selectedThreadIds — now that some
+  // callers patch in place instead of re-rendering, do it directly here.
+  document.querySelectorAll('.msg-checkbox').forEach(cb => { cb.checked = false; });
   updateSelectionToolbar();
   updateSelectAllCheckboxState();
 }
@@ -1354,9 +1358,19 @@ async function bulkSetUnread(unread){
     showListStatus(`Couldn't update ${failures.length} of ${allMessages.length} message(s) — check your connection and try again.`);
   }
 
+  // Patch just the rows that actually changed, instead of tearing down and
+  // rebuilding every row in the list for a change that affects only the
+  // selected ones.
+  groups.forEach(g => {
+    const freshUnread = g.messages.some(m => m.unread);
+    const renderedGroup = lastRenderedGroups.find(rg => rg.threadId === g.threadId);
+    if(renderedGroup) renderedGroup.unread = freshUnread;
+    const row = findRowByThreadId(g.threadId);
+    if(row) setRowUnreadUI(row, freshUnread);
+  });
+
   clearSelection();
   updateNavCounts();
-  renderList();
 }
 
 function showToast(text, variant){
@@ -1398,8 +1412,12 @@ el('select-all-checkbox').addEventListener('change', () => {
   }else{
     lastRenderedGroups.forEach(g => selectedThreadIds.delete(g.threadId));
   }
+  // Only the checkboxes' checked state actually changed — no need to
+  // rebuild every row to reflect that.
+  document.querySelectorAll('.msg-checkbox').forEach(cb => {
+    cb.checked = selectedThreadIds.has(cb.dataset.threadid);
+  });
   updateSelectionToolbar();
-  renderList();
 });
 
 function skeletonRows(count){
@@ -1568,6 +1586,30 @@ function dateBucket(dateStr){
   return 'Earlier';
 }
 
+// Look up a currently-rendered row by thread ID, so callers can patch just
+// that row instead of re-rendering the whole list.
+function findRowByThreadId(threadId){
+  return Array.from(document.querySelectorAll('.msg-row')).find(r => r.dataset.threadid === threadId) || null;
+}
+
+// Toggle a row's unread indicator (bold text + dot) in place. Used anywhere
+// a message's read state changes without the rest of the list changing.
+function setRowUnreadUI(row, isUnread){
+  row.classList.toggle('unread', isUnread);
+  const nameWrap = row.querySelector('.msg-top > span');
+  if(!nameWrap) return;
+  let dot = nameWrap.querySelector('.unread-dot');
+  if(isUnread && !dot){
+    dot = document.createElement('span');
+    dot.className = 'unread-dot';
+    dot.setAttribute('aria-hidden', 'true');
+    dot.title = 'Unread';
+    nameWrap.insertBefore(dot, nameWrap.firstChild);
+  }else if(!isUnread && dot){
+    dot.remove();
+  }
+}
+
 function renderList(){
   const flatList = searchActive ? searchResultsCache : (messagesCache[currentFolder] || []);
   const groups = groupByThread(flatList);
@@ -1593,7 +1635,7 @@ function renderList(){
     }
 
     return bucketHeader + `
-    <div class="msg-row ${g.unread ? 'unread' : ''}" data-idx="${i}" style="border-left-color:${color};">
+    <div class="msg-row ${g.unread ? 'unread' : ''}" data-idx="${i}" data-threadid="${escapeHtml(g.threadId)}" style="border-left-color:${color};">
       <input type="checkbox" class="msg-checkbox" data-threadid="${escapeHtml(g.threadId)}" aria-label="Select conversation">
       <div class="msg-avatar" style="background:${color};">${escapeHtml(initial)}</div>
       <div class="msg-content">
@@ -1842,7 +1884,14 @@ async function openThread(group){
     await Promise.allSettled(unreadOnes.map(m => setMessageUnreadState(m, false)));
     unreadOnes.forEach(syncMessageIntoCache);
     updateNavCounts();
-    if(!searchActive) renderList();
+    // Only this one thread's row needs to lose its unread indicator — no
+    // need to rebuild the rest of the list to reflect that.
+    if(!searchActive){
+      const renderedGroup = lastRenderedGroups.find(rg => rg.threadId === group.threadId);
+      if(renderedGroup) renderedGroup.unread = false;
+      const row = findRowByThreadId(group.threadId);
+      if(row) setRowUnreadUI(row, false);
+    }
   }
 }
 
