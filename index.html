@@ -943,11 +943,72 @@ async function bootWithRetry(onFinalFailure){
   }
 }
 
+/* ---------------- Silent re-authentication ----------------
+   The Google credential here is an ID token, which Google ALWAYS expires
+   after 1 hour — there's no refresh token for it. So instead of dropping the
+   agent back to the sign-in screen, we ask Google to silently re-issue a
+   fresh ID token shortly before the current one expires. Thanks to
+   auto_select + FedCM (set in initAgentSignIn), this happens with no UI as
+   long as the agent's Google session is still active. */
+let refreshTimer = null;
+let pendingReauth = null;         // in-flight silent renewal (a Promise)
+let resolvePendingReauth = null;  // its resolver
+
+// Fire a silent renewal ~2 min before the 1-hour expiry.
+function scheduleSilentRefresh(){
+  if(refreshTimer){ clearTimeout(refreshTimer); refreshTimer = null; }
+  if(!agentIdToken) return;
+  let payload;
+  try{ payload = decodeJwtPayload(agentIdToken); }catch(e){ return; }
+  if(!payload.exp) return;
+  const msUntil = (payload.exp * 1000) - Date.now() - 120000;
+  refreshTimer = setTimeout(silentReauth, Math.max(msUntil, 1000));
+}
+
+// Ask Google for a fresh credential. On success, handleCredentialResponse
+// fires again with the new token. If Google can't do it silently, the next
+// gmailFetch falls back to the sign-in screen, exactly as before.
+function silentReauth(){
+  try{ google.accounts.id.prompt(); }
+  catch(e){ console.warn('Silent re-auth attempt failed:', e); }
+}
+
+// Awaitable fallback: if a request finds the token already expired, kick off
+// a silent renewal and wait for the new token (or time out). Concurrent
+// callers share one attempt so we never fire multiple prompts at once.
+function requestSilentReauth(){
+  if(pendingReauth) return pendingReauth;
+  pendingReauth = new Promise(resolve => {
+    let settled = false;
+    resolvePendingReauth = (ok) => {
+      if(settled) return;
+      settled = true;
+      pendingReauth = null;
+      resolvePendingReauth = null;
+      resolve(ok);
+    };
+    setTimeout(() => resolvePendingReauth && resolvePendingReauth(false), 8000);
+    silentReauth();
+  });
+  return pendingReauth;
+}
+
 function handleCredentialResponse(response){
+  // If the app is already running, this is a silent renewal mid-session — we
+  // just swap in the new token and keep going, rather than re-booting the UI.
+  const wasSignedIn = !!agentIdToken && el('app-shell').style.display !== 'none';
+
   agentIdToken = response.credential;
   agentProfile = decodeJwtPayload(agentIdToken);
   persistAgentSession();
+  scheduleSilentRefresh();
+
+  // Unblock any request that was waiting on a fresh token.
+  if(resolvePendingReauth) resolvePendingReauth(true);
+
   applyAgentSessionUI();
+
+  if(wasSignedIn) return;  // silent renewal — no full reload
 
   bootWithRetry(e => {
     el('agent-error').textContent = 'Signed in, but the mail server rejected this account: ' + e.message;
@@ -959,6 +1020,7 @@ function handleCredentialResponse(response){
 function signOutAgent(){
   agentIdToken = null;
   agentProfile = null;
+  if(refreshTimer){ clearTimeout(refreshTimer); refreshTimer = null; }
   clearPersistedAgentSession();
   if(window.google && google.accounts && google.accounts.id){
     google.accounts.id.disableAutoSelect();
@@ -976,7 +1038,11 @@ el('agent-signout-btn').addEventListener('click', signOutAgent);
 function initAgentSignIn(){
   google.accounts.id.initialize({
     client_id: SIGNIN_CLIENT_ID,
-    callback: handleCredentialResponse
+    callback: handleCredentialResponse,
+    // Let Google re-issue an ID token silently (no account chooser) once the
+    // agent has signed in once and still has an active Google session.
+    auto_select: true,
+    use_fedcm_for_prompt: true
   });
   google.accounts.id.renderButton(el('g_id_signin'), { theme: 'outline', size: 'large', width: 260 });
 }
@@ -1005,8 +1071,13 @@ function showSessionExpired(){
 
 async function gmailFetch(path, options = {}){
   if(isAgentTokenExpired()){
-    showSessionExpired();
-    throw new Error('Session expired — please sign in again.');
+    // Try to renew silently first; only fall back to the sign-in screen if
+    // Google can't hand us a fresh token without user interaction.
+    const renewed = await requestSilentReauth();
+    if(!renewed || isAgentTokenExpired()){
+      showSessionExpired();
+      throw new Error('Session expired — please sign in again.');
+    }
   }
   const res = await fetch(WORKER_BASE_URL + path, {
     ...options,
@@ -2388,6 +2459,7 @@ window.addEventListener('load', () => {
 
       if(tryRestoreAgentSession()){
         applyAgentSessionUI();
+        scheduleSilentRefresh();
         bootWithRetry(() => showSessionExpired());
       }
     }
