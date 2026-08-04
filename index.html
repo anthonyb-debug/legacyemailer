@@ -1020,6 +1020,7 @@ function handleCredentialResponse(response){
 function signOutAgent(){
   agentIdToken = null;
   agentProfile = null;
+  stopAutoRefresh();
   if(refreshTimer){ clearTimeout(refreshTimer); refreshTimer = null; }
   clearPersistedAgentSession();
   if(window.google && google.accounts && google.accounts.id){
@@ -1143,6 +1144,9 @@ async function boot(){
   // no longer fights Inbox for bandwidth.
   await loadFolder('INBOX');
   loadFolder('SENT', true);
+
+  // Begin silent polling for new mail once the app is up and running.
+  startAutoRefresh();
 }
 
 function headerVal(headers, name){
@@ -1218,6 +1222,10 @@ function extractParts(payload){
 // Everything downstream (DOMPurify sanitize, inline-image fetch, the reading
 // pane's HTML branch) keys off this one flag, so no other edits are required.
 const RENDER_HTML_BODIES = false;
+// Silent auto-refresh of the current folder, in milliseconds. Set to 0 to
+// disable. New mail is merged into the list in place — it never disturbs the
+// message you're reading, your scroll position, or a selection/search.
+const AUTO_REFRESH_MS = 90000; // 90s; 0 = off
 // ─────────────────────────────────────────────────────────────────────────
 
 // Lightweight fields used for the list view — headers + attachment metadata
@@ -1425,6 +1433,102 @@ async function loadMoreFolder(folder){
   }
 }
 
+// Fetches just the first page of a folder (list + per-message metadata),
+// returning parsed messages without touching any global state. Shared by the
+// in-place refresh below.
+async function fetchFolderFirstPage(folder){
+  const labelQuery = folder === 'INBOX' ? 'label:inbox' : 'label:sent';
+  const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery)}&maxResults=${PAGE_SIZE}`);
+  const ids = (listRes.messages || []).map(m => m.id);
+  const { values: full } = await fetchAllSettled(ids, id =>
+    gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
+  );
+  return full.map(parseMessageMetadata);
+}
+
+// Reconciles a freshly-fetched first page into the folder cache IN PLACE:
+// adds new messages, applies read/unread changes, and drops messages that have
+// left the folder (archived/deleted) — but only within the refreshed window
+// (messages at least as new as the oldest fetched one). Anything older came
+// from "Load more" pages we didn't re-check, so it's preserved. Never
+// overwrites an already-hydrated message object. Returns whether anything
+// changed, so we can skip a needless re-render when the folder is unchanged.
+function reconcileFolderFirstPage(folder, fetched){
+  const cache = messagesCache[folder] || (messagesCache[folder] = []);
+  const fetchedById = new Map(fetched.map(m => [m.id, m]));
+  const cacheById = new Map(cache.map(m => [m.id, m]));
+  let changed = false;
+
+  const windowStart = fetched.length
+    ? Math.min(...fetched.map(m => new Date(m.date).getTime()))
+    : -Infinity; // empty folder → clear everything
+
+  for(let i = cache.length - 1; i >= 0; i--){
+    const t = new Date(cache[i].date).getTime();
+    if(t >= windowStart && !fetchedById.has(cache[i].id)){
+      cache.splice(i, 1);
+      changed = true;
+    }
+  }
+  fetched.forEach(fm => {
+    const existing = cacheById.get(fm.id);
+    if(existing){
+      if(existing.unread !== fm.unread){ existing.unread = fm.unread; changed = true; }
+    }else{
+      cache.push(fm);
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+// Shows the Refresh link as busy without blanking the list.
+function setRefreshBusy(busy){
+  const btn = el('refresh-btn');
+  if(!btn) return;
+  if(busy){
+    if(btn.dataset.label === undefined) btn.dataset.label = btn.textContent;
+    btn.textContent = 'Refreshing…';
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.6';
+  }else{
+    btn.textContent = btn.dataset.label || 'Refresh';
+    btn.style.pointerEvents = '';
+    btn.style.opacity = '';
+  }
+}
+
+// The Refresh button. Never drops back to skeletons when there's already
+// something on screen — it updates the list in place, preserving scroll and
+// the open conversation. First load (empty cache) still shows a skeleton, and
+// an active search re-runs the search.
+async function refreshCurrentView(){
+  if(searchActive){
+    performSearch(el('search-input').value.trim());
+    return;
+  }
+  const folder = currentFolder;
+  const hasContent = (messagesCache[folder] || []).length > 0;
+  if(!hasContent){
+    loadFolder(folder);
+    return;
+  }
+  setRefreshBusy(true);
+  try{
+    const fetched = await fetchFolderFirstPage(folder);
+    const changed = reconcileFolderFirstPage(folder, fetched);
+    updateNavCounts();
+    if(!searchActive && folder === currentFolder && changed){
+      renderListPreservingView();
+    }
+  }catch(e){
+    console.error(e);
+    showListStatus("Couldn't refresh — try again.");
+  }finally{
+    setRefreshBusy(false);
+  }
+}
+
 function updateNavCounts(){
   const inboxUnread = (messagesCache.INBOX || []).filter(m => m.unread).length;
   el('count-inbox').textContent = inboxUnread > 0 ? inboxUnread : '';
@@ -1604,6 +1708,8 @@ async function downloadAttachment(messageId, att){
 let searchActive = false;
 let searchResultsCache = [];
 let searchRequestId = 0;
+let searchNextPageToken = null;
+let currentSearchTerm = null;
 
 async function performSearch(term){
   if(!term){
@@ -1612,28 +1718,14 @@ async function performSearch(term){
   }
   const requestId = ++searchRequestId;
   searchActive = true;
+  currentSearchTerm = term;
+  searchNextPageToken = null;
+  searchResultsCache = [];
   el('search-clear-btn').style.display = 'inline-block';
   el('list-title').textContent = `Search: "${term}"`;
   el('msg-list').innerHTML = skeletonRows(4);
-
-  const labelQuery = currentFolder === 'INBOX' ? 'label:inbox' : 'label:sent';
-  const q = `${labelQuery} ${term}`;
   try{
-    const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(q)}&maxResults=50`);
-    const ids = (listRes.messages || []).map(m => m.id);
-    const { values: full, failures } = await fetchAllSettled(ids, id =>
-      gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
-    );
-
-    // If a newer search started while this one was in flight, discard
-    // these results rather than let a slow older search clobber it.
-    if(requestId !== searchRequestId) return;
-
-    searchResultsCache = full.map(parseMessageMetadata);
-    renderList();
-    if(failures > 0){
-      showListStatus(`${failures} result(s) couldn't be loaded — search results may be incomplete.`);
-    }
+    await fetchSearchPage(term, requestId, false);
   }catch(e){
     if(requestId !== searchRequestId) return;
     console.error(e);
@@ -1647,8 +1739,62 @@ async function performSearch(term){
   }
 }
 
+// Fetches one page of search results. The key speedup: search is scoped to the
+// current folder's label, and we've usually already loaded much of that folder,
+// so any result whose message we already hold is reused from cache instead of
+// re-fetched — only genuinely-new IDs cost a round-trip. Pages at PAGE_SIZE
+// with a "Load more", so the worst-case fan-out is a folder page, not 50.
+async function fetchSearchPage(term, requestId, append){
+  const labelQuery = currentFolder === 'INBOX' ? 'label:inbox' : 'label:sent';
+  const q = `${labelQuery} ${term}`;
+  let url = `/gmail/v1/users/me/messages?q=${encodeURIComponent(q)}&maxResults=${PAGE_SIZE}`;
+  if(append && searchNextPageToken){
+    url += `&pageToken=${encodeURIComponent(searchNextPageToken)}`;
+  }
+  const listRes = await gmailFetch(url);
+  const ids = (listRes.messages || []).map(m => m.id);
+
+  const cacheById = new Map((messagesCache[currentFolder] || []).map(m => [m.id, m]));
+  const toFetch = ids.filter(id => !cacheById.has(id));
+  const { values: fetchedRaw, failures } = await fetchAllSettled(toFetch, id =>
+    gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
+  );
+
+  // A newer search (or a cleared search) started while we were in flight —
+  // discard this page rather than let it clobber the current view.
+  if(requestId !== searchRequestId) return;
+
+  const fetchedById = new Map();
+  fetchedRaw.forEach(raw => { const m = parseMessageMetadata(raw); fetchedById.set(m.id, m); });
+
+  // Preserve Gmail's relevance ordering from the ids array; reuse cache hits.
+  const pageResults = ids.map(id => cacheById.get(id) || fetchedById.get(id)).filter(Boolean);
+  searchResultsCache = append ? searchResultsCache.concat(pageResults) : pageResults;
+  searchNextPageToken = listRes.nextPageToken || null;
+
+  if(append) renderListPreservingView(); else renderList();
+  if(failures > 0){
+    showListStatus(`${failures} result(s) couldn't be loaded — search results may be incomplete.`);
+  }
+}
+
+async function loadMoreSearch(){
+  if(!searchNextPageToken || !currentSearchTerm) return;
+  const requestId = searchRequestId; // same search session
+  try{
+    await fetchSearchPage(currentSearchTerm, requestId, true);
+  }catch(e){
+    console.error(e);
+    const btn = document.getElementById('load-more-btn');
+    if(btn) btn.textContent = 'Failed — try again';
+  }
+}
+
 function clearSearch(){
   searchActive = false;
+  searchRequestId++;
+  searchNextPageToken = null;
+  currentSearchTerm = null;
   el('search-input').value = '';
   el('search-clear-btn').style.display = 'none';
   el('list-title').textContent = currentFolder === 'INBOX' ? 'Inbox' : 'Sent';
@@ -1808,7 +1954,8 @@ function renderList(){
   // row that was just rendered a second time (innerHTML += reads back the
   // whole current contents, concatenates, then reconstructs the entire
   // subtree from scratch). Real DOM append here only adds the one new node.
-  if(!searchActive && nextPageTokens[currentFolder]){
+  const canLoadMore = searchActive ? !!searchNextPageToken : !!nextPageTokens[currentFolder];
+  if(canLoadMore){
     const loadMoreWrap = document.createElement('div');
     loadMoreWrap.style.padding = '14px 18px';
     loadMoreWrap.style.textAlign = 'center';
@@ -1844,9 +1991,100 @@ function renderList(){
   if(loadMoreBtn){
     loadMoreBtn.addEventListener('click', () => {
       loadMoreBtn.textContent = 'Loading…';
-      loadMoreFolder(currentFolder);
+      if(searchActive) loadMoreSearch();
+      else loadMoreFolder(currentFolder);
     });
   }
+}
+
+/* ---------------- Silent auto-refresh (poll for new mail) ---------------- */
+
+// Re-renders the list but restores what the user was doing: scroll position
+// and the highlight on the conversation currently open in the reading pane.
+// (renderList already restores bulk-selection checkboxes from selectedThreadIds.)
+function renderListPreservingView(){
+  const pane = document.querySelector('.list-pane');
+  const scrollTop = pane ? pane.scrollTop : 0;
+  renderList();
+  if(pane) pane.scrollTop = scrollTop;
+  if(currentOpenGroup){
+    el('msg-list').querySelectorAll('.msg-row').forEach(r => {
+      if(r.dataset.threadid === currentOpenGroup.threadId) r.classList.add('selected');
+    });
+  }
+}
+
+// Merges freshly-polled metadata into the folder cache WITHOUT replacing it:
+// new messages are appended (groupByThread re-sorts by date, so they surface
+// at the top), and read/unread flips on existing messages are applied. We
+// never overwrite an already-hydrated message object, so opening a thread and
+// then polling won't wipe a loaded body — and messages loaded via "Load more"
+// (beyond the first page this poll fetches) are left untouched, so the list
+// never shrinks under the user. Returns whether anything actually changed.
+function mergePolledMessages(folder, fetched){
+  const cache = messagesCache[folder] || (messagesCache[folder] = []);
+  const byId = new Map(cache.map(m => [m.id, m]));
+  let changed = false;
+  fetched.forEach(fm => {
+    const existing = byId.get(fm.id);
+    if(existing){
+      if(existing.unread !== fm.unread){ existing.unread = fm.unread; changed = true; }
+    }else{
+      cache.push(fm);
+      byId.set(fm.id, fm);
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+async function pollForNewMail(){
+  if(!AUTO_REFRESH_MS) return;
+  // Don't clobber an active search view.
+  if(searchActive) return;
+  // Skip while the tab is backgrounded — no point polling an unseen tab.
+  if(typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+  // Only when signed in and the app is showing.
+  if(!agentIdToken || !el('app-shell') || el('app-shell').style.display === 'none') return;
+  // If the token's already expired, let the dedicated renewal path handle it
+  // rather than having a background poll trigger the session-expired screen.
+  if(isAgentTokenExpired()) return;
+
+  const folder = currentFolder;
+  try{
+    const labelQuery = folder === 'INBOX' ? 'label:inbox' : 'label:sent';
+    const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery)}&maxResults=${PAGE_SIZE}`);
+    const ids = (listRes.messages || []).map(m => m.id);
+    const { values: full } = await fetchAllSettled(ids, id =>
+      gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
+    );
+    const changed = mergePolledMessages(folder, full.map(parseMessageMetadata));
+    updateNavCounts();
+    // Re-render only if something changed and the user hasn't moved on.
+    if(changed && !searchActive && folder === currentFolder){
+      renderListPreservingView();
+    }
+  }catch(e){
+    // A failed background poll must stay invisible — try again next tick.
+    if(window.console && console.debug) console.debug('Auto-refresh poll skipped:', e);
+  }
+}
+
+let autoRefreshTimer = null;
+function startAutoRefresh(){
+  if(!AUTO_REFRESH_MS) return;
+  stopAutoRefresh();
+  autoRefreshTimer = setInterval(pollForNewMail, AUTO_REFRESH_MS);
+}
+function stopAutoRefresh(){
+  if(autoRefreshTimer){ clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+}
+// Coming back to a backgrounded tab should feel fresh — poll right away
+// instead of waiting out the remainder of the interval.
+if(typeof document !== 'undefined'){
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible' && autoRefreshTimer) pollForNewMail();
+  });
 }
 
 function parseAddress(str){
@@ -2070,6 +2308,10 @@ document.querySelectorAll('.nav-item[data-folder]').forEach(item => {
     document.querySelectorAll('.lead-source-item').forEach(i => i.classList.remove('active'));
     currentFolder = item.dataset.folder;
     searchActive = false;
+    // Invalidate any in-flight search page so it can't render over this folder.
+    searchRequestId++;
+    searchNextPageToken = null;
+    currentSearchTerm = null;
     currentOpenGroup = null;
     currentThreadMessages = [];
     clearSelection();
@@ -2095,7 +2337,7 @@ document.querySelectorAll('.lead-source-item').forEach(item => {
   });
 });
 
-el('refresh-btn').addEventListener('click', () => loadFolder(currentFolder));
+el('refresh-btn').addEventListener('click', () => refreshCurrentView());
 
 /* ---------------- Compose: intake form logic ---------------- */
 const MAX_FILES = 10;
