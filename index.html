@@ -1211,6 +1211,15 @@ function extractParts(payload){
   return { html, text, attachments, inlineImages };
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Reading-pane body rendering mode. This is the ONLY switch you need to flip.
+//   false → plain text (fast; signatures show as text, images omitted)
+//   true  → rich HTML  (renders the real email: signature, logo, social icons)
+// Everything downstream (DOMPurify sanitize, inline-image fetch, the reading
+// pane's HTML branch) keys off this one flag, so no other edits are required.
+const RENDER_HTML_BODIES = false;
+// ─────────────────────────────────────────────────────────────────────────
+
 // Lightweight fields used for the list view — headers + attachment metadata
 // only, no message body, so opening a folder is fast and cheap.
 const LIST_FIELDS = 'id,threadId,snippet,labelIds,payload/headers,payload/parts(filename,mimeType,headers,body/attachmentId,body/size,parts(filename,mimeType,headers,body/attachmentId,body/size))';
@@ -1237,18 +1246,58 @@ function parseMessageMetadata(m){
   };
 }
 
+// Reduces a raw email HTML body to readable plain text. This is only hit for
+// HTML-only messages (no text/plain part); it strips script/style blocks,
+// turns block-level tags and <br> into newlines, drops the remaining tags,
+// then decodes entities via a textarea (which parses its contents as text,
+// so nothing executes). Kept regex-based on purpose — it's cheap, and we're
+// not trying to preserve layout, just get the words out.
+function htmlToPlainText(html){
+  let s = html.replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, '');
+  s = s.replace(/<\s*br\s*\/?>/gi, '\n');
+  s = s.replace(/<\/\s*(p|div|tr|li|h[1-6]|table|blockquote|ul|ol)\s*>/gi, '\n');
+  s = s.replace(/<[^>]+>/g, '');
+  const ta = document.createElement('textarea');
+  ta.innerHTML = s;
+  s = ta.value;
+  return s.replace(/^[ \t]+/gm, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 // Builds a fully-hydrated display message from a raw Gmail API message
 // object that's already been fetched with format=full (used both by
 // hydrateMessage below and by the unified thread fetch in openThread).
+//
+// Plain-text rendering: we deliberately do NOT keep or render the raw HTML
+// body. Parsing and laying out signature-heavy marketing HTML directly in the
+// main document (nested tables, inline styles, leaked <style> rules) was what
+// made the reading pane slow. Prefer the message's text/plain part; fall back
+// to stripping the HTML to text only when there's no plain-text part at all.
 function processFullMessage(m){
   const headers = m.payload.headers || [];
   const { html, text, attachments, inlineImages } = extractParts(m.payload);
 
-  let resolvedHtml = null;
-  if(html){
+  let bodyText = null;
+  let bodyHtml = null;
+  let pendingInlineImages = [];
+
+  if(RENDER_HTML_BODIES && html){
+    // Rich path: sanitize the HTML, rewrite cid: image srcs so the inline
+    // resolver can fill them in from the background fetch below.
     let htmlStr = base64UrlDecodeToUtf8(html);
     htmlStr = htmlStr.replace(/\ssrc=(["'])cid:([^"']+)\1/g, ' data-cid="$2"');
-    resolvedHtml = window.DOMPurify ? DOMPurify.sanitize(htmlStr, { ADD_ATTR: ['target', 'data-cid'] }) : htmlStr;
+    bodyHtml = window.DOMPurify ? DOMPurify.sanitize(htmlStr, { ADD_ATTR: ['target', 'data-cid'] }) : htmlStr;
+    bodyText = text ? base64UrlDecodeToUtf8(text) : null;
+    pendingInlineImages = inlineImages;
+  } else {
+    // Plain path: prefer the text/plain part; strip HTML to text only when
+    // the message is HTML-only.
+    if(text){
+      bodyText = base64UrlDecodeToUtf8(text);
+    } else if(html){
+      bodyText = htmlToPlainText(base64UrlDecodeToUtf8(html));
+    } else {
+      bodyText = '(no readable body)';
+    }
   }
 
   return {
@@ -1266,10 +1315,10 @@ function processFullMessage(m){
     isSent: (m.labelIds || []).includes('SENT'),
     hasAttachments: attachments.length > 0,
     hydrated: true,
-    body: text ? base64UrlDecodeToUtf8(text) : (resolvedHtml ? null : '(no readable body)'),
-    bodyHtml: resolvedHtml,
+    body: bodyText,
+    bodyHtml,
     attachments,
-    pendingInlineImages: inlineImages
+    pendingInlineImages
   };
 }
 
