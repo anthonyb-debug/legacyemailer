@@ -1003,7 +1003,7 @@
       <dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Move through the list</dd>
       <dt><kbd>/</kbd></dt><dd>Search mail</dd>
       <dt><kbd>Ctrl</kbd> <kbd>Enter</kbd></dt><dd>Send, while writing</dd>
-      <dt><kbd>Esc</kbd></dt><dd>Close the open window, or clear search</dd>
+      <dt><kbd>Esc</kbd></dt><dd>Close the open window, clear a selection, or clear search</dd>
       <dt><kbd>?</kbd></dt><dd>Show this list</dd>
     </dl>
   </div>
@@ -2090,7 +2090,7 @@ function clearSelection(){
   // Previously this relied on a full renderList() happening right after to
   // reset each checkbox's `checked` from selectedThreadIds — now that some
   // callers patch in place instead of re-rendering, do it directly here.
-  document.querySelectorAll('.msg-checkbox').forEach(cb => { cb.checked = false; });
+  el('msg-list').querySelectorAll('.msg-checkbox').forEach(cb => { cb.checked = false; });
   updateSelectionToolbar();
   updateSelectAllCheckboxState();
 }
@@ -2164,17 +2164,24 @@ el('mark-read-btn').addEventListener('click', () => bulkSetUnread(false));
 el('mark-unread-btn').addEventListener('click', () => bulkSetUnread(true));
 
 el('select-all-checkbox').addEventListener('change', () => {
-  if(el('select-all-checkbox').checked){
-    lastRenderedGroups.forEach(g => selectedThreadIds.add(g.threadId));
-  }else{
+  // Anything already selected → this click clears it (Gmail-style), so a
+  // partly-selected list clears rather than jumping to "all".
+  const anySelected = lastRenderedGroups.some(g => selectedThreadIds.has(g.threadId));
+  if(anySelected){
     lastRenderedGroups.forEach(g => selectedThreadIds.delete(g.threadId));
+  }else{
+    lastRenderedGroups.forEach(g => selectedThreadIds.add(g.threadId));
   }
-  // Only the checkboxes' checked state actually changed — no need to
-  // rebuild every row to reflect that.
-  document.querySelectorAll('.msg-checkbox').forEach(cb => {
+  // Only the row checkboxes' checked state changed — no need to rebuild
+  // every row. Scoped to the list: the header "Select all" box shares the
+  // .msg-checkbox style, and including it here used to switch it straight
+  // back off, so a second click selected everything again instead of
+  // clearing the selection.
+  el('msg-list').querySelectorAll('.msg-checkbox').forEach(cb => {
     cb.checked = selectedThreadIds.has(cb.dataset.threadid);
   });
   updateSelectionToolbar();
+  updateSelectAllCheckboxState();
 });
 
 function skeletonRows(count){
@@ -2411,6 +2418,9 @@ function updateSelectAllCheckboxState(){
   const selectedCount = lastRenderedGroups.filter(g => selectedThreadIds.has(g.threadId)).length;
   cb.checked = total > 0 && selectedCount === total;
   cb.indeterminate = selectedCount > 0 && selectedCount < total;
+  const label = selectedCount > 0 ? 'Clear selection' : 'Select all';
+  cb.setAttribute('aria-label', label);
+  cb.title = label;
 }
 
 function dateBucket(dateStr){
@@ -3904,6 +3914,7 @@ document.addEventListener('keydown', (e) => {
     else if(isDiscardOpen()) closeDiscardDialog(false);
     else if(composeOpen) closeComposeWithConfirm();
     else if(isNavOpen()) closeNav();
+    else if(selectedThreadIds.size > 0) clearSelection();
     else if(searchActive) clearSearch();
     return;
   }
