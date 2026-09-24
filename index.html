@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Legacy Healing Center Email Portal</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22brand-grad%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%232563eb%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%230d9488%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%228%22%20fill%3D%22url%28%23brand-grad%29%22/%3E%3Cpath%20d%3D%22M16%2013.4V9.6%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22/%3E%3Cpath%20d%3D%22M16%2011.2C16%208.6%2013.9%206.9%2011.2%207.1C11.3%209.7%2013.3%2011.3%2016%2011.2Z%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.85%22/%3E%3Cpath%20d%3D%22M16%2010.2C16%207.2%2018.3%205.2%2021.4%205.4C21.3%208.4%2019%2010.3%2016%2010.2Z%22%20fill%3D%22%23fff%22/%3E%3Crect%20x%3D%227.5%22%20y%3D%2213.4%22%20width%3D%2217%22%20height%3D%2211.6%22%20rx%3D%222.2%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.7%22%20fill%3D%22none%22/%3E%3Cpath%20d%3D%22M8.2%2014.6%2016%2019.8l7.8-5.2%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20fill%3D%22none%22/%3E%3C/svg%3E">
+<link rel="icon" id="favicon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22brand-grad%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%232563eb%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%230d9488%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%228%22%20fill%3D%22url%28%23brand-grad%29%22/%3E%3Cpath%20d%3D%22M16%2013.4V9.6%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22/%3E%3Cpath%20d%3D%22M16%2011.2C16%208.6%2013.9%206.9%2011.2%207.1C11.3%209.7%2013.3%2011.3%2016%2011.2Z%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.85%22/%3E%3Cpath%20d%3D%22M16%2010.2C16%207.2%2018.3%205.2%2021.4%205.4C21.3%208.4%2019%2010.3%2016%2010.2Z%22%20fill%3D%22%23fff%22/%3E%3Crect%20x%3D%227.5%22%20y%3D%2213.4%22%20width%3D%2217%22%20height%3D%2211.6%22%20rx%3D%222.2%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.7%22%20fill%3D%22none%22/%3E%3Cpath%20d%3D%22M8.2%2014.6%2016%2019.8l7.8-5.2%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20fill%3D%22none%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
@@ -776,6 +776,11 @@
   }
   .toast-action:hover{background:rgba(255,255,255,0.28);}
 
+  /* ---------- Desktop notifications toggle ---------- */
+  .topbar .notif-btn.is-on{border-color:rgba(125,211,252,0.55);}
+  .topbar .notif-btn.is-on .icon{color:#7dd3fc;}
+  .topbar .notif-btn.is-blocked .icon{color:rgba(255,255,255,0.5);}
+
   /* ---------- Shortcuts panel (reuses the confirm dialog shell) ---------- */
   .shortcuts-dialog{text-align:left;width:420px;padding:22px 24px 20px;}
   .dialog-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
@@ -880,6 +885,9 @@
   <symbol id="i-reply-all" viewBox="0 0 24 24"><path d="M7 17 2 12l5-5"/><path d="m12 17-5-5 5-5"/><path d="M22 18v-2a4 4 0 0 0-4-4H7"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-bell-on" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M2 8c0-2.2.7-4.3 2-6M22 8a10 10 0 0 0-2-6"/></symbol>
+  <symbol id="i-bell-off" viewBox="0 0 24 24"><path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5"/><path d="M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="m2 2 20 20"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
 </svg>
 
@@ -896,6 +904,7 @@
     <button type="button" id="search-clear-btn" hidden aria-label="Clear search"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg></button>
   </div>
   <div class="account-area">
+    <button type="button" class="btn-ghost icon-btn notif-btn" id="notif-btn" hidden aria-pressed="false" aria-label="Turn on desktop notifications" title="Turn on desktop notifications"><svg class="icon" aria-hidden="true"><use href="#i-bell"/></svg></button>
     <button type="button" class="btn-ghost icon-btn" id="shortcuts-btn" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)"><svg class="icon" aria-hidden="true"><use href="#i-keyboard"/></svg></button>
     <button type="button" class="btn-ghost icon-btn theme-toggle-btn" id="theme-toggle-btn" aria-label="Switch to dark mode" title="Toggle dark mode">
       <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg><svg class="icon i-sun" aria-hidden="true"><use href="#i-sun"/></svg>
@@ -1139,7 +1148,7 @@
         <div class="file-drop">
           <button type="button" class="file-drop-btn" id="attach-btn"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-paperclip"/></svg>Attach files</button>
           <input type="file" id="field-attachments" multiple>
-          <span>Up to 10 files, 10MB each</span>
+          <span>Up to 10 files, 10MB each, 25MB total</span>
         </div>
         <div class="file-list" id="file-list"></div>
       </div>
@@ -1308,6 +1317,7 @@ function tryRestoreAgentSession(){
 
 function applyAgentSessionUI(){
   el('signin-screen').hidden = true;
+  syncNotifButton();
   el('app-shell').hidden = false;
   el('agent-error').hidden = true;
   el('agent-label').textContent = agentProfile.name || agentProfile.email;
@@ -1452,6 +1462,8 @@ function resetMailState(){
   el('reading-pane').innerHTML = emptyReaderHtml();
   document.querySelectorAll('[data-source-count]').forEach(b => { b.textContent = ''; });
   el('count-inbox').textContent = '';
+  updateTabBadge(0);
+  el('notif-btn').hidden = true;
 }
 
 el('agent-signout-btn').addEventListener('click', signOutAgent);
@@ -1480,6 +1492,16 @@ function isAgentTokenExpired(){
 }
 
 function showSessionExpired(){
+  // If the agent was mid-message, keep their work: save it as a draft and
+  // take the compose window off the screen (without discarding), so it's
+  // offered back as "Restore draft" after they sign in again.
+  if(el('compose-overlay').classList.contains('open')){
+    try{ saveDraftNow(); }catch(e){ /* best-effort */ }
+    if(isDiscardOpen()) closeDiscardDialog(false);
+    el('compose-overlay').classList.remove('open');
+  }
+  if(isShortcutsOpen()) closeShortcuts();
+  stopAutoRefresh();
   clearPersistedAgentSession();
   el('app-shell').hidden = true;
   el('agent-avatar').hidden = true;
@@ -1582,6 +1604,8 @@ async function boot(){
 
   // Begin silent polling for new mail once the app is up and running.
   startAutoRefresh();
+  syncNotifButton();
+  maybeOfferNotifications();
 }
 
 function headerVal(headers, name){
@@ -1968,6 +1992,7 @@ function updateNavCounts(){
   // Sent intentionally shows no badge — there's no meaningful "unread"
   // concept for sent mail.
   el('count-sent').textContent = '';
+  updateTabBadge(inboxUnread);
   // Every change to the list cache funnels through here, so this is also
   // where the tab's instant-start cache gets refreshed.
   saveListCacheSoon();
@@ -2719,6 +2744,7 @@ async function pollViaHistory(){
     .map(([id]) => id);
 
   let allFetched = true;
+  const newArrivals = [];
   if(toFetch.length > 0){
     const { values, failures } = await fetchAllSettled(toFetch, id =>
       gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
@@ -2727,6 +2753,7 @@ async function pollViaHistory(){
     values.forEach(raw => {
       const meta = parseMessageMetadata(raw);
       const labels = raw.labelIds || [];
+      if(labels.includes('INBOX') && labels.includes('UNREAD') && !inFolder('INBOX', meta.id)) newArrivals.push(meta);
       ['INBOX', 'SENT'].forEach(f => {
         if(labels.includes(f) && !inFolder(f, meta.id)){
           messagesCache[f].push(meta);
@@ -2742,7 +2769,7 @@ async function pollViaHistory(){
   // Only move the checkpoint forward once everything new is in hand, so a
   // failed fetch is simply retried on the next poll.
   if(allFetched) lastHistoryId = newestHistoryId;
-  return { changed, threadsWithNewMail };
+  return { changed, threadsWithNewMail, newArrivals };
 }
 
 // Old approach, kept as a fallback: re-check the current folder's first page.
@@ -2756,7 +2783,9 @@ async function pollFirstPage(){
   const { values: full } = await fetchAllSettled(ids.filter(id => !known.has(id)), id =>
     gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
   );
-  let changed = mergePolledMessages(folder, full.map(parseMessageMetadata));
+  const fresh = full.map(parseMessageMetadata);
+  const newArrivals = folder === 'INBOX' ? fresh.filter(m => m.unread) : [];
+  let changed = mergePolledMessages(folder, fresh);
   // Unread state for the ids we already had: one ids-only query.
   const unreadRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery + ' is:unread')}&maxResults=100&fields=${encodeURIComponent('messages/id')}`);
   const unreadIds = new Set((unreadRes.messages || []).map(m => m.id));
@@ -2765,13 +2794,16 @@ async function pollFirstPage(){
     if(m && m.unread !== unreadIds.has(id)){ m.unread = unreadIds.has(id); changed = true; }
   });
   markSynced(folder);
-  return { changed: { [folder]: changed }, threadsWithNewMail: new Set() };
+  return { changed: { [folder]: changed }, threadsWithNewMail: new Set(), newArrivals };
 }
 
 async function pollForNewMail(){
   if(!AUTO_REFRESH_MS || pollInFlight) return;
-  // Skip while the tab is backgrounded — no point polling an unseen tab.
-  if(typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+  // Keep checking while the tab is in the background — that's when the tab
+  // badge and desktop notifications matter. With the history check it's one
+  // small request. Only the heavier fallback check is skipped when hidden.
+  const tabHidden = document.visibilityState === 'hidden';
+  if(tabHidden && (historyUnsupported || !lastHistoryId)) return;
   // Only when signed in and the app is showing.
   if(!agentIdToken || !el('app-shell') || el('app-shell').hidden) return;
   // If the token's already expired, let the dedicated renewal path handle it
@@ -2802,6 +2834,7 @@ async function pollForNewMail(){
       }
     }
 
+    if(result.newArrivals && result.newArrivals.length) notifyNewMail(result.newArrivals);
     const anyChange = Object.values(result.changed).some(Boolean);
     if(anyChange){
       updateNavCounts();
@@ -3197,6 +3230,8 @@ el('refresh-btn').addEventListener('click', () => refreshCurrentView());
 /* ---------------- Compose: intake form logic ---------------- */
 const MAX_FILES = 10;
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
+// Gmail rejects messages with more than 25MB of attachments in total.
+const MAX_TOTAL_BYTES = 25 * 1024 * 1024;
 let attachedFiles = [];
 
 const FIELD_LABELS = [
@@ -3278,7 +3313,12 @@ el('field-attachments').addEventListener('change', (e) => {
       break;
     }
     if(f.size > MAX_FILE_BYTES){
-      warnings.push(`${f.name} is over 10MB — skipped.`);
+      warnings.push(`${f.name} is over 10MB, so it wasn't added.`);
+      continue;
+    }
+    const total = attachedFiles.reduce((sum, a) => sum + a.size, 0);
+    if(total + f.size > MAX_TOTAL_BYTES){
+      warnings.push(`${f.name} wasn't added: attachments can't total more than 25MB.`);
       continue;
     }
     attachedFiles.push(f);
@@ -3723,6 +3763,33 @@ function b64ToUrlSafe(str){
   return str.replace(/\+/g, '-').replace(/\//g, '_');
 }
 
+// Email headers must be plain ASCII. Anything else (José, Niño, ñ, emoji)
+// is sent as RFC 2047 "encoded words", or recipients can see mojibake like
+// "JosÃ©". Long values are split into several encoded words.
+function encodeHeaderValue(str){
+  if(/^[\x20-\x7E]*$/.test(str)) return str;
+  const words = [];
+  let chunk = '';
+  let chunkBytes = 0;
+  for(const ch of str){
+    const n = new TextEncoder().encode(ch).length;
+    if(chunkBytes + n > 45 && chunk){ words.push(chunk); chunk = ''; chunkBytes = 0; }
+    chunk += ch; chunkBytes += n;
+  }
+  if(chunk) words.push(chunk);
+  return words.map(w => '=?UTF-8?B?' + btoa(unescape(encodeURIComponent(w))) + '?=').join('\r\n ');
+}
+
+// Attachment file name for Content-Type/Content-Disposition: quotes and line
+// breaks stripped (they'd break the header), non-ASCII encoded, plus the
+// RFC 2231 form that modern mail clients prefer.
+function attachmentNameParams(name){
+  const safe = String(name || 'attachment').replace(/["\\\r\n]/g, '_');
+  const encoded = encodeHeaderValue(safe).replace(/\r\n /g, '');
+  const star = /^[\x20-\x7E]*$/.test(safe) ? '' : `; filename*=UTF-8''${encodeURIComponent(safe)}`;
+  return { quoted: `"${encoded}"`, star };
+}
+
 async function buildRawMessage(to, subject, bodyText, files, replyCtx){
   const extraHeaders = [];
   if(replyCtx && replyCtx.inReplyTo){
@@ -3735,7 +3802,7 @@ async function buildRawMessage(to, subject, bodyText, files, replyCtx){
   if(files.length === 0){
     const rawMessage = [
       `To: ${to}`,
-      `Subject: ${subject}`,
+      `Subject: ${encodeHeaderValue(subject)}`,
       ...extraHeaders,
       'Content-Type: text/plain; charset="UTF-8"',
       '',
@@ -3756,11 +3823,12 @@ async function buildRawMessage(to, subject, bodyText, files, replyCtx){
 
   for(const file of files){
     const base64Data = await readFileAsBase64(file);
+    const fname = attachmentNameParams(file.name);
     parts.push(
       `--${boundary}`,
-      `Content-Type: ${file.type || 'application/octet-stream'}`,
+      `Content-Type: ${file.type || 'application/octet-stream'}; name=${fname.quoted}`,
       'Content-Transfer-Encoding: base64',
-      `Content-Disposition: attachment; filename="${file.name}"`,
+      `Content-Disposition: attachment; filename=${fname.quoted}${fname.star}`,
       '',
       base64Data,
       ''
@@ -3770,7 +3838,7 @@ async function buildRawMessage(to, subject, bodyText, files, replyCtx){
 
   const rawMessage = [
     `To: ${to}`,
-    `Subject: ${subject}`,
+    `Subject: ${encodeHeaderValue(subject)}`,
     ...extraHeaders,
     `Content-Type: multipart/mixed; boundary="${boundary}"`,
     '',
@@ -3830,7 +3898,10 @@ async function sendCompose(){
   }catch(e){
     console.error(e);
     setSendBusy(false);
-    setSendStatus("Couldn't send. Check your connection and try again.", 'error');
+    const tooLarge = e.status === 413 || /too large|exceed|size limit/i.test(e.message || '');
+    setSendStatus(tooLarge
+      ? 'This email is too large to send. Remove an attachment or two and try again.'
+      : "Couldn't send. Check your connection and try again.", 'error');
     return;
   }
 
@@ -3864,6 +3935,193 @@ async function sendCompose(){
 }
 
 el('send-btn').addEventListener('click', sendCompose);
+
+/* ---------------- Tab badge: "(6) Legacy Healing…" + favicon dot ----------------
+   Pinned tabs show only the icon, so the icon gets a red dot too. */
+const APP_TITLE = document.title;
+let faviconUrls = null;
+function updateTabBadge(unread){
+  document.title = unread > 0 ? `(${unread > 99 ? '99+' : unread}) ${APP_TITLE}` : APP_TITLE;
+  const link = el('favicon');
+  if(!link) return;
+  if(!faviconUrls){
+    const prefix = 'data:image/svg+xml,';
+    const base = link.getAttribute('href');
+    if(!base || !base.startsWith(prefix)) return;
+    const svg = decodeURIComponent(base.slice(prefix.length));
+    const dot = '<circle cx="25" cy="7" r="6.5" fill="#ef4444" stroke="#fff" stroke-width="2"/>';
+    faviconUrls = { base, dot: prefix + encodeURIComponent(svg.replace('</svg>', dot + '</svg>')) };
+  }
+  const want = unread > 0 ? faviconUrls.dot : faviconUrls.base;
+  if(link.getAttribute('href') !== want) link.setAttribute('href', want);
+}
+
+/* ---------------- Desktop notifications ----------------
+   Off until the agent turns them on (the browser asks for permission).
+   Shown only when the portal isn't the window the agent is looking at.
+   For privacy, a notification shows the sender and subject only — never the
+   message preview, which can contain patient details and would otherwise sit
+   in the computer's notification center. */
+let notificationsUnsupported = !('Notification' in window);
+let notificationIconPromise = null;
+
+function notifyPrefKey(){ return 'leadmail-notify:' + ((agentProfile && agentProfile.email) || 'anonymous'); }
+function getNotifyPref(){ try{ return localStorage.getItem(notifyPrefKey()); }catch(e){ return null; } }
+function setNotifyPref(v){ try{ localStorage.setItem(notifyPrefKey(), v); }catch(e){ /* ignore */ } }
+
+function notificationsActive(){
+  return !notificationsUnsupported && Notification.permission === 'granted' && getNotifyPref() !== 'off';
+}
+
+// Chrome and most browsers won't reliably show an SVG as a notification
+// icon, so the app mark is drawn once into a PNG.
+function getNotificationIcon(){
+  if(notificationIconPromise) return notificationIconPromise;
+  notificationIconPromise = new Promise(resolve => {
+    const link = el('favicon');
+    const src = faviconUrls ? faviconUrls.base : (link && link.getAttribute('href'));
+    if(!src){ resolve(undefined); return; }
+    const img = new Image();
+    img.onload = () => {
+      try{
+        const c = document.createElement('canvas');
+        c.width = c.height = 192;
+        c.getContext('2d').drawImage(img, 0, 0, 192, 192);
+        resolve(c.toDataURL('image/png'));
+      }catch(e){ resolve(undefined); }
+    };
+    img.onerror = () => resolve(undefined);
+    img.src = src;
+  });
+  return notificationIconPromise;
+}
+
+function syncNotifButton(){
+  const btn = el('notif-btn');
+  if(!btn) return;
+  btn.hidden = notificationsUnsupported || !agentProfile;
+  if(btn.hidden) return;
+  const perm = Notification.permission;
+  const on = notificationsActive();
+  const blocked = perm === 'denied';
+  const label = on ? 'Desktop notifications are on. Click to turn off.'
+    : blocked ? 'Notifications are blocked for this site in your browser settings.'
+    : 'Turn on desktop notifications';
+  btn.classList.toggle('is-on', on);
+  btn.classList.toggle('is-blocked', blocked);
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  btn.setAttribute('aria-label', label);
+  btn.title = label;
+  btn.querySelector('use').setAttribute('href', on ? '#i-bell-on' : (blocked || (perm === 'granted' && !on)) ? '#i-bell-off' : '#i-bell');
+}
+
+async function enableNotifications(){
+  if(notificationsUnsupported) return;
+  let perm = Notification.permission;
+  if(perm === 'default'){
+    // Must be called straight from a click, before any await.
+    try{ perm = await Notification.requestPermission(); }catch(e){ perm = Notification.permission; }
+  }
+  if(perm === 'granted'){
+    setNotifyPref('on');
+    try{
+      const icon = await getNotificationIcon();
+      new Notification('Notifications are on', {
+        body: "You'll get an alert when new mail arrives while you're working in another tab or app.",
+        icon, tag: 'leadmail-test'
+      });
+      showToast('Desktop notifications turned on', 'success');
+    }catch(e){
+      // e.g. Android Chrome only allows notifications from installed apps.
+      notificationsUnsupported = true;
+      showToast("This browser can't show desktop notifications.", 'error');
+    }
+  }else if(perm === 'denied'){
+    showToast("Notifications are blocked for this site. Allow them in your browser's site settings, then click the bell again.", 'error');
+  }
+  syncNotifButton();
+}
+
+function toggleNotifications(){
+  if(notificationsActive()){
+    setNotifyPref('off');
+    showToast('Desktop notifications turned off');
+    syncNotifButton();
+  }else{
+    enableNotifications();
+  }
+}
+el('notif-btn').addEventListener('click', toggleNotifications);
+if(!notificationsUnsupported && navigator.permissions && navigator.permissions.query){
+  // Keep the bell accurate if the agent changes the permission in browser settings.
+  navigator.permissions.query({ name: 'notifications' }).then(status => {
+    status.onchange = syncNotifButton;
+  }).catch(() => { /* not supported everywhere */ });
+}
+
+// A one-time, dismissible nudge after sign-in. Clicking "Turn on" is the
+// click the browser needs before it will ask for permission.
+function maybeOfferNotifications(){
+  if(notificationsUnsupported || !agentProfile || Notification.permission !== 'default') return;
+  const key = 'leadmail-notify-asked:' + agentProfile.email;
+  try{
+    if(localStorage.getItem(key)) return;
+    localStorage.setItem(key, '1');
+  }catch(e){ return; }
+  setTimeout(() => {
+    showToast('Want a desktop alert when new mail arrives?', undefined, { label: 'Turn on', onClick: enableNotifications });
+  }, 3000);
+}
+
+function senderDisplayName(m){
+  const a = parseAddress(m.from);
+  return a.name || a.email || 'Unknown sender';
+}
+
+function notifyNewMail(list){
+  if(!notificationsActive()) return;
+  // Agent is looking at the portal right now: the list updates in front of them.
+  if(document.visibilityState === 'visible' && document.hasFocus()) return;
+  const me = (legacyEmailAddress || '').toLowerCase();
+  const incoming = list
+    .filter(m => (parseAddress(m.from).email || '').toLowerCase() !== me)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  if(incoming.length === 0) return;
+
+  const single = incoming.length === 1;
+  const title = single ? `New email from ${senderDisplayName(incoming[0])}` : `${incoming.length} new emails`;
+  const body = single
+    ? incoming[0].subject
+    : incoming.slice(0, 3).map(m => `${senderDisplayName(m)}: ${m.subject}`).join('\n') + (incoming.length > 3 ? `\n+${incoming.length - 3} more` : '');
+
+  getNotificationIcon().then(icon => {
+    try{
+      const n = new Notification(title, { body, icon, tag: 'leadmail-new-mail', renotify: true });
+      n.onclick = () => {
+        window.focus();
+        n.close();
+        showArrival(single ? incoming[0].threadId : null);
+      };
+    }catch(e){
+      console.debug('Notification failed:', e);
+    }
+  });
+}
+
+// Clicking a notification: bring up the Inbox and, for a single message,
+// open that conversation. Leaves an open compose window alone.
+function showArrival(threadId){
+  if(el('app-shell').hidden || composeIsOpen()) return;
+  if(currentFolder !== 'INBOX' || searchActive){
+    document.querySelector('.nav-item[data-folder="INBOX"]').click();
+  }
+  if(!threadId) return;
+  const row = findRowByThreadId(threadId);
+  if(row){
+    selectRow(row);
+    row.scrollIntoView({ block: 'nearest' });
+  }
+}
 
 /* ---------------- Keyboard shortcuts ---------------- */
 function navigateList(delta){
