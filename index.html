@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Legacy Healing Center Email Portal</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22brand-grad%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%232563eb%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%230d9488%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%228%22%20fill%3D%22url%28%23brand-grad%29%22/%3E%3Cpath%20d%3D%22M16%2013.4V9.6%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22/%3E%3Cpath%20d%3D%22M16%2011.2C16%208.6%2013.9%206.9%2011.2%207.1C11.3%209.7%2013.3%2011.3%2016%2011.2Z%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.85%22/%3E%3Cpath%20d%3D%22M16%2010.2C16%207.2%2018.3%205.2%2021.4%205.4C21.3%208.4%2019%2010.3%2016%2010.2Z%22%20fill%3D%22%23fff%22/%3E%3Crect%20x%3D%227.5%22%20y%3D%2213.4%22%20width%3D%2217%22%20height%3D%2211.6%22%20rx%3D%222.2%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.7%22%20fill%3D%22none%22/%3E%3Cpath%20d%3D%22M8.2%2014.6%2016%2019.8l7.8-5.2%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20fill%3D%22none%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <script>
   // Runs synchronously, before any CSS paints, so there's no flash of the
   // wrong theme. Preference: localStorage first, else system preference.
@@ -40,6 +44,11 @@
                                 the many existing rules already using it) */
     --hover-bg:#f8fafc;     /* generic row/button hover background */
     --hover-border:#c9cfd8; /* generic hover border */
+    --skeleton-hi:#eef1f5;  /* shimmer highlight */
+    --scroll-thumb:#d1d5db;
+    --scroll-thumb-hover:#b0b7c1;
+    --danger-border:#fecaca;
+    --danger-soft:#fef2f2;
     --radius-sm:8px;
     --radius-md:10px;
     --radius-lg:12px;
@@ -47,7 +56,7 @@
     --shadow-md:0 4px 12px rgba(17,24,39,0.08);
     --shadow-lg:0 20px 48px rgba(17,24,39,0.14);
     --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
 
   /* ---------- Dark mode ----------
@@ -69,6 +78,11 @@
     --warn:#f87171;
     --hover-bg:#243247;     /* slightly lighter than --panel, per spec */
     --hover-border:#475569;
+    --skeleton-hi:#2b3a52;
+    --scroll-thumb:#475569;
+    --scroll-thumb-hover:#64748b;
+    --danger-border:#7f1d1d;
+    --danger-soft:rgba(248,113,113,0.1);
   }
 
   *{box-sizing:border-box;}
@@ -108,16 +122,13 @@
   }
   .brand{display:flex;align-items:center;gap:10px;min-width:0;flex-shrink:1;}
   .brand-mark{
-    width:32px;height:32px;border-radius:var(--radius-sm);flex-shrink:0;
-    background:var(--accent);
-    display:flex;align-items:center;justify-content:center;
-    color:#fff;font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:-0.02em;
+    width:32px;height:32px;flex-shrink:0;display:block;
   }
   .topbar .brand-name{
     font-weight:600;font-size:15px;letter-spacing:-0.01em;color:#fff;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
-  .brand-sub{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-left:6px;}
+  .brand-sub{font-variant-numeric:tabular-nums;font-size:11px;color:var(--ink-soft);margin-left:6px;}
   .account-area{display:flex;align-items:center;gap:12px;flex-shrink:0;}
   .topbar .agent-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,0.3);}
   .search-bar{flex:1;max-width:440px;position:relative;margin:0 24px;}
@@ -184,9 +195,9 @@
      compose Reset button, which discards entered data) */
   .btn-danger{
     background:var(--panel);color:var(--warn);padding:8px 12px;
-    border:1px solid #fecaca;
+    border:1px solid var(--danger-border);
   }
-  .btn-danger:hover{background:#fef2f2;border-color:var(--warn);}
+  .btn-danger:hover{background:var(--danger-soft);border-color:var(--warn);}
 
   /* ---------- Layout ---------- */
   .app{
@@ -241,12 +252,12 @@
   .nav-item:hover{background:var(--hover-bg);color:var(--ink);}
   .nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:600;}
   .nav-count{
-    margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-soft);
+    margin-left:auto;font-variant-numeric:tabular-nums;font-size:11px;color:var(--ink-soft);
   }
   .nav-item.active .nav-count{color:var(--accent);}
   .nav-section-label{
-    font-size:10.5px;font-family:var(--mono);color:var(--ink-soft);
-    text-transform:uppercase;letter-spacing:0.04em;
+    font-size:11.5px;font-weight:600;color:var(--ink-soft);
+    
     margin:16px 12px 6px;
   }
 
@@ -264,12 +275,12 @@
     background:var(--panel);
   }
   .list-header{
-    padding:14px 18px;
-    font-size:11.5px;
-    font-family:var(--mono);
-    color:var(--ink-soft);
-    text-transform:uppercase;
-    letter-spacing:0.04em;
+    padding:12px 14px 12px 18px;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--ink);
+    min-height:49px;
+    
     border-bottom:1px solid var(--line);
     position:sticky;top:0;background:var(--panel);
     display:flex;justify-content:space-between;align-items:center;
@@ -292,7 +303,7 @@
     gap:11px;
   }
   .msg-row:hover{background:var(--hover-bg);}
-  .msg-row.selected{background:var(--accent-soft);}
+  .msg-row.selected{background:var(--accent-soft);border-left-color:var(--accent);}
   .msg-row.unread .msg-from, .msg-row.unread .msg-subject{font-weight:700;color:var(--ink);}
   /* Unread indicator dot — the bold weight above is a bit too subtle on its
      own (color doesn't change), so this gives a clear, unmissable signal
@@ -314,17 +325,17 @@
   .msg-content{flex:1;min-width:0;}
   .msg-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:3px;}
   .msg-from{font-size:13.5px;font-weight:500;color:var(--ink);}
-  .msg-date{font-family:var(--mono);font-size:11px;color:var(--ink-soft);flex-shrink:0;}
+  .msg-date{font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--ink-soft);flex-shrink:0;}
   .msg-subject{font-size:13px;color:var(--ink);margin-bottom:3px;}
   .thread-count{
-    background:var(--accent-soft);color:var(--accent);font-family:var(--mono);
+    background:var(--accent-soft);color:var(--accent);font-variant-numeric:tabular-nums;
     font-size:10.5px;padding:1px 6px;border-radius:999px;margin-left:6px;
   }
   .attachment-flag{margin-left:6px;font-size:11px;}
   .msg-snippet{font-size:12.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .list-date-header{
-    padding:10px 18px 4px;font-size:11px;font-family:var(--mono);color:var(--ink-soft);
-    text-transform:uppercase;letter-spacing:0.04em;background:var(--panel);
+    padding:12px 18px 4px;font-size:11.5px;font-weight:600;color:var(--ink-soft);
+    background:var(--panel);
   }
 
   /* Shared placeholder style for Loading / Searching / No messages / errors —
@@ -337,7 +348,7 @@
   .skeleton-row{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:7px;}
   .skeleton-bar{
     height:10px;border-radius:4px;
-    background:linear-gradient(90deg, var(--line) 25%, #eef1f5 37%, var(--line) 63%);
+    background:linear-gradient(90deg, var(--line) 25%, var(--skeleton-hi) 37%, var(--line) 63%);
     background-size:400% 100%;
     animation:skeleton-shimmer 1.4s ease infinite;
   }
@@ -347,7 +358,7 @@
   .skeleton-bar.w-90{width:90%;}
   .skeleton-avatar{
     width:42px;height:42px;border-radius:50%;flex-shrink:0;
-    background:linear-gradient(90deg, var(--line) 25%, #eef1f5 37%, var(--line) 63%);
+    background:linear-gradient(90deg, var(--line) 25%, var(--skeleton-hi) 37%, var(--line) 63%);
     background-size:400% 100%;
     animation:skeleton-shimmer 1.4s ease infinite;
   }
@@ -369,14 +380,14 @@
     color:var(--ink-soft);text-align:center;gap:10px;
   }
   .empty-state .glyph{
-    font-size:30px;opacity:0.6;
+    color:var(--ink-soft);
     width:56px;height:56px;border-radius:50%;background:var(--panel);border:1px solid var(--line);
     display:flex;align-items:center;justify-content:center;
   }
   .empty-state p{margin:0;font-size:13.5px;max-width:280px;}
 
   .read-topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px;}
-  .read-subject{font-size:20px;font-weight:700;letter-spacing:-0.01em;color:var(--ink);}
+  .read-subject{font-size:20px;font-weight:700;letter-spacing:-0.01em;color:var(--ink);margin:0;line-height:1.3;min-width:0;flex:1;}
   .read-actions-top{display:flex;gap:8px;flex-shrink:0;}
 
   .read-header-row{
@@ -393,7 +404,7 @@
   .read-sender-email{font-weight:400;color:var(--ink-soft);font-size:12.5px;margin-left:2px;}
   .read-to-line{font-size:12px;color:var(--ink-soft);margin-top:3px;}
   .read-date{
-    font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);
+    font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--ink-soft);
     white-space:nowrap;flex-shrink:0;padding-top:3px;
   }
 
@@ -444,7 +455,7 @@
     font-size:12.5px;color:var(--ink-soft);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
-  .collapsed-date{font-family:var(--mono);font-size:11px;color:var(--ink-soft);flex-shrink:0;}
+  .collapsed-date{font-variant-numeric:tabular-nums;font-size:11px;color:var(--ink-soft);flex-shrink:0;}
 
   .attachment-list{margin-top:16px;display:flex;flex-direction:column;gap:8px;}
   .attachment-chip{
@@ -453,7 +464,7 @@
     border:1px solid var(--line);
     padding:9px 12px;border-radius:var(--radius-sm);
   }
-  .attachment-size{color:var(--ink-soft);font-family:var(--mono);font-size:11px;}
+  .attachment-size{color:var(--ink-soft);font-variant-numeric:tabular-nums;font-size:11px;}
   .attachment-download-btn{
     background:var(--panel);border:1px solid var(--line);color:var(--accent);
     padding:4px 10px;font-size:11.5px;border-radius:6px;margin-left:auto;
@@ -470,9 +481,65 @@
     padding:40px 44px;text-align:center;max-width:380px;
     box-shadow:var(--shadow-md);
   }
-  .signin-card .brand-mark{margin:0 auto 18px;}
+  .signin-card .brand-mark{width:56px;height:56px;margin:0 auto 18px;filter:drop-shadow(0 6px 14px rgba(37,99,235,0.25));}
   .signin-card h1{font-size:18px;margin:0 0 8px;color:var(--ink);}
   .signin-card p{font-size:13.5px;color:var(--ink-soft);margin:0 0 22px;line-height:1.55;}
+
+  /* ---------- Discard confirmation dialog ----------
+     Replaces the browser's native confirm(), which rendered as a plain
+     box pinned to the top of the window. Centered over the compose
+     window, themed with the same tokens so it works in dark mode too. */
+  .confirm-overlay{
+    position:fixed;inset:0;z-index:60;
+    display:none;align-items:center;justify-content:center;
+    padding:24px;
+    background:rgba(15,23,42,0.45);
+    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+  }
+  .confirm-overlay.open{display:flex;animation:confirmFade .16s ease-out;}
+  .confirm-dialog{
+    width:400px;max-width:100%;
+    background:var(--panel);color:var(--ink);
+    border:1px solid var(--line);border-radius:14px;
+    box-shadow:0 24px 64px rgba(15,23,42,0.28), 0 2px 6px rgba(15,23,42,0.08);
+    padding:28px 28px 22px;
+    text-align:center;
+  }
+  .confirm-overlay.open .confirm-dialog{animation:confirmPop .2s cubic-bezier(.2,.9,.3,1.2);}
+  .confirm-icon{
+    width:52px;height:52px;margin:0 auto 16px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:color-mix(in srgb, var(--warn) 12%, transparent);
+    color:var(--warn);
+    box-shadow:0 0 0 6px color-mix(in srgb, var(--warn) 6%, transparent);
+  }
+  .confirm-icon svg{width:24px;height:24px;}
+  .confirm-title{margin:0 0 8px;font-size:17px;font-weight:600;letter-spacing:-0.01em;color:var(--ink);}
+  .confirm-text{margin:0 auto;max-width:300px;font-size:13.5px;line-height:1.55;color:var(--ink-soft);}
+  .confirm-detail{
+    margin:14px auto 0;display:inline-block;
+    font-size:12px;color:var(--ink-soft);
+    background:var(--paper);border:1px solid var(--line);
+    border-radius:999px;padding:5px 12px;
+  }
+  .confirm-detail:empty{display:none;}
+  .confirm-actions{display:flex;gap:10px;margin-top:22px;}
+  .confirm-actions button{flex:1;padding:10px 14px;font-size:13.5px;font-weight:600;}
+  .btn-danger-solid{
+    background:var(--warn);color:#fff;border:1px solid transparent;
+    box-shadow:0 1px 2px rgba(239,68,68,0.3);
+  }
+  .btn-danger-solid:hover{background:#dc2626;}
+  html[data-theme="dark"] .btn-danger-solid{color:#0F172A;}
+  html[data-theme="dark"] .btn-danger-solid:hover{background:#fca5a5;}
+  @keyframes confirmFade{from{opacity:0;}to{opacity:1;}}
+  @keyframes confirmPop{from{opacity:0;transform:translateY(8px) scale(.96);}to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion: reduce){
+    .confirm-overlay.open, .confirm-overlay.open .confirm-dialog{animation:none;}
+  }
+  @media (max-width:420px){
+    .confirm-actions{flex-direction:column-reverse;}
+  }
 
   /* ---------- Compose modal ---------- */
   .modal-overlay{
@@ -540,17 +607,17 @@
     padding:12px 20px;border-top:1px solid var(--line);
     display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
   }
-  .send-status{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);transition:color .15s ease;}
+  .send-status{font-size:12px;color:var(--ink-soft);transition:color .15s ease;}
   .send-status.is-success{color:var(--success);font-family:var(--sans);font-size:13px;font-weight:700;}
   .send-status.is-error{color:var(--warn);font-weight:600;}
   .foot-actions{display:flex;gap:8px;align-items:center;}
 
   ::-webkit-scrollbar{width:9px;}
-  ::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:6px;}
-  ::-webkit-scrollbar-thumb:hover{background:#b0b7c1;}
+  ::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:6px;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--scroll-thumb-hover);}
 
   .banner{
-    padding:10px 22px;font-size:12.5px;font-family:var(--mono);
+    padding:10px 22px;font-size:12.5px;font-variant-numeric:tabular-nums;
     background:#fffbeb;color:#92400e;border-bottom:1px solid #fde68a;
     display:none;
   }
@@ -563,6 +630,7 @@
     pointer-events:none;
   }
   .toast{
+    pointer-events:auto;display:flex;align-items:center;gap:10px;
     background:#111827;color:#fff;padding:11px 16px;border-radius:var(--radius-sm);
     font-size:13px;box-shadow:var(--shadow-lg);max-width:340px;
     opacity:0;transform:translateY(8px);
@@ -576,28 +644,265 @@
   }
   .toast.toast-success .toast-check{
     width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.25);
-    display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  /* =========================================================================
+     ADDITIONS: icons, accessible controls, validation, drafts, shortcuts,
+     empty states and the small-screen layout.
+     ========================================================================= */
+  [hidden]{display:none !important;}
+
+  /* ---------- Icons (flat line icons from the sprite at the top of <body>) ---------- */
+  .icon-sprite{position:absolute;width:0;height:0;overflow:hidden;}
+  .icon{
+    width:16px;height:16px;flex-shrink:0;
+    fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;
+    vertical-align:-3px;
+  }
+  .icon-sm{width:14px;height:14px;vertical-align:-2px;}
+  .icon-lg{width:24px;height:24px;}
+  button .icon{pointer-events:none;}
+  .btn-primary, .btn-ghost, .btn-danger, .file-drop-btn, .attachment-download-btn, .btn-danger-solid{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  }
+  .compose-btn{display:flex;align-items:center;justify-content:center;gap:8px;}
+  .icon-btn{padding:7px 9px;line-height:1;}
+  button:disabled{cursor:default;opacity:.6;}
+
+  /* Theme toggle shows the icon for the mode you'd switch to */
+  .theme-toggle-btn .i-sun{display:none;}
+  html[data-theme="dark"] .theme-toggle-btn .i-sun{display:inline;}
+  html[data-theme="dark"] .theme-toggle-btn .i-moon{display:none;}
+
+  /* ---------- Search ---------- */
+  .search-bar .search-icon{
+    position:absolute;left:11px;top:50%;transform:translateY(-50%);
+    color:rgba(255,255,255,0.55);pointer-events:none;
+  }
+  .topbar .search-bar input{padding-left:34px;}
+  .search-kbd{
+    position:absolute;right:10px;top:50%;transform:translateY(-50%);
+    pointer-events:none;
+    background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);
+  }
+  .search-bar input:focus ~ .search-kbd,
+  .search-bar input:not(:placeholder-shown) ~ .search-kbd{display:none;}
+
+  /* ---------- Sidebar ---------- */
+  .compose-btn.compose-btn-secondary{
+    background:var(--panel);color:var(--ink);
+    border:1px solid var(--line);box-shadow:none;margin-bottom:18px;
+  }
+  .compose-btn.compose-btn-secondary:hover{background:var(--hover-bg);border-color:var(--hover-border);}
+  button.nav-item{
+    width:100%;border:0;background:transparent;text-align:left;
+    font-family:var(--sans);font-size:13.5px;font-weight:400;
+  }
+  button.nav-item.active{font-weight:600;background:var(--accent-soft);}
+  .nav-item .icon{color:var(--ink-soft);}
+  .nav-item.active .icon{color:var(--accent);}
+  .nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+  .nav-count:not(:empty){
+    background:var(--accent-soft);color:var(--accent);
+    font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;
+  }
+  .nav-item.active .nav-count:not(:empty){background:var(--accent);color:#fff;}
+  #g_id_signin{display:flex;justify-content:center;}
+  .signin-error{color:var(--warn);margin-top:14px;}
+
+  /* ---------- List header controls (real buttons now) ---------- */
+  button.refresh-link{
+    background:none;border:0;padding:4px 7px;border-radius:6px;
+    font-weight:500;display:inline-flex;align-items:center;gap:5px;
+  }
+  button.refresh-link:hover{text-decoration:none;background:var(--accent-soft);}
+  button.refresh-link:focus-visible{outline-offset:0;}
+  .refresh-link.is-busy .icon{animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .sync-info{font-size:11.5px;font-weight:400;color:var(--ink-soft);white-space:nowrap;}
+  .list-header-actions{gap:6px;}
+  .list-header-left{min-width:0;}
+  #list-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  /* ---------- Rows ---------- */
+  .msg-row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+  .msg-from-wrap{display:flex;align-items:center;min-width:0;}
+  .msg-from{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .attachment-flag{color:var(--ink-soft);margin-left:6px;}
+  .load-more-wrap{padding:14px 18px;text-align:center;}
+  .list-placeholder p{margin:0 0 4px;color:var(--ink);font-weight:500;font-size:13.5px;}
+  .list-placeholder.is-error p{color:var(--warn);}
+  .placeholder-actions{margin-top:12px;display:flex;gap:8px;justify-content:center;}
+  .skeleton-bar.gap-8{margin-bottom:8px;}
+  .skeleton-bar.gap-10{margin-bottom:10px;}
+
+  /* ---------- Reading pane ---------- */
+  .read-inner{max-width:760px;margin:0 auto;}
+  .read-back-btn{display:none;}
+  .read-actions-top .btn-ghost{gap:6px;}
+  .thread-message-collapsed:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+  .attachment-chip .icon{color:var(--ink-soft);}
+  .attachment-name{color:var(--ink);min-width:0;overflow-wrap:anywhere;}
+  .attachment-download-btn{gap:5px;}
+  .is-error-text{color:var(--warn);margin:0;}
+  .empty-state .empty-hint{font-size:12.5px;line-height:1.9;}
+  kbd{
+    font-family:var(--sans);font-size:11px;font-weight:600;line-height:1.4;
+    display:inline-block;min-width:20px;padding:1px 6px;text-align:center;
+    border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;
+    background:var(--panel);color:var(--ink);
+  }
+
+  /* ---------- Compose ---------- */
+  .form-control-follow{margin-top:8px;}
+  textarea.form-control.tall{min-height:160px;}
+  .form-control.is-invalid{border-color:var(--warn);}
+  .form-control.is-invalid:focus{box-shadow:0 0 0 3px color-mix(in srgb, var(--warn) 18%, transparent);}
+  .field-error{margin-top:5px;font-size:11.5px;font-weight:500;color:var(--warn);}
+  .compose-close{display:inline-flex;align-items:center;}
+  .draft-banner{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    margin:0 0 14px;padding:9px 10px 9px 12px;
+    background:var(--accent-soft);color:var(--ink);
+    border:1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+    border-radius:var(--radius-sm);font-size:12.5px;
+  }
+  .draft-banner-actions{display:flex;gap:4px;}
+  .file-chip button{display:inline-flex;align-items:center;gap:4px;}
+  .toast-text{flex:1;}
+  .toast-action{
+    background:rgba(255,255,255,0.18);color:#fff;padding:5px 10px;
+    font-size:12.5px;font-weight:600;border-radius:6px;flex-shrink:0;
+  }
+  .toast-action:hover{background:rgba(255,255,255,0.28);}
+
+  /* ---------- Shortcuts panel (reuses the confirm dialog shell) ---------- */
+  .shortcuts-dialog{text-align:left;width:420px;padding:22px 24px 20px;}
+  .dialog-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .dialog-head .confirm-title{margin:0;}
+  .dialog-close{
+    background:transparent;color:var(--ink-soft);padding:6px;border-radius:6px;
+    display:inline-flex;align-items:center;
+  }
+  .dialog-close:hover{background:var(--hover-bg);color:var(--ink);}
+  .shortcut-list{margin:0;display:grid;grid-template-columns:auto 1fr;gap:9px 16px;align-items:center;font-size:13px;}
+  .shortcut-list dt{margin:0;white-space:nowrap;}
+  .shortcut-list dd{margin:0;color:var(--ink-soft);}
+
+  /* ---------- Responsive ---------- */
+  .nav-toggle-btn{
+    display:none;background:transparent;color:#fff;padding:6px;border-radius:6px;
+    align-items:center;
+  }
+  .nav-toggle-btn:hover{background:rgba(255,255,255,0.12);}
+  .nav-backdrop{display:none;}
+
+  @media (max-width:1100px){
+    .list-pane{width:320px;}
+    .reading-pane{padding:28px;}
+  }
+  @media (max-width:900px){
+    .topbar{padding:10px 12px;gap:10px;}
+    .nav-toggle-btn{display:inline-flex;}
+    .topbar .brand-name, .topbar .account-email, #shortcuts-btn, .search-kbd{display:none;}
+    .search-bar{margin:0;max-width:none;}
+    .account-area{gap:8px;}
+    .sidebar{
+      position:fixed;top:0;bottom:0;left:0;z-index:45;width:260px;
+      transform:translateX(-100%);transition:transform .2s ease;box-shadow:var(--shadow-lg);
+    }
+    .app.nav-open .sidebar{transform:none;}
+    .app.nav-open .nav-backdrop{display:block;position:fixed;inset:0;z-index:44;background:rgba(15,23,42,0.4);}
+    .list-pane{width:100%;border-right:0;}
+    .reading-pane{display:none;padding:16px;}
+    .app.show-reader .list-pane{display:none;}
+    .app.show-reader .reading-pane{display:block;}
+    .read-back-btn{display:inline-flex;}
+    .read-topbar{flex-wrap:wrap;gap:10px;}
+    .read-actions-top{width:100%;}
+    .read-subject{font-size:18px;}
+    .read-header-row{flex-wrap:wrap;row-gap:4px;}
+    .read-date{flex-basis:100%;order:3;padding:0 0 0 56px;}
+    .read-sender-email{display:block;margin-left:0;}
+    .modal-overlay{padding:0;}
+    .compose-modal{max-height:100%;height:100%;border-radius:0;border:0;}
+    .compose-head{border-radius:0;}
+    .form-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:560px){
+    #agent-signout-btn{padding:7px 9px;}
+    .compose-foot{flex-direction:column-reverse;align-items:stretch;}
+    .foot-actions button{flex:1;}
+    .toast{max-width:calc(100vw - 40px);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .sidebar{transition:none;}
+    .refresh-link.is-busy .icon{animation:none;}
+    .skeleton-bar, .skeleton-avatar{animation:none;}
   }
 </style>
 </head>
 <body>
+<svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="brand-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#0d9488"/>
+    </linearGradient>
+  </defs>
+  <!-- App mark: an envelope with a seedling growing from it — a chat
+       becoming a lead, and a lead becoming someone's path into care. -->
+  <symbol id="i-brand" viewBox="0 0 32 32">
+    <rect width="32" height="32" rx="8" fill="url(#brand-grad)"/>
+    <path d="M16 13.4V9.6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+    <path d="M16 11.2C16 8.6 13.9 6.9 11.2 7.1C11.3 9.7 13.3 11.3 16 11.2Z" fill="#fff" fill-opacity=".85"/>
+    <path d="M16 10.2C16 7.2 18.3 5.2 21.4 5.4C21.3 8.4 19 10.3 16 10.2Z" fill="#fff"/>
+    <rect x="7.5" y="13.4" width="17" height="11.6" rx="2.2" stroke="#fff" stroke-width="1.7" fill="none"/>
+    <path d="M8.2 14.6 16 19.8l7.8-5.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+  <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></symbol>
+  <symbol id="i-user-plus" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-paperclip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-reply" viewBox="0 0 24 24"><path d="M9 17 4 12l5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></symbol>
+  <symbol id="i-reply-all" viewBox="0 0 24 24"><path d="M7 17 2 12l5-5"/><path d="m12 17-5-5 5-5"/><path d="M22 18v-2a4 4 0 0 0-4-4H7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+</svg>
 
 <div class="topbar">
   <div class="brand">
-    <div class="brand-mark">LH</div>
+    <button type="button" class="nav-toggle-btn" id="nav-toggle-btn" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button>
+    <svg class="brand-mark" aria-hidden="true"><use href="#i-brand"/></svg>
     <div class="brand-name">Legacy Healing Center Email Portal</div>
   </div>
   <div class="search-bar">
-    <input type="text" id="search-input" placeholder="Search mail  (press / to focus)" autocomplete="off">
-    <button type="button" id="search-clear-btn" style="display:none;" aria-label="Clear search">✕</button>
+    <svg class="icon search-icon" aria-hidden="true"><use href="#i-search"/></svg>
+    <input type="text" id="search-input" placeholder="Search mail" aria-label="Search mail" autocomplete="off">
+    <kbd class="search-kbd" aria-hidden="true">/</kbd>
+    <button type="button" id="search-clear-btn" hidden aria-label="Clear search"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg></button>
   </div>
   <div class="account-area">
-    <button type="button" class="btn-ghost theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle dark mode">
-      <span class="theme-icon" id="theme-icon">🌙</span>
+    <button type="button" class="btn-ghost icon-btn" id="shortcuts-btn" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)"><svg class="icon" aria-hidden="true"><use href="#i-keyboard"/></svg></button>
+    <button type="button" class="btn-ghost icon-btn theme-toggle-btn" id="theme-toggle-btn" aria-label="Switch to dark mode" title="Toggle dark mode">
+      <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg><svg class="icon i-sun" aria-hidden="true"><use href="#i-sun"/></svg>
     </button>
-    <img id="agent-avatar" class="agent-avatar" style="display:none;" alt="">
-    <span class="account-email" id="agent-label" style="display:none;"></span>
-    <button class="btn-ghost" id="agent-signout-btn" style="display:none;">Sign out</button>
+    <img id="agent-avatar" class="agent-avatar" hidden alt="">
+    <span class="account-email" id="agent-label" hidden></span>
+    <button type="button" class="btn-ghost" id="agent-signout-btn" hidden>Sign out</button>
   </div>
 </div>
 
@@ -605,28 +910,31 @@
   Set WORKER_BASE_URL and PROXY_API_KEY in the script before this will work — see comment at top of &lt;script&gt; block.
 </div>
 
-<div class="app" id="app-shell" style="display:none;">
-  <div class="sidebar">
+<div class="app" id="app-shell" hidden>
+  <div class="nav-backdrop" id="nav-backdrop"></div>
+  <nav class="sidebar" id="sidebar" aria-label="Mailboxes">
     <div class="sidebar-nav">
-      <button class="compose-btn" id="compose-open-btn">✏️ New Lead</button>
-      <button class="compose-btn" id="quick-compose-open-btn" style="background:#111827;margin-bottom:16px;">✉️ Quick Email</button>
-      <div class="nav-item active" data-folder="INBOX">
-        Inbox <span class="nav-count" id="count-inbox"></span>
+      <button type="button" class="compose-btn" id="compose-open-btn" title="New lead (c)"><svg class="icon" aria-hidden="true"><use href="#i-user-plus"/></svg>New Lead</button>
+      <button type="button" class="compose-btn compose-btn-secondary" id="quick-compose-open-btn" title="Quick email (q)"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>Quick Email</button>
+      <button type="button" class="nav-item active" data-folder="INBOX" aria-current="page">
+        <svg class="icon" aria-hidden="true"><use href="#i-inbox"/></svg>Inbox <span class="nav-count" id="count-inbox"></span>
+      </button>
+      <button type="button" class="nav-item" data-folder="SENT">
+        <svg class="icon" aria-hidden="true"><use href="#i-send"/></svg>Sent <span class="nav-count" id="count-sent"></span>
+      </button>
+      <div class="nav-section-label" id="lead-source-label">Lead source</div>
+      <div role="group" aria-labelledby="lead-source-label">
+        <button type="button" class="nav-item lead-source-item" data-source="Legacy Healing LA Chat"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg>LA Chat <span class="nav-count" data-source-count="Legacy Healing LA Chat"></span></button>
+        <button type="button" class="nav-item lead-source-item" data-source="Legacy Healing Chat"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg>Legacy Chat <span class="nav-count" data-source-count="Legacy Healing Chat"></span></button>
+        <button type="button" class="nav-item lead-source-item" data-source="DCF Chat"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg>DCF Chat <span class="nav-count" data-source-count="DCF Chat"></span></button>
       </div>
-      <div class="nav-item" data-folder="SENT">
-        Sent <span class="nav-count" id="count-sent"></span>
-      </div>
-      <div class="nav-section-label">Lead Source</div>
-      <div class="nav-item lead-source-item" data-source="Legacy Healing LA Chat">LA Chat</div>
-      <div class="nav-item lead-source-item" data-source="Legacy Healing Chat">Legacy Chat</div>
-      <div class="nav-item lead-source-item" data-source="DCF Chat">DCF Chat</div>
     </div>
     <div class="sidebar-footer">
       <div class="sidebar-logo">
         <img src="data:image/png;base64,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" alt="Legacy Healing Center">
       </div>
     </div>
-  </div>
+  </nav>
 
   <div class="main">
     <div class="list-pane">
@@ -636,18 +944,20 @@
           <span id="list-title">Inbox</span>
         </div>
         <div class="list-header-actions">
-          <span class="selection-info" id="selection-info" style="display:none;"></span>
-          <span class="refresh-link" id="mark-read-btn" style="display:none;">Mark read</span>
-          <span class="refresh-link" id="mark-unread-btn" style="display:none;">Mark unread</span>
-          <span class="refresh-link" id="refresh-btn">Refresh</span>
+          <span class="selection-info" id="selection-info" hidden></span>
+          <button type="button" class="refresh-link" id="mark-read-btn" hidden>Mark read</button>
+          <button type="button" class="refresh-link" id="mark-unread-btn" hidden>Mark unread</button>
+          <span class="sync-info" id="sync-info"></span>
+          <button type="button" class="refresh-link" id="refresh-btn" aria-label="Refresh" title="Refresh"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-refresh"/></svg></button>
         </div>
       </div>
       <div id="msg-list"></div>
     </div>
     <div class="reading-pane" id="reading-pane">
       <div class="empty-state">
-        <div class="glyph">✉</div>
-        <p>Select a message to read it here.</p>
+        <div class="glyph"><svg class="icon icon-lg" aria-hidden="true"><use href="#i-mail"/></svg></div>
+        <p>Select a conversation to read it here.</p>
+        <p class="empty-hint">Use <kbd>↑</kbd> <kbd>↓</kbd> to move through the list. Press <kbd>?</kbd> for all shortcuts.</p>
       </div>
     </div>
   </div>
@@ -655,11 +965,47 @@
 
 <div class="signin-screen" id="signin-screen">
   <div class="signin-card">
-    <div class="brand-mark">LH</div>
+    <svg class="brand-mark" aria-hidden="true"><use href="#i-brand"/></svg>
     <h1>Legacy Healing Center Email Portal</h1>
     <p>Sign in with your work Google account to identify yourself. Mail is always sent and read as the shared Legacy Healing inbox — your personal account is only used to confirm who you are.</p>
-    <div id="g_id_signin" style="display:flex;justify-content:center;"></div>
-    <p id="agent-error" style="color:var(--warn);margin-top:14px;display:none;"></p>
+    <div id="g_id_signin"></div>
+    <p id="agent-error" class="signin-error" hidden></p>
+  </div>
+</div>
+
+<!-- Discard confirmation dialog -->
+<div class="confirm-overlay" id="discard-overlay" aria-hidden="true">
+  <div class="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="discard-title" aria-describedby="discard-text">
+    <div class="confirm-icon" aria-hidden="true"><svg class="icon"><use href="#i-trash"/></svg></div>
+    <h2 class="confirm-title" id="discard-title">Discard this message?</h2>
+    <p class="confirm-text" id="discard-text">Everything you've entered will be cleared. This can't be undone.</p>
+    <div class="confirm-detail" id="discard-detail"></div>
+    <div class="confirm-actions">
+      <button type="button" class="btn-ghost" id="discard-cancel-btn">Keep editing</button>
+      <button type="button" class="btn-danger-solid" id="discard-confirm-btn">Discard</button>
+    </div>
+  </div>
+</div>
+
+<!-- Keyboard shortcuts panel -->
+<div class="confirm-overlay" id="shortcuts-overlay" aria-hidden="true">
+  <div class="confirm-dialog shortcuts-dialog" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
+    <div class="dialog-head">
+      <h2 class="confirm-title" id="shortcuts-title">Keyboard shortcuts</h2>
+      <button type="button" class="dialog-close" id="shortcuts-close-btn" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </div>
+    <dl class="shortcut-list">
+      <dt><kbd>c</kbd></dt><dd>New lead</dd>
+      <dt><kbd>q</kbd></dt><dd>Quick email</dd>
+      <dt><kbd>r</kbd></dt><dd>Reply to the open conversation</dd>
+      <dt><kbd>a</kbd></dt><dd>Reply all</dd>
+      <dt><kbd>u</kbd></dt><dd>Mark the open conversation unread</dd>
+      <dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Move through the list</dd>
+      <dt><kbd>/</kbd></dt><dd>Search mail</dd>
+      <dt><kbd>Ctrl</kbd> <kbd>Enter</kbd></dt><dd>Send, while writing</dd>
+      <dt><kbd>Esc</kbd></dt><dd>Close the open window, or clear search</dd>
+      <dt><kbd>?</kbd></dt><dd>Show this list</dd>
+    </dl>
   </div>
 </div>
 
@@ -667,40 +1013,47 @@
 <div class="modal-overlay" id="compose-overlay">
   <div class="compose-modal">
     <div class="compose-head">
-      <span>New message</span>
-      <button class="compose-close" id="compose-close-btn" aria-label="Close compose window">✕</button>
+      <span id="compose-title">New message</span>
+      <button type="button" class="compose-close" id="compose-close-btn" aria-label="Close compose window"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
     </div>
     <div class="compose-body">
+      <div class="draft-banner" id="draft-banner" hidden>
+        <span id="draft-banner-text">You have an unsent draft.</span>
+        <div class="draft-banner-actions">
+          <button type="button" class="refresh-link" id="draft-restore-btn">Restore draft</button>
+          <button type="button" class="refresh-link" id="draft-discard-btn">Discard draft</button>
+        </div>
+      </div>
       <div id="lead-recipient-subject-block">
         <div class="form-block">
-          <label class="form-label">Recipient</label>
+          <label class="form-label" for="field-recipient-select">Recipient <span class="req">*</span></label>
           <select class="form-control" id="field-recipient-select">
             <option value="" disabled selected>Select recipient</option>
             <option value="ChatAI@legacyhealing.com">ChatAI@legacyhealing.com</option>
             <option value="__custom__">Custom…</option>
           </select>
-          <input type="text" class="form-control" id="field-recipient-custom" placeholder="Enter recipient email" style="display:none;margin-top:8px;">
+          <input type="text" class="form-control form-control-follow" id="field-recipient-custom" placeholder="Enter recipient email" aria-label="Recipient email" hidden>
         </div>
 
         <div class="form-block">
-          <label class="form-label">Subject <span class="req">*</span></label>
+          <label class="form-label" for="field-subject-select">Subject <span class="req">*</span></label>
           <select class="form-control" id="field-subject-select">
             <option value="" disabled selected>Select subject</option>
             <option value="Chat Follow Up">Chat Follow Up</option>
             <option value="Chat Private Pay">Chat Private Pay</option>
             <option value="__custom__">Custom…</option>
           </select>
-          <input type="text" class="form-control" id="field-subject-custom" placeholder="Enter subject" style="display:none;margin-top:8px;">
+          <input type="text" class="form-control form-control-follow" id="field-subject-custom" placeholder="Enter subject" aria-label="Custom subject" hidden>
         </div>
       </div>
 
-      <div id="reply-recipient-subject-block" style="display:none;">
+      <div id="reply-recipient-subject-block" hidden>
         <div class="form-block">
-          <label class="form-label">To</label>
+          <label class="form-label" for="field-reply-to">To <span class="req">*</span></label>
           <input type="text" class="form-control" id="field-reply-to" placeholder="recipient@example.com">
         </div>
         <div class="form-block">
-          <label class="form-label">Subject</label>
+          <label class="form-label" for="field-reply-subject">Subject</label>
           <input type="text" class="form-control" id="field-reply-subject" placeholder="Subject">
         </div>
       </div>
@@ -708,11 +1061,11 @@
       <div id="lead-fields-block">
         <div class="form-grid">
           <div class="form-block">
-            <label class="form-label">Agent</label>
+            <label class="form-label" for="field-agent">Agent</label>
             <input type="text" class="form-control" id="field-agent">
           </div>
           <div class="form-block">
-            <label class="form-label">Lead Source <span class="req">*</span></label>
+            <label class="form-label" for="field-lead-source">Lead Source <span class="req">*</span></label>
             <select class="form-control" id="field-lead-source">
               <option value="" disabled selected>Select lead source</option>
               <option value="Legacy Healing LA Chat">Legacy Healing LA Chat</option>
@@ -722,69 +1075,69 @@
           </div>
 
           <div class="form-block">
-            <label class="form-label">Chat ID</label>
+            <label class="form-label" for="field-chat-id">Chat ID</label>
             <input type="text" class="form-control" id="field-chat-id">
           </div>
           <div class="form-block">
-            <label class="form-label">Chatter's First/Last Name</label>
+            <label class="form-label" for="field-chatter-name">Chatter's First/Last Name</label>
             <input type="text" class="form-control" id="field-chatter-name">
           </div>
 
           <div class="form-block">
-            <label class="form-label">Patient's First/Last Name</label>
+            <label class="form-label" for="field-patient-name">Patient's First/Last Name</label>
             <input type="text" class="form-control" id="field-patient-name">
           </div>
           <div class="form-block">
-            <label class="form-label">Phone</label>
+            <label class="form-label" for="field-phone">Phone</label>
             <input type="tel" class="form-control" id="field-phone">
           </div>
 
           <div class="form-block">
-            <label class="form-label">Date of Birth</label>
+            <label class="form-label" for="field-dob">Date of Birth</label>
             <input type="text" class="form-control" id="field-dob" placeholder="MM/DD/YYYY">
           </div>
           <div class="form-block">
-            <label class="form-label">Email</label>
+            <label class="form-label" for="field-patient-email">Email</label>
             <input type="email" class="form-control" id="field-patient-email">
           </div>
 
           <div class="form-block">
-            <label class="form-label">Private Insurance</label>
+            <label class="form-label" for="field-insurance">Private Insurance</label>
             <input type="text" class="form-control" id="field-insurance">
           </div>
           <div class="form-block">
-            <label class="form-label">Member ID #</label>
+            <label class="form-label" for="field-member-id">Member ID #</label>
             <input type="text" class="form-control" id="field-member-id">
           </div>
 
           <div class="form-block">
-            <label class="form-label">Insurance Group</label>
+            <label class="form-label" for="field-insurance-group">Insurance Group</label>
             <input type="text" class="form-control" id="field-insurance-group">
           </div>
         </div>
 
         <div class="form-block">
-          <label class="form-label">Chat landing page</label>
+          <label class="form-label" for="field-landing-page">Chat landing page</label>
           <input type="text" class="form-control" id="field-landing-page" placeholder="https://…">
         </div>
 
         <div class="form-block">
-          <label class="form-label">Explanation <span class="req">*</span></label>
+          <label class="form-label" for="field-explanation">Explanation <span class="req">*</span></label>
           <textarea class="form-control" id="field-explanation" placeholder="Add context or notes…"></textarea>
         </div>
       </div>
 
-      <div id="reply-message-block" style="display:none;">
+      <div id="reply-message-block" hidden>
         <div class="form-block">
-          <label class="form-label">Message</label>
-          <textarea class="form-control" id="field-reply-body" placeholder="Write your reply…" style="min-height:160px;"></textarea>
+          <label class="form-label" for="field-reply-body">Message <span class="req">*</span></label>
+          <textarea class="form-control tall" id="field-reply-body" placeholder="Write your message…"></textarea>
         </div>
       </div>
 
       <div class="form-block">
         <label class="form-label">Attachments</label>
         <div class="file-drop">
-          <button type="button" class="file-drop-btn" id="attach-btn" aria-label="Attach files">📎 Attach files</button>
+          <button type="button" class="file-drop-btn" id="attach-btn"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-paperclip"/></svg>Attach files</button>
           <input type="file" id="field-attachments" multiple>
           <span>Up to 10 files, 10MB each</span>
         </div>
@@ -792,11 +1145,11 @@
       </div>
     </div>
     <div class="compose-foot">
-      <span class="send-status" id="send-status"></span>
+      <span class="send-status" id="send-status" role="status" aria-live="polite"></span>
       <div class="foot-actions">
-        <button class="btn-danger" id="reset-btn" aria-label="Reset form">↺ Reset</button>
-        <button class="btn-ghost" id="copy-btn" aria-label="Copy all info to clipboard">⧉ Copy all info</button>
-        <button class="btn-primary" id="send-btn" aria-label="Send email">✈ Send email</button>
+        <button type="button" class="btn-danger" id="reset-btn"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-reset"/></svg>Reset</button>
+        <button type="button" class="btn-ghost" id="copy-btn"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-copy"/></svg>Copy all info</button>
+        <button type="button" class="btn-primary" id="send-btn" title="Send (Ctrl+Enter)"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-send"/></svg><span id="send-btn-label">Send email</span></button>
       </div>
     </div>
   </div>
@@ -848,28 +1201,18 @@ function currentTheme(){
 }
 
 function syncThemeIcon(){
-  el('theme-icon').textContent = currentTheme() === 'dark' ? '☀️' : '🌙';
+  // The sun/moon swap itself is pure CSS (keyed off html[data-theme]); this
+  // just keeps the accessible label accurate.
+  el('theme-toggle-btn').setAttribute('aria-label',
+    currentTheme() === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
 }
 
 function toggleTheme(){
-  const icon = el('theme-icon');
   const next = currentTheme() === 'dark' ? 'light' : 'dark';
-
-  // Brief, smooth icon swap (~150ms) rather than an abrupt flip
-  icon.style.transform = 'scale(0.6) rotate(90deg)';
-  icon.style.opacity = '0';
-
-  setTimeout(() => {
-    if(next === 'dark'){
-      document.documentElement.setAttribute('data-theme', 'dark');
-    }else{
-      document.documentElement.removeAttribute('data-theme');
-    }
-    localStorage.setItem('theme', next);
-    syncThemeIcon();
-    icon.style.transform = 'scale(1) rotate(0deg)';
-    icon.style.opacity = '1';
-  }, 150);
+  if(next === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  else document.documentElement.removeAttribute('data-theme');
+  try{ localStorage.setItem('theme', next); }catch(e){ /* storage unavailable */ }
+  syncThemeIcon();
 }
 
 el('theme-toggle-btn').addEventListener('click', toggleTheme);
@@ -891,6 +1234,59 @@ function persistAgentSession(){
 
 function clearPersistedAgentSession(){
   try{ sessionStorage.removeItem(AGENT_SESSION_KEY); }catch(e){ /* ignore */ }
+  clearListCache();
+}
+
+/* ---------------- Instant start: last-seen list, this tab only ----------------
+   The list metadata (sender, subject, snippet) is kept in sessionStorage so a
+   page refresh can paint the inbox immediately while fresh data loads. It's
+   scoped to this browser tab, tied to the signed-in agent, and wiped on sign
+   out or session expiry — it never lingers on a shared computer. */
+const LIST_CACHE_KEY = 'leadmail-list-cache';
+const LIST_CACHE_MAX_AGE = 6 * 60 * 60 * 1000;
+let listCacheTimer = null;
+
+function slimMeta(m){
+  return {
+    id: m.id, threadId: m.threadId, messageIdHeader: m.messageIdHeader, references: m.references,
+    from: m.from, to: m.to, cc: m.cc, subject: m.subject, date: m.date, snippet: m.snippet,
+    unread: m.unread, hasAttachments: m.hasAttachments
+  };
+}
+function saveListCacheSoon(){
+  clearTimeout(listCacheTimer);
+  listCacheTimer = setTimeout(saveListCache, 600);
+}
+function saveListCache(){
+  if(!agentProfile) return;
+  try{
+    sessionStorage.setItem(LIST_CACHE_KEY, JSON.stringify({
+      agent: agentProfile.email,
+      account: legacyEmailAddress,
+      savedAt: Date.now(),
+      INBOX: (messagesCache.INBOX || []).slice(0, 60).map(slimMeta),
+      SENT: (messagesCache.SENT || []).slice(0, 40).map(slimMeta)
+    }));
+  }catch(e){ /* quota or storage unavailable — the cache is optional */ }
+}
+function restoreListCache(){
+  try{
+    const raw = sessionStorage.getItem(LIST_CACHE_KEY);
+    if(!raw || !agentProfile) return false;
+    const c = JSON.parse(raw);
+    if(c.agent !== agentProfile.email || Date.now() - c.savedAt > LIST_CACHE_MAX_AGE) return false;
+    const revive = (arr) => (arr || []).map(m => ({ ...m, hydrated: false, body: null, bodyHtml: null, attachments: null }));
+    messagesCache.INBOX = revive(c.INBOX);
+    messagesCache.SENT = revive(c.SENT);
+    legacyEmailAddress = c.account || legacyEmailAddress;
+    return messagesCache.INBOX.length > 0;
+  }catch(e){
+    return false;
+  }
+}
+function clearListCache(){
+  clearTimeout(listCacheTimer);
+  try{ sessionStorage.removeItem(LIST_CACHE_KEY); }catch(e){ /* ignore */ }
 }
 
 // Restores a still-valid session from this browser tab, if one exists —
@@ -911,17 +1307,17 @@ function tryRestoreAgentSession(){
 }
 
 function applyAgentSessionUI(){
-  el('signin-screen').style.display = 'none';
-  el('app-shell').style.display = 'flex';
-  el('agent-error').style.display = 'none';
+  el('signin-screen').hidden = true;
+  el('app-shell').hidden = false;
+  el('agent-error').hidden = true;
   el('agent-label').textContent = agentProfile.name || agentProfile.email;
-  el('agent-label').style.display = 'inline';
-  el('agent-signout-btn').style.display = 'inline-block';
+  el('agent-label').hidden = false;
+  el('agent-signout-btn').hidden = false;
 
   if(agentProfile.picture){
     el('agent-avatar').src = agentProfile.picture;
     el('agent-avatar').alt = agentProfile.name || agentProfile.email || '';
-    el('agent-avatar').style.display = 'inline-block';
+    el('agent-avatar').hidden = false;
   }
 }
 
@@ -996,7 +1392,7 @@ function requestSilentReauth(){
 function handleCredentialResponse(response){
   // If the app is already running, this is a silent renewal mid-session — we
   // just swap in the new token and keep going, rather than re-booting the UI.
-  const wasSignedIn = !!agentIdToken && el('app-shell').style.display !== 'none';
+  const wasSignedIn = !!agentIdToken && !el('app-shell').hidden;
 
   agentIdToken = response.credential;
   agentProfile = decodeJwtPayload(agentIdToken);
@@ -1012,12 +1408,14 @@ function handleCredentialResponse(response){
 
   bootWithRetry(e => {
     el('agent-error').textContent = 'Signed in, but the mail server rejected this account: ' + e.message;
-    el('agent-error').style.display = 'block';
+    el('agent-error').hidden = false;
     signOutAgent();
   });
 }
 
 function signOutAgent(){
+  // Drafts can hold patient details, so an explicit sign-out removes them.
+  clearAllDrafts();
   agentIdToken = null;
   agentProfile = null;
   stopAutoRefresh();
@@ -1026,12 +1424,34 @@ function signOutAgent(){
   if(window.google && google.accounts && google.accounts.id){
     google.accounts.id.disableAutoSelect();
   }
-  el('app-shell').style.display = 'none';
-  el('signin-screen').style.display = 'flex';
-  el('agent-label').style.display = 'none';
-  el('agent-signout-btn').style.display = 'none';
-  el('agent-avatar').style.display = 'none';
+  resetMailState();
+  el('app-shell').hidden = true;
+  el('signin-screen').hidden = false;
+  el('agent-label').hidden = true;
+  el('agent-signout-btn').hidden = true;
+  el('agent-avatar').hidden = true;
   el('agent-avatar').src = '';
+}
+
+// Clears everything loaded for the previous session so the next person to
+// sign in on this computer never sees it, even for a moment.
+function resetMailState(){
+  messagesCache = { INBOX: [], SENT: [] };
+  nextPageTokens = { INBOX: null, SENT: null };
+  searchResultsCache = [];
+  searchActive = false;
+  threadCache.clear();
+  lastHistoryId = null;
+  lastSyncedAt.INBOX = 0; lastSyncedAt.SENT = 0;
+  currentOpenGroup = null;
+  currentThreadMessages = [];
+  lastRenderedGroups = [];
+  selectedThreadIds.clear();
+  el('compose-overlay').classList.remove('open');
+  el('msg-list').innerHTML = '';
+  el('reading-pane').innerHTML = emptyReaderHtml();
+  document.querySelectorAll('[data-source-count]').forEach(b => { b.textContent = ''; });
+  el('count-inbox').textContent = '';
 }
 
 el('agent-signout-btn').addEventListener('click', signOutAgent);
@@ -1061,13 +1481,13 @@ function isAgentTokenExpired(){
 
 function showSessionExpired(){
   clearPersistedAgentSession();
-  el('app-shell').style.display = 'none';
-  el('agent-avatar').style.display = 'none';
-  el('agent-label').style.display = 'none';
-  el('agent-signout-btn').style.display = 'none';
-  el('signin-screen').style.display = 'flex';
+  el('app-shell').hidden = true;
+  el('agent-avatar').hidden = true;
+  el('agent-label').hidden = true;
+  el('agent-signout-btn').hidden = true;
+  el('signin-screen').hidden = false;
   el('agent-error').textContent = 'Your session timed out. Please sign in again to continue.';
-  el('agent-error').style.display = 'block';
+  el('agent-error').hidden = false;
 }
 
 async function gmailFetch(path, options = {}){
@@ -1088,14 +1508,18 @@ async function gmailFetch(path, options = {}){
       'x-agent-token': agentIdToken || ''
     }
   });
+  const text = await res.text();
   if(!res.ok){
-    const text = await res.text();
     if(res.status === 403 && /Agent verification failed/.test(text)){
       showSessionExpired();
     }
-    throw new Error('Proxy error ' + res.status + ': ' + text);
+    const err = new Error('Proxy error ' + res.status + ': ' + text);
+    err.status = res.status;
+    throw err;
   }
-  return res.json();
+  // Some Gmail endpoints (e.g. batchModify) answer 204 with no body.
+  if(!text) return {};
+  try{ return JSON.parse(text); }catch(e){ return {}; }
 }
 
 // Runs several async calls with limited concurrency (rather than firing
@@ -1132,18 +1556,29 @@ async function fetchAllSettled(items, fn, concurrency = 8){
 }
 
 async function boot(){
+  // Paint the last-seen inbox from this tab's cache right away (if any), so
+  // a page refresh shows mail instantly; fresh data replaces it below.
+  const restored = restoreListCache();
+  if(restored){
+    updateNavCounts();
+    if(currentFolder === 'INBOX' && !searchActive) renderList();
+  }
+
   const profile = await gmailFetch('/gmail/v1/users/me/profile');
   legacyEmailAddress = profile.emailAddress;
+  lastHistoryId = profile.historyId || null;
 
-  // Load Inbox first and wait for it to finish before starting Sent.
-  // Previously both fired at once, each fanning out up to 8 concurrent
-  // per-message requests — up to 16 simultaneous requests competing for
-  // the same connections/rate limit right at boot, which is what made
-  // the initial load (and post-refresh) feel laggish. Sent still loads
-  // eagerly in the background so switching tabs stays instant — it just
-  // no longer fights Inbox for bandwidth.
-  await loadFolder('INBOX');
+  // Load Inbox first and wait for it to finish before starting Sent, so the
+  // two don't fight over connections and rate limit at boot. Sent still
+  // loads eagerly in the background so switching tabs stays instant.
+  if(restored){
+    await loadFolder('INBOX', true);
+    if(currentFolder === 'INBOX' && !searchActive) renderListPreservingView();
+  }else{
+    await loadFolder('INBOX');
+  }
   loadFolder('SENT', true);
+  scheduleLeadSourceCounts(0);
 
   // Begin silent polling for new mail once the app is up and running.
   startAutoRefresh();
@@ -1369,7 +1804,10 @@ let nextPageTokens = { INBOX: null, SENT: null };
 const PAGE_SIZE = 25;
 
 async function loadFolder(folder, silent){
-  if(!silent){
+  // Only show skeletons for the folder that's on screen. (Previously a
+  // non-silent load of Sent while viewing Inbox blanked the Inbox list and
+  // never re-rendered it — e.g. right after sending a new lead.)
+  if(!silent && folder === currentFolder && !searchActive){
     el('msg-list').innerHTML = skeletonRows(6);
   }
   try{
@@ -1383,9 +1821,10 @@ async function loadFolder(folder, silent){
 
     messagesCache[folder] = full.map(parseMessageMetadata);
     nextPageTokens[folder] = listRes.nextPageToken || null;
+    markSynced(folder);
 
     updateNavCounts();
-    if(folder === currentFolder && !silent){
+    if(folder === currentFolder && !silent && !searchActive){
       renderList();
       if(failures > 0){
         showListStatus(`${failures} message(s) couldn't be loaded — try Refresh.`);
@@ -1396,11 +1835,10 @@ async function loadFolder(folder, silent){
     if(folder === currentFolder && !silent){
       el('msg-list').innerHTML = `
         <div class="list-placeholder is-error">
-          Couldn't load this folder.
-          <div style="margin-top:10px;"><button class="btn-ghost" id="retry-load-btn">Try again</button></div>
+          <p>Couldn't load this folder.</p>
+          Check your connection, then try again.
+          <div class="placeholder-actions"><button type="button" class="btn-ghost" data-list-action="retry-load">Try again</button></div>
         </div>`;
-      const retryBtn = document.getElementById('retry-load-btn');
-      if(retryBtn) retryBtn.addEventListener('click', () => loadFolder(folder));
     }
   }
 }
@@ -1486,16 +1924,9 @@ function reconcileFolderFirstPage(folder, fetched){
 function setRefreshBusy(busy){
   const btn = el('refresh-btn');
   if(!btn) return;
-  if(busy){
-    if(btn.dataset.label === undefined) btn.dataset.label = btn.textContent;
-    btn.textContent = 'Refreshing…';
-    btn.style.pointerEvents = 'none';
-    btn.style.opacity = '0.6';
-  }else{
-    btn.textContent = btn.dataset.label || 'Refresh';
-    btn.style.pointerEvents = '';
-    btn.style.opacity = '';
-  }
+  btn.disabled = busy;
+  btn.classList.toggle('is-busy', busy);
+  btn.setAttribute('aria-label', busy ? 'Refreshing' : 'Refresh');
 }
 
 // The Refresh button. Never drops back to skeletons when there's already
@@ -1517,7 +1948,9 @@ async function refreshCurrentView(){
   try{
     const fetched = await fetchFolderFirstPage(folder);
     const changed = reconcileFolderFirstPage(folder, fetched);
+    markSynced(folder);
     updateNavCounts();
+    if(changed) scheduleLeadSourceCounts();
     if(!searchActive && folder === currentFolder && changed){
       renderListPreservingView();
     }
@@ -1533,19 +1966,111 @@ function updateNavCounts(){
   const inboxUnread = (messagesCache.INBOX || []).filter(m => m.unread).length;
   el('count-inbox').textContent = inboxUnread > 0 ? inboxUnread : '';
   // Sent intentionally shows no badge — there's no meaningful "unread"
-  // concept for sent mail, and the raw loaded-message count (always 25
-  // until "Load more" is clicked) was misleading, not informative.
+  // concept for sent mail.
   el('count-sent').textContent = '';
+  // Every change to the list cache funnels through here, so this is also
+  // where the tab's instant-start cache gets refreshed.
+  saveListCacheSoon();
 }
 
-async function setMessageUnreadState(m, unread){
-  const body = unread ? { addLabelIds: ['UNREAD'] } : { removeLabelIds: ['UNREAD'] };
-  await gmailFetch(`/gmail/v1/users/me/messages/${m.id}/modify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
+/* ---------------- "Updated 2 min ago" ---------------- */
+const lastSyncedAt = { INBOX: 0, SENT: 0 };
+function markSynced(folder){
+  lastSyncedAt[folder] = Date.now();
+  updateSyncInfo();
+}
+function updateSyncInfo(){
+  const info = el('sync-info');
+  if(!info) return;
+  const t = lastSyncedAt[currentFolder];
+  if(searchActive || selectedThreadIds.size > 0 || !t){ info.textContent = ''; return; }
+  const secs = Math.round((Date.now() - t) / 1000);
+  info.textContent = secs < 45 ? 'Updated just now'
+    : secs < 3600 ? `Updated ${Math.max(1, Math.round(secs / 60))} min ago`
+    : `Updated ${Math.round(secs / 3600)} hr ago`;
+  info.title = 'Last checked ' + new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+setInterval(updateSyncInfo, 30000);
+
+/* ---------------- Lead-source unread badges ----------------
+   Three lightweight list queries (ids only, no per-message fetches). */
+const LEAD_SOURCES = ['Legacy Healing LA Chat', 'Legacy Healing Chat', 'DCF Chat'];
+let leadCountsTimer = null;
+function scheduleLeadSourceCounts(delay = 1500){
+  clearTimeout(leadCountsTimer);
+  leadCountsTimer = setTimeout(refreshLeadSourceCounts, delay);
+}
+async function refreshLeadSourceCounts(){
+  if(!agentIdToken) return;
+  const results = await Promise.allSettled(LEAD_SOURCES.map(src => {
+    const q = `label:inbox is:unread "Lead Source: ${src}"`;
+    return gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(q)}&maxResults=100&fields=${encodeURIComponent('messages/id')}`);
+  }));
+  results.forEach((r, i) => {
+    const badge = document.querySelector(`[data-source-count="${LEAD_SOURCES[i]}"]`);
+    if(!badge || r.status !== 'fulfilled') return;
+    const n = (r.value.messages || []).length;
+    badge.textContent = n === 0 ? '' : (n >= 100 ? '99+' : String(n));
+    badge.title = n ? `${n} unread in Inbox` : '';
   });
-  m.unread = unread;
+}
+
+// Applies a read/unread change to every copy of these messages we hold:
+// both folder caches, search results, cached threads, and the open thread.
+function applyUnreadEverywhere(ids, unread){
+  const set = new Set(ids);
+  const touch = (m) => { if(set.has(m.id)) m.unread = unread; };
+  (messagesCache.INBOX || []).forEach(touch);
+  (messagesCache.SENT || []).forEach(touch);
+  searchResultsCache.forEach(touch);
+  threadCache.forEach(t => t.messages.forEach(touch));
+  currentThreadMessages.forEach(touch);
+}
+
+// One batchModify request for any number of messages. If the mail proxy
+// doesn't allow that endpoint, falls back (once, then permanently) to the
+// old one-request-per-message path.
+let batchModifyUnsupported = false;
+async function setUnreadForMessages(msgs, unread){
+  const ids = [...new Set(msgs.map(m => m.id))];
+  if(ids.length === 0) return { failed: 0, total: 0 };
+  const labels = unread ? { addLabelIds: ['UNREAD'] } : { removeLabelIds: ['UNREAD'] };
+
+  if(!batchModifyUnsupported){
+    try{
+      await gmailFetch('/gmail/v1/users/me/messages/batchModify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, ...labels })
+      });
+      applyUnreadEverywhere(ids, unread);
+      return { failed: 0, total: ids.length };
+    }catch(e){
+      if([400, 403, 404, 405].includes(e.status)) batchModifyUnsupported = true;
+      console.debug('batchModify unavailable, falling back to per-message updates', e);
+    }
+  }
+
+  const results = await Promise.allSettled(ids.map(id =>
+    gmailFetch(`/gmail/v1/users/me/messages/${id}/modify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(labels)
+    })
+  ));
+  const ok = ids.filter((id, i) => results[i].status === 'fulfilled');
+  applyUnreadEverywhere(ok, unread);
+  return { failed: ids.length - ok.length, total: ids.length };
+}
+
+// Re-derives one thread's unread state from its messages and patches just
+// that row in the list.
+function patchThreadRow(threadId){
+  const renderedGroup = lastRenderedGroups.find(rg => rg.threadId === threadId);
+  if(!renderedGroup) return;
+  renderedGroup.unread = renderedGroup.messages.some(m => m.unread);
+  const row = findRowByThreadId(threadId);
+  if(row) setRowUnreadUI(row, renderedGroup.unread);
 }
 
 /* ---------------- Selection + bulk read/unread ---------------- */
@@ -1553,10 +2078,11 @@ let selectedThreadIds = new Set();
 
 function updateSelectionToolbar(){
   const count = selectedThreadIds.size;
-  el('selection-info').style.display = count > 0 ? 'inline' : 'none';
+  el('selection-info').hidden = count === 0;
   el('selection-info').textContent = count > 0 ? `${count} selected` : '';
-  el('mark-read-btn').style.display = count > 0 ? 'inline' : 'none';
-  el('mark-unread-btn').style.display = count > 0 ? 'inline' : 'none';
+  el('mark-read-btn').hidden = count === 0;
+  el('mark-unread-btn').hidden = count === 0;
+  updateSyncInfo();
 }
 
 function clearSelection(){
@@ -1575,29 +2101,20 @@ async function bulkSetUnread(unread){
   const groups = groupByThread(flatList).filter(g => selectedThreadIds.has(g.threadId));
   const allMessages = groups.flatMap(g => g.messages);
 
-  const results = await Promise.allSettled(allMessages.map(m => setMessageUnreadState(m, unread)));
-  const failures = results.filter(r => r.status === 'rejected');
-  if(failures.length > 0){
-    console.error('Mark read/unread failed for', failures.length, 'message(s):', failures.map(f => f.reason));
-    showListStatus(`Couldn't update ${failures.length} of ${allMessages.length} message(s) — check your connection and try again.`);
+  const { failed, total } = await setUnreadForMessages(allMessages, unread);
+  if(failed > 0){
+    showListStatus(`Couldn't update ${failed} of ${total} message(s). Check your connection and try again.`);
   }
 
-  // Patch just the rows that actually changed, instead of tearing down and
-  // rebuilding every row in the list for a change that affects only the
-  // selected ones.
-  groups.forEach(g => {
-    const freshUnread = g.messages.some(m => m.unread);
-    const renderedGroup = lastRenderedGroups.find(rg => rg.threadId === g.threadId);
-    if(renderedGroup) renderedGroup.unread = freshUnread;
-    const row = findRowByThreadId(g.threadId);
-    if(row) setRowUnreadUI(row, freshUnread);
-  });
-
+  groups.forEach(g => patchThreadRow(g.threadId));
   clearSelection();
   updateNavCounts();
+  scheduleLeadSourceCounts();
 }
 
-function showToast(text, variant){
+// variant: 'success' | 'error' (or true) | undefined.
+// action (optional): { label, onClick } — renders a button inside the toast.
+function showToast(text, variant, action){
   const container = el('toast-container');
   const toast = document.createElement('div');
   const isError = variant === true || variant === 'error';
@@ -1605,19 +2122,35 @@ function showToast(text, variant){
 
   toast.className = 'toast' + (isError ? ' toast-error' : isSuccess ? ' toast-success' : '');
   if(isSuccess){
-    toast.innerHTML = `<span class="toast-check">✓</span><span>${escapeHtml(text)}</span>`;
-  }else{
-    toast.textContent = text;
+    const check = document.createElement('span');
+    check.className = 'toast-check';
+    check.innerHTML = '<svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>';
+    toast.appendChild(check);
   }
-  toast.setAttribute('role', 'status');
+  const label = document.createElement('span');
+  label.className = 'toast-text';
+  label.textContent = text;
+  toast.appendChild(label);
+
+  let dismissTimer = null;
+  const dismiss = () => {
+    clearTimeout(dismissTimer);
+    toast.classList.remove('toast-show');
+    setTimeout(() => toast.remove(), 200);
+  };
+  if(action){
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'toast-action';
+    btn.textContent = action.label;
+    btn.addEventListener('click', () => { dismiss(); action.onClick(); });
+    toast.appendChild(btn);
+  }
+  toast.setAttribute('role', isError ? 'alert' : 'status');
   container.appendChild(toast);
 
   requestAnimationFrame(() => toast.classList.add('toast-show'));
-
-  setTimeout(() => {
-    toast.classList.remove('toast-show');
-    setTimeout(() => toast.remove(), 200);
-  }, isSuccess ? 6000 : 4500);
+  dismissTimer = setTimeout(dismiss, action ? 8000 : (isSuccess ? 6000 : 4500));
 }
 
 // Kept as a thin alias so every existing call site (folder/search/bulk
@@ -1659,19 +2192,29 @@ function skeletonRows(count){
 
 function skeletonReadingPane(){
   return `
-    <div class="thread-message">
-      <div class="read-header-row">
-        <div class="skeleton-avatar"></div>
-        <div class="read-sender-block">
-          <div class="skeleton-bar w-30" style="margin-bottom:8px;"></div>
-          <div class="skeleton-bar w-45"></div>
+    <div class="read-inner">
+      <div class="thread-message">
+        <div class="read-header-row">
+          <div class="skeleton-avatar"></div>
+          <div class="read-sender-block">
+            <div class="skeleton-bar w-30 gap-8"></div>
+            <div class="skeleton-bar w-45"></div>
+          </div>
         </div>
+        <div class="skeleton-bar w-90 gap-10"></div>
+        <div class="skeleton-bar w-90 gap-10"></div>
+        <div class="skeleton-bar w-70"></div>
       </div>
-      <div class="skeleton-bar w-90" style="margin-bottom:10px;"></div>
-      <div class="skeleton-bar w-90" style="margin-bottom:10px;"></div>
-      <div class="skeleton-bar w-70"></div>
     </div>
   `;
+}
+
+function emptyReaderHtml(){
+  return `<div class="empty-state">
+        <div class="glyph"><svg class="icon icon-lg" aria-hidden="true"><use href="#i-mail"/></svg></div>
+        <p>Select a conversation to read it here.</p>
+        <p class="empty-hint">Use <kbd>↑</kbd> <kbd>↓</kbd> to move through the list. Press <kbd>?</kbd> for all shortcuts.</p>
+      </div>`;
 }
 
 function formatBytes(bytes){
@@ -1686,9 +2229,8 @@ async function downloadAttachment(messageId, att){
     const res = await gmailFetch(`/gmail/v1/users/me/messages/${messageId}/attachments/${att.attachmentId}`);
     const base64 = res.data.replace(/-/g, '+').replace(/_/g, '/');
     const byteChars = atob(base64);
-    const byteNumbers = new Array(byteChars.length);
-    for(let i = 0; i < byteChars.length; i++){ byteNumbers[i] = byteChars.charCodeAt(i); }
-    const byteArray = new Uint8Array(byteNumbers);
+    const byteArray = new Uint8Array(byteChars.length);
+    for(let i = 0; i < byteChars.length; i++){ byteArray[i] = byteChars.charCodeAt(i); }
     const blob = new Blob([byteArray], { type: att.mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1697,10 +2239,10 @@ async function downloadAttachment(messageId, att){
     document.body.appendChild(a);
     a.click();
     a.remove();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }catch(e){
     console.error('Attachment download failed', e);
-    alert('Could not download this attachment — check your connection and try again.');
+    showToast(`Couldn't download ${att.filename}. Check your connection and try again.`, 'error');
   }
 }
 
@@ -1721,9 +2263,10 @@ async function performSearch(term){
   currentSearchTerm = term;
   searchNextPageToken = null;
   searchResultsCache = [];
-  el('search-clear-btn').style.display = 'inline-block';
+  el('search-clear-btn').hidden = false;
   el('list-title').textContent = `Search: "${term}"`;
   el('msg-list').innerHTML = skeletonRows(4);
+  updateSyncInfo();
   try{
     await fetchSearchPage(term, requestId, false);
   }catch(e){
@@ -1731,11 +2274,10 @@ async function performSearch(term){
     console.error(e);
     el('msg-list').innerHTML = `
       <div class="list-placeholder is-error">
-        Search failed.
-        <div style="margin-top:10px;"><button class="btn-ghost" id="retry-search-btn">Try again</button></div>
+        <p>Search didn't finish.</p>
+        Check your connection, then try again.
+        <div class="placeholder-actions"><button type="button" class="btn-ghost" data-list-action="retry-search">Try again</button></div>
       </div>`;
-    const retryBtn = document.getElementById('retry-search-btn');
-    if(retryBtn) retryBtn.addEventListener('click', () => performSearch(term));
   }
 }
 
@@ -1796,9 +2338,9 @@ function clearSearch(){
   searchNextPageToken = null;
   currentSearchTerm = null;
   el('search-input').value = '';
-  el('search-clear-btn').style.display = 'none';
+  el('search-clear-btn').hidden = true;
   el('list-title').textContent = currentFolder === 'INBOX' ? 'Inbox' : 'Sent';
-  document.querySelectorAll('.lead-source-item').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.lead-source-item').forEach(i => { i.classList.remove('active'); i.removeAttribute('aria-pressed'); });
   clearSelection();
   renderList();
 }
@@ -1906,18 +2448,49 @@ function setRowUnreadUI(row, isUnread){
   }
 }
 
+function emptyListHtml(){
+  const folderName = currentFolder === 'INBOX' ? 'Inbox' : 'Sent';
+  const activeSource = document.querySelector('.lead-source-item.active');
+  if(searchActive && activeSource){
+    const name = activeSource.childNodes[1] ? activeSource.childNodes[1].textContent.trim() : 'these';
+    return `<div class="list-placeholder">
+      <p>No ${escapeHtml(name)} messages in ${folderName}.</p>
+      <div class="placeholder-actions"><button type="button" class="btn-ghost" data-list-action="clear-search">Clear filter</button></div>
+    </div>`;
+  }
+  if(searchActive){
+    return `<div class="list-placeholder">
+      <p>No messages in ${folderName} match “${escapeHtml(currentSearchTerm || '')}”.</p>
+      Try different words, or search the other folder.
+      <div class="placeholder-actions"><button type="button" class="btn-ghost" data-list-action="clear-search">Clear search</button></div>
+    </div>`;
+  }
+  if(currentFolder === 'INBOX'){
+    return `<div class="list-placeholder">
+      <p>Your inbox is empty.</p>
+      New mail appears here automatically.
+    </div>`;
+  }
+  return `<div class="list-placeholder">
+    <p>Nothing sent yet.</p>
+    Leads and emails you send show up here.
+    <div class="placeholder-actions"><button type="button" class="btn-primary" data-list-action="new-lead">New Lead</button></div>
+  </div>`;
+}
+
 function renderList(){
   const flatList = searchActive ? searchResultsCache : (messagesCache[currentFolder] || []);
   const groups = groupByThread(flatList);
   lastRenderedGroups = groups;
   const container = el('msg-list');
+  updateSyncInfo();
   if(groups.length === 0){
-    container.innerHTML = '<div class="list-placeholder">No messages.</div>';
+    container.innerHTML = emptyListHtml();
     updateSelectAllCheckboxState();
     return;
   }
   let lastBucket = null;
-  container.innerHTML = groups.map((g, i) => {
+  let html = groups.map((g, i) => {
     const addr = parseAddress(currentFolder === 'INBOX' ? g.latest.from : g.latest.to);
     const hasAttachment = g.messages.some(m => m.hasAttachments);
     const color = avatarColor(addr.email || addr.name || 'x');
@@ -1931,71 +2504,102 @@ function renderList(){
       lastBucket = bucket;
     }
 
+    const checked = selectedThreadIds.has(g.threadId) ? ' checked' : '';
     return bucketHeader + `
-    <div class="msg-row ${g.unread ? 'unread' : ''}" data-idx="${i}" data-threadid="${escapeHtml(g.threadId)}" style="border-left-color:${color};">
-      <input type="checkbox" class="msg-checkbox" data-threadid="${escapeHtml(g.threadId)}" aria-label="Select conversation">
-      <div class="msg-avatar" style="background:${color};">${escapeHtml(initial)}</div>
+    <div class="msg-row ${g.unread ? 'unread' : ''}" tabindex="0" data-idx="${i}" data-threadid="${escapeHtml(g.threadId)}">
+      <input type="checkbox" class="msg-checkbox" data-threadid="${escapeHtml(g.threadId)}" aria-label="Select conversation"${checked}>
+      <div class="msg-avatar" style="background:${color};" aria-hidden="true">${escapeHtml(initial)}</div>
       <div class="msg-content">
         <div class="msg-top">
-          <span style="display:flex;align-items:center;min-width:0;">
+          <span class="msg-from-wrap">
             ${g.unread ? '<span class="unread-dot" aria-hidden="true" title="Unread"></span>' : ''}
             <span class="msg-from">${escapeHtml(participants)}</span>
           </span>
           <span class="msg-date">${formatDate(g.latest.date)}</span>
         </div>
-        <div class="msg-subject">${escapeHtml(g.latest.subject)}${g.count > 1 ? `<span class="thread-count">${g.count}</span>` : ''}${hasAttachment ? '<span class="attachment-flag" title="Has attachment">📎</span>' : ''}</div>
+        <div class="msg-subject">${escapeHtml(g.latest.subject)}${g.count > 1 ? `<span class="thread-count">${g.count}</span>` : ''}${hasAttachment ? '<svg class="icon icon-sm attachment-flag" role="img" aria-label="Has attachment"><use href="#i-paperclip"/></svg>' : ''}</div>
         <div class="msg-snippet">${escapeHtml(g.latest.snippet)}</div>
       </div>
     </div>
   `;
   }).join('');
 
-  // Was `container.innerHTML += ...` — that reparses and rebuilds every
-  // row that was just rendered a second time (innerHTML += reads back the
-  // whole current contents, concatenates, then reconstructs the entire
-  // subtree from scratch). Real DOM append here only adds the one new node.
   const canLoadMore = searchActive ? !!searchNextPageToken : !!nextPageTokens[currentFolder];
   if(canLoadMore){
-    const loadMoreWrap = document.createElement('div');
-    loadMoreWrap.style.padding = '14px 18px';
-    loadMoreWrap.style.textAlign = 'center';
-    loadMoreWrap.innerHTML = '<button class="btn-ghost" id="load-more-btn">Load more</button>';
-    container.appendChild(loadMoreWrap);
+    html += '<div class="load-more-wrap"><button type="button" class="btn-ghost" data-list-action="load-more">Load more</button></div>';
   }
-
-  container.querySelectorAll('.msg-row').forEach(row => {
-    row.addEventListener('click', () => {
-      container.querySelectorAll('.msg-row').forEach(r => r.classList.remove('selected'));
-      row.classList.add('selected');
-      openThread(groups[parseInt(row.dataset.idx)]);
-    });
-  });
-
-  container.querySelectorAll('.msg-checkbox').forEach(cb => {
-    cb.checked = selectedThreadIds.has(cb.dataset.threadid);
-    cb.addEventListener('click', (e) => e.stopPropagation());
-    cb.addEventListener('change', () => {
-      if(cb.checked){
-        selectedThreadIds.add(cb.dataset.threadid);
-      }else{
-        selectedThreadIds.delete(cb.dataset.threadid);
-      }
-      updateSelectionToolbar();
-      updateSelectAllCheckboxState();
-    });
-  });
-
+  container.innerHTML = html;
   updateSelectAllCheckboxState();
+}
 
-  const loadMoreBtn = document.getElementById('load-more-btn');
-  if(loadMoreBtn){
-    loadMoreBtn.addEventListener('click', () => {
-      loadMoreBtn.textContent = 'Loading…';
-      if(searchActive) loadMoreSearch();
-      else loadMoreFolder(currentFolder);
-    });
+/* One set of listeners on the list container (instead of re-attaching a
+   click/change listener to every row on every render). */
+let hoverRow = null;
+let prefetchTimer = null;
+
+function selectRow(row){
+  el('msg-list').querySelectorAll('.msg-row.selected').forEach(r => r.classList.remove('selected'));
+  row.classList.add('selected');
+  const group = lastRenderedGroups[parseInt(row.dataset.idx, 10)];
+  if(group) openThread(group);
+}
+
+function handleListAction(action, btn){
+  if(action === 'load-more'){
+    btn.textContent = 'Loading…';
+    btn.disabled = true;
+    if(searchActive) loadMoreSearch();
+    else loadMoreFolder(currentFolder);
+  }else if(action === 'retry-load'){
+    loadFolder(currentFolder);
+  }else if(action === 'retry-search'){
+    performSearch(currentSearchTerm || el('search-input').value.trim());
+  }else if(action === 'clear-search'){
+    clearSearch();
+  }else if(action === 'new-lead'){
+    openCompose();
   }
 }
+
+el('msg-list').addEventListener('click', (e) => {
+  const actionBtn = e.target.closest('[data-list-action]');
+  if(actionBtn){ handleListAction(actionBtn.dataset.listAction, actionBtn); return; }
+  if(e.target.closest('.msg-checkbox')) return;
+  const row = e.target.closest('.msg-row');
+  if(row) selectRow(row);
+});
+el('msg-list').addEventListener('keydown', (e) => {
+  if((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('msg-row')){
+    e.preventDefault();
+    selectRow(e.target);
+  }
+});
+el('msg-list').addEventListener('change', (e) => {
+  const cb = e.target.closest('.msg-checkbox');
+  if(!cb) return;
+  if(cb.checked) selectedThreadIds.add(cb.dataset.threadid);
+  else selectedThreadIds.delete(cb.dataset.threadid);
+  updateSelectionToolbar();
+  updateSelectAllCheckboxState();
+});
+// Start loading a conversation when the pointer rests on its row, so it's
+// usually ready by the time it's clicked.
+el('msg-list').addEventListener('mouseover', (e) => {
+  const row = e.target.closest('.msg-row');
+  if(!row || row === hoverRow) return;
+  hoverRow = row;
+  clearTimeout(prefetchTimer);
+  prefetchTimer = setTimeout(() => {
+    const group = lastRenderedGroups[parseInt(row.dataset.idx, 10)];
+    if(group && !getCachedThread(group.threadId) && !threadInflight.has(group.threadId)){
+      fetchThread(group.threadId).catch(() => { /* prefetch is best-effort */ });
+    }
+  }, 150);
+});
+el('msg-list').addEventListener('mouseleave', () => {
+  hoverRow = null;
+  clearTimeout(prefetchTimer);
+});
 
 /* ---------------- Silent auto-refresh (poll for new mail) ---------------- */
 
@@ -2038,35 +2642,174 @@ function mergePolledMessages(folder, fetched){
   return changed;
 }
 
+let lastHistoryId = null;
+let historyUnsupported = false;
+let historyFailures = 0;
+let pollInFlight = false;
+
+// Asks Gmail only for what changed since the last check (usually one small
+// request with nothing in it), instead of re-downloading the first 25
+// messages every time. Covers both folders in one call.
+async function pollViaHistory(){
+  const added = new Map();        // id -> labelIds at time of add
+  const labelChanges = new Map(); // id -> latest labelIds
+  const deleted = new Set();
+  const threadsWithNewMail = new Set();
+  let pageToken = null;
+  let pages = 0;
+  let newestHistoryId = lastHistoryId;
+
+  do{
+    let url = `/gmail/v1/users/me/history?startHistoryId=${encodeURIComponent(lastHistoryId)}&maxResults=500`;
+    if(pageToken) url += `&pageToken=${encodeURIComponent(pageToken)}`;
+    const res = await gmailFetch(url);
+    (res.history || []).forEach(h => {
+      (h.messagesAdded || []).forEach(x => {
+        added.set(x.message.id, x.message.labelIds || []);
+        threadsWithNewMail.add(x.message.threadId);
+      });
+      (h.labelsAdded || []).concat(h.labelsRemoved || []).forEach(x => {
+        labelChanges.set(x.message.id, x.message.labelIds || []);
+      });
+      (h.messagesDeleted || []).forEach(x => {
+        deleted.add(x.message.id);
+        threadsWithNewMail.add(x.message.threadId);
+      });
+    });
+    if(res.historyId) newestHistoryId = res.historyId;
+    pageToken = res.nextPageToken || null;
+    pages++;
+  }while(pageToken && pages < 5);
+
+  const changed = { INBOX: false, SENT: false };
+
+  // Read/unread flips, removals, and messages that left a folder.
+  ['INBOX', 'SENT'].forEach(folder => {
+    const cache = messagesCache[folder] || [];
+    for(let i = cache.length - 1; i >= 0; i--){
+      const m = cache[i];
+      if(deleted.has(m.id)){ cache.splice(i, 1); changed[folder] = true; continue; }
+      const labels = labelChanges.get(m.id);
+      if(!labels) continue;
+      if(!labels.includes(folder)){ cache.splice(i, 1); changed[folder] = true; continue; }
+      const u = labels.includes('UNREAD');
+      if(m.unread !== u){ m.unread = u; changed[folder] = true; }
+    }
+  });
+  labelChanges.forEach((labels, id) => applyUnreadEverywhere([id], labels.includes('UNREAD')));
+
+  // Genuinely new messages: fetch list metadata for just those.
+  const inFolder = (folder, id) => (messagesCache[folder] || []).some(m => m.id === id);
+  const toFetch = [...added.entries()]
+    .filter(([id]) => !deleted.has(id))
+    .filter(([id, labels]) => {
+      const finalLabels = labelChanges.get(id) || labels;
+      return ['INBOX', 'SENT'].some(f => finalLabels.includes(f) && !inFolder(f, id));
+    })
+    .map(([id]) => id);
+
+  let allFetched = true;
+  if(toFetch.length > 0){
+    const { values, failures } = await fetchAllSettled(toFetch, id =>
+      gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
+    );
+    allFetched = failures === 0;
+    values.forEach(raw => {
+      const meta = parseMessageMetadata(raw);
+      const labels = raw.labelIds || [];
+      ['INBOX', 'SENT'].forEach(f => {
+        if(labels.includes(f) && !inFolder(f, meta.id)){
+          messagesCache[f].push(meta);
+          changed[f] = true;
+        }
+      });
+    });
+  }
+
+  // Conversations that gained or lost a message must be re-fetched next open.
+  threadsWithNewMail.forEach(t => threadCache.delete(t));
+
+  // Only move the checkpoint forward once everything new is in hand, so a
+  // failed fetch is simply retried on the next poll.
+  if(allFetched) lastHistoryId = newestHistoryId;
+  return { changed, threadsWithNewMail };
+}
+
+// Old approach, kept as a fallback: re-check the current folder's first page.
+async function pollFirstPage(){
+  const folder = currentFolder;
+  const labelQuery = folder === 'INBOX' ? 'label:inbox' : 'label:sent';
+  const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery)}&maxResults=${PAGE_SIZE}`);
+  const ids = (listRes.messages || []).map(m => m.id);
+  const known = new Map((messagesCache[folder] || []).map(m => [m.id, m]));
+  // Only new ids need a metadata fetch; read state comes from the check below.
+  const { values: full } = await fetchAllSettled(ids.filter(id => !known.has(id)), id =>
+    gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
+  );
+  let changed = mergePolledMessages(folder, full.map(parseMessageMetadata));
+  // Unread state for the ids we already had: one ids-only query.
+  const unreadRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery + ' is:unread')}&maxResults=100&fields=${encodeURIComponent('messages/id')}`);
+  const unreadIds = new Set((unreadRes.messages || []).map(m => m.id));
+  ids.forEach(id => {
+    const m = known.get(id);
+    if(m && m.unread !== unreadIds.has(id)){ m.unread = unreadIds.has(id); changed = true; }
+  });
+  markSynced(folder);
+  return { changed: { [folder]: changed }, threadsWithNewMail: new Set() };
+}
+
 async function pollForNewMail(){
-  if(!AUTO_REFRESH_MS) return;
-  // Don't clobber an active search view.
-  if(searchActive) return;
+  if(!AUTO_REFRESH_MS || pollInFlight) return;
   // Skip while the tab is backgrounded — no point polling an unseen tab.
   if(typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
   // Only when signed in and the app is showing.
-  if(!agentIdToken || !el('app-shell') || el('app-shell').style.display === 'none') return;
+  if(!agentIdToken || !el('app-shell') || el('app-shell').hidden) return;
   // If the token's already expired, let the dedicated renewal path handle it
   // rather than having a background poll trigger the session-expired screen.
   if(isAgentTokenExpired()) return;
 
-  const folder = currentFolder;
+  pollInFlight = true;
   try{
-    const labelQuery = folder === 'INBOX' ? 'label:inbox' : 'label:sent';
-    const listRes = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(labelQuery)}&maxResults=${PAGE_SIZE}`);
-    const ids = (listRes.messages || []).map(m => m.id);
-    const { values: full } = await fetchAllSettled(ids, id =>
-      gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
-    );
-    const changed = mergePolledMessages(folder, full.map(parseMessageMetadata));
-    updateNavCounts();
-    // Re-render only if something changed and the user hasn't moved on.
-    if(changed && !searchActive && folder === currentFolder){
+    let result = null;
+    if(lastHistoryId && !historyUnsupported){
+      try{
+        result = await pollViaHistory();
+        historyFailures = 0;
+        markSynced('INBOX');
+        markSynced('SENT');
+      }catch(e){
+        historyFailures++;
+        if(historyFailures >= 3) historyUnsupported = true;
+        console.debug('History check failed, using first-page check instead:', e);
+      }
+    }
+    if(!result){
+      if(searchActive) return;  // first-page check would clobber a search view
+      result = await pollFirstPage();
+      if(!historyUnsupported){
+        // Re-anchor so the next poll can use history again.
+        try{ const prof = await gmailFetch('/gmail/v1/users/me/profile'); lastHistoryId = prof.historyId || lastHistoryId; }catch(e){ /* next time */ }
+      }
+    }
+
+    const anyChange = Object.values(result.changed).some(Boolean);
+    if(anyChange){
+      updateNavCounts();
+      scheduleLeadSourceCounts();
+    }
+    if(!searchActive && result.changed[currentFolder]){
       renderListPreservingView();
+    }
+    // Someone replied in the conversation that's open: refresh it quietly.
+    if(currentOpenGroup && result.threadsWithNewMail.has(currentOpenGroup.threadId)){
+      const fresh = lastRenderedGroups.find(g => g.threadId === currentOpenGroup.threadId) || currentOpenGroup;
+      openThread(fresh, { silent: true, forceRefresh: true });
     }
   }catch(e){
     // A failed background poll must stay invisible — try again next tick.
     if(window.console && console.debug) console.debug('Auto-refresh poll skipped:', e);
+  }finally{
+    pollInFlight = false;
   }
 }
 
@@ -2128,8 +2871,10 @@ function headerAndSubLineFor(m){
   return { headerAddr, subLine };
 }
 
-function renderReadingThread(messages){
+function renderReadingThread(messages, keepScroll){
   const latest = messages[messages.length - 1];
+  const pane = el('reading-pane');
+  const scrollTop = keepScroll ? pane.scrollTop : 0;
 
   const cardsHtml = messages.map((m, idx) => {
     const isLast = idx === messages.length - 1;
@@ -2142,8 +2887,10 @@ function renderReadingThread(messages){
       <div class="attachment-list">
         ${m.attachments.map(a => `
           <div class="attachment-chip">
-            📎 ${escapeHtml(a.filename)} <span class="attachment-size">(${formatBytes(a.size)})</span>
-            <button type="button" class="attachment-download-btn" data-msgid="${escapeHtml(m.id)}" data-attid="${escapeHtml(a.attachmentId)}" data-filename="${escapeHtml(a.filename)}" data-mimetype="${escapeHtml(a.mimeType)}">Download</button>
+            <svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>
+            <span class="attachment-name">${escapeHtml(a.filename)}</span>
+            <span class="attachment-size">${formatBytes(a.size)}</span>
+            <button type="button" class="attachment-download-btn" data-msgid="${escapeHtml(m.id)}" data-attid="${escapeHtml(a.attachmentId)}" data-filename="${escapeHtml(a.filename)}" data-mimetype="${escapeHtml(a.mimeType)}" aria-label="Download ${escapeHtml(a.filename)}"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-download"/></svg><span>Download</span></button>
           </div>
         `).join('')}
       </div>
@@ -2154,9 +2901,9 @@ function renderReadingThread(messages){
       : `<div class="read-body">${escapeHtml(m.body || '')}</div>`;
 
     const fullCard = `
-      <div class="thread-message" id="msg-card-${escapeHtml(m.id)}" style="${isLast ? '' : 'display:none;'}">
+      <div class="thread-message" id="msg-card-${escapeHtml(m.id)}"${isLast ? '' : ' hidden'}>
         <div class="read-header-row">
-          <div class="read-avatar" style="background:${color};">${escapeHtml(initial)}</div>
+          <div class="read-avatar" style="background:${color};" aria-hidden="true">${escapeHtml(initial)}</div>
           <div class="read-sender-block">
             <div class="read-sender-name">${escapeHtml(headerAddr.name)}${showEmailSeparately ? `<span class="read-sender-email">&lt;${escapeHtml(headerAddr.email)}&gt;</span>` : ''}</div>
             <div class="read-to-line">${escapeHtml(subLine)}</div>
@@ -2171,11 +2918,11 @@ function renderReadingThread(messages){
     if(isLast) return fullCard;
 
     // Collapsed one-line summary for every earlier message in the thread —
-    // click to expand in place, matching Gmail's collapsed-thread pattern.
+    // click (or Enter) to expand in place.
     const preview = m.snippet || (m.body ? m.body.slice(0, 120) : '');
     return `
-      <div class="thread-message-collapsed" id="msg-collapsed-${escapeHtml(m.id)}" data-msgid="${escapeHtml(m.id)}">
-        <div class="collapsed-avatar" style="background:${color};">${escapeHtml(initial)}</div>
+      <div class="thread-message-collapsed" id="msg-collapsed-${escapeHtml(m.id)}" data-msgid="${escapeHtml(m.id)}" tabindex="0" role="button" aria-expanded="false" aria-label="Show message from ${escapeHtml(headerAddr.name)}">
+        <div class="collapsed-avatar" style="background:${color};" aria-hidden="true">${escapeHtml(initial)}</div>
         <div class="collapsed-info">
           <span class="collapsed-name">${escapeHtml(headerAddr.name)}</span>
           <span class="collapsed-snippet">${escapeHtml(preview)}</span>
@@ -2186,38 +2933,50 @@ function renderReadingThread(messages){
     `;
   }).join('');
 
-  el('reading-pane').innerHTML = `
-    <div class="read-topbar">
-      <div class="read-subject">${escapeHtml(latest.subject)}</div>
-      <div class="read-actions-top">
-        <button class="btn-ghost" id="reply-btn" aria-label="Reply">↩ Reply</button>
-        <button class="btn-ghost" id="reply-all-btn" aria-label="Reply all">↩↩ Reply All</button>
+  pane.innerHTML = `
+    <div class="read-inner">
+      <div class="read-topbar">
+        <button type="button" class="btn-ghost icon-btn read-back-btn" id="read-back-btn" aria-label="Back to list"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg></button>
+        <h2 class="read-subject">${escapeHtml(latest.subject)}</h2>
+        <div class="read-actions-top">
+          <button type="button" class="btn-ghost" id="reply-btn" title="Reply (r)"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-reply"/></svg>Reply</button>
+          <button type="button" class="btn-ghost" id="reply-all-btn" title="Reply all (a)"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-reply-all"/></svg>Reply All</button>
+        </div>
       </div>
+      ${cardsHtml}
     </div>
-    ${cardsHtml}
   `;
+  pane.scrollTop = scrollTop;
 
   el('reply-btn').addEventListener('click', () => openReplyCompose(latest, false));
   el('reply-all-btn').addEventListener('click', () => openReplyCompose(latest, true));
+  el('read-back-btn').addEventListener('click', closeReader);
 
-  el('reading-pane').querySelectorAll('.thread-message-collapsed').forEach(row => {
-    row.addEventListener('click', () => {
-      const id = row.dataset.msgid;
-      const cardEl = document.getElementById(`msg-card-${id}`);
-      if(!cardEl) return;
-      const isHidden = cardEl.style.display === 'none';
-      cardEl.style.display = isHidden ? 'block' : 'none';
-      row.style.display = isHidden ? 'none' : 'flex';
+  const toggleCollapsed = (row) => {
+    const cardEl = document.getElementById(`msg-card-${row.dataset.msgid}`);
+    if(!cardEl) return;
+    cardEl.hidden = false;
+    row.hidden = true;
+  };
+  pane.querySelectorAll('.thread-message-collapsed').forEach(row => {
+    row.addEventListener('click', () => toggleCollapsed(row));
+    row.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleCollapsed(row); }
     });
   });
 
-  el('reading-pane').querySelectorAll('.attachment-download-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      downloadAttachment(btn.dataset.msgid, {
+  pane.querySelectorAll('.attachment-download-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const labelEl = btn.querySelector('span');
+      btn.disabled = true;
+      if(labelEl) labelEl.textContent = 'Downloading…';
+      await downloadAttachment(btn.dataset.msgid, {
         attachmentId: btn.dataset.attid,
         filename: btn.dataset.filename,
         mimeType: btn.dataset.mimetype
       });
+      btn.disabled = false;
+      if(labelEl) labelEl.textContent = 'Download';
     });
   });
 
@@ -2242,46 +3001,118 @@ function syncMessageIntoCache(freshMsg){
   if(searchHit) fieldsToSync.forEach(f => { searchHit[f] = freshMsg[f]; });
 }
 
-async function openThread(group){
-  currentOpenGroup = group;
-  el('reading-pane').innerHTML = skeletonReadingPane();
+/* ---------------- Thread cache ----------------
+   Recently opened (or hovered) conversations are kept in memory, so going
+   back to one is instant. Entries expire after a few minutes and are dropped
+   as soon as a poll sees new mail in that conversation. */
+const threadCache = new Map();     // threadId -> { messages, fetchedAt }
+const threadInflight = new Map();  // threadId -> Promise
+const THREAD_CACHE_MAX = 40;
+const THREAD_CACHE_TTL = 5 * 60 * 1000;
 
-  let messages;
-  try{
-    const threadRes = await gmailFetch(`/gmail/v1/users/me/threads/${group.threadId}?format=full`);
-    messages = (threadRes.messages || []).map(processFullMessage);
-    messages.sort((a, b) => new Date(a.date) - new Date(b.date));
-  }catch(e){
-    console.error(e);
-    el('reading-pane').innerHTML = `
-      <div class="empty-state">
-        <p style="color:var(--warn);">Couldn't load this message.</p>
-        <button class="btn-ghost" id="retry-open-btn">Try again</button>
-      </div>
-    `;
-    const retryBtn = document.getElementById('retry-open-btn');
-    if(retryBtn) retryBtn.addEventListener('click', () => openThread(group));
-    return;
+function fetchThread(threadId){
+  if(threadInflight.has(threadId)) return threadInflight.get(threadId);
+  const p = gmailFetch(`/gmail/v1/users/me/threads/${threadId}?format=full`)
+    .then(res => {
+      const messages = (res.messages || []).map(processFullMessage);
+      messages.sort((a, b) => new Date(a.date) - new Date(b.date));
+      threadCache.delete(threadId);
+      threadCache.set(threadId, { messages, fetchedAt: Date.now() });
+      while(threadCache.size > THREAD_CACHE_MAX) threadCache.delete(threadCache.keys().next().value);
+      return messages;
+    })
+    .finally(() => threadInflight.delete(threadId));
+  threadInflight.set(threadId, p);
+  return p;
+}
+
+function getCachedThread(threadId){
+  const hit = threadCache.get(threadId);
+  if(!hit) return null;
+  if(Date.now() - hit.fetchedAt > THREAD_CACHE_TTL){ threadCache.delete(threadId); return null; }
+  return hit.messages;
+}
+
+// Every openThread call gets a number; only the newest one may draw. This is
+// what stops a slow response for an earlier click from replacing the
+// conversation the agent actually has selected now.
+let openThreadToken = 0;
+
+async function openThread(group, opts = {}){
+  const token = ++openThreadToken;
+  currentOpenGroup = group;
+  el('app-shell').classList.add('show-reader');
+
+  let messages = opts.forceRefresh ? null : getCachedThread(group.threadId);
+  // A cached copy that's missing a message the list knows about is stale.
+  if(messages && !group.messages.every(gm => messages.some(c => c.id === gm.id))) messages = null;
+
+  if(!messages){
+    if(!opts.silent) el('reading-pane').innerHTML = skeletonReadingPane();
+    try{
+      if(opts.forceRefresh) threadCache.delete(group.threadId);
+      messages = await fetchThread(group.threadId);
+    }catch(e){
+      if(token !== openThreadToken || opts.silent) return;
+      console.error(e);
+      el('reading-pane').innerHTML = `
+        <div class="empty-state">
+          <p class="is-error-text">Couldn't load this conversation.</p>
+          <button type="button" class="btn-ghost" id="retry-open-btn">Try again</button>
+        </div>
+      `;
+      el('retry-open-btn').addEventListener('click', () => openThread(group));
+      return;
+    }
+    if(token !== openThreadToken) return;
   }
 
+  // The list may know newer read/unread state than a cached thread does.
+  const listById = new Map(
+    [...(messagesCache.INBOX || []), ...(messagesCache.SENT || []), ...searchResultsCache].map(m => [m.id, m])
+  );
+  messages.forEach(m => { const l = listById.get(m.id); if(l) m.unread = l.unread; });
+
   currentThreadMessages = messages;
-  renderReadingThread(messages);
+  renderReadingThread(messages, !!opts.silent);
   messages.forEach(syncMessageIntoCache);
 
   const unreadOnes = messages.filter(m => m.unread);
   if(unreadOnes.length > 0){
-    await Promise.allSettled(unreadOnes.map(m => setMessageUnreadState(m, false)));
-    unreadOnes.forEach(syncMessageIntoCache);
+    await setUnreadForMessages(unreadOnes, false);
     updateNavCounts();
-    // Only this one thread's row needs to lose its unread indicator — no
-    // need to rebuild the rest of the list to reflect that.
-    if(!searchActive){
-      const renderedGroup = lastRenderedGroups.find(rg => rg.threadId === group.threadId);
-      if(renderedGroup) renderedGroup.unread = false;
-      const row = findRowByThreadId(group.threadId);
-      if(row) setRowUnreadUI(row, false);
-    }
+    scheduleLeadSourceCounts();
+    // Only this one thread's row needs to lose its unread indicator.
+    patchThreadRow(group.threadId);
   }
+}
+
+// Leaves the open conversation: clears the reading pane and, on small
+// screens, returns to the list.
+function closeReader(){
+  openThreadToken++;
+  currentOpenGroup = null;
+  currentThreadMessages = [];
+  el('reading-pane').innerHTML = emptyReaderHtml();
+  el('msg-list').querySelectorAll('.msg-row.selected').forEach(r => r.classList.remove('selected'));
+  el('app-shell').classList.remove('show-reader');
+}
+
+async function markOpenThreadUnread(){
+  if(!currentOpenGroup || currentThreadMessages.length === 0) return;
+  const group = currentOpenGroup;
+  const { failed } = await setUnreadForMessages(currentThreadMessages, true);
+  if(failed > 0){
+    showListStatus("Couldn't mark this conversation unread. Try again.");
+    return;
+  }
+  patchThreadRow(group.threadId);
+  updateNavCounts();
+  scheduleLeadSourceCounts();
+  closeReader();
+  const row = findRowByThreadId(group.threadId);
+  if(row) row.focus({ preventScroll: true });
+  showToast('Marked as unread');
 }
 
 function escapeHtml(str){
@@ -2301,38 +3132,52 @@ function formatDate(dateStr){
     : d.toLocaleDateString([], {month:'short', day:'numeric'});
 }
 
+function isNavOpen(){ return el('app-shell').classList.contains('nav-open'); }
+function openNav(){
+  el('app-shell').classList.add('nav-open');
+  el('nav-toggle-btn').setAttribute('aria-expanded', 'true');
+  const first = el('sidebar').querySelector('button');
+  if(first) first.focus();
+}
+function closeNav(){
+  if(!isNavOpen()) return;
+  el('app-shell').classList.remove('nav-open');
+  el('nav-toggle-btn').setAttribute('aria-expanded', 'false');
+}
+el('nav-toggle-btn').addEventListener('click', () => (isNavOpen() ? closeNav() : openNav()));
+el('nav-backdrop').addEventListener('click', closeNav);
+
 document.querySelectorAll('.nav-item[data-folder]').forEach(item => {
   item.addEventListener('click', () => {
-    document.querySelectorAll('.nav-item[data-folder]').forEach(i => i.classList.remove('active'));
+    document.querySelectorAll('.nav-item[data-folder]').forEach(i => { i.classList.remove('active'); i.removeAttribute('aria-current'); });
     item.classList.add('active');
-    document.querySelectorAll('.lead-source-item').forEach(i => i.classList.remove('active'));
+    item.setAttribute('aria-current', 'page');
+    document.querySelectorAll('.lead-source-item').forEach(i => { i.classList.remove('active'); i.removeAttribute('aria-pressed'); });
     currentFolder = item.dataset.folder;
     searchActive = false;
     // Invalidate any in-flight search page so it can't render over this folder.
     searchRequestId++;
     searchNextPageToken = null;
     currentSearchTerm = null;
-    currentOpenGroup = null;
-    currentThreadMessages = [];
     clearSelection();
     el('search-input').value = '';
-    el('search-clear-btn').style.display = 'none';
+    el('search-clear-btn').hidden = true;
     el('list-title').textContent = currentFolder === 'INBOX' ? 'Inbox' : 'Sent';
-    el('reading-pane').innerHTML = `
-      <div class="empty-state">
-        <div class="glyph">✉</div>
-        <p>Select a message to read it here.</p>
-      </div>`;
+    closeReader();
+    closeNav();
     renderList();
   });
 });
 
 document.querySelectorAll('.lead-source-item').forEach(item => {
   item.addEventListener('click', () => {
-    document.querySelectorAll('.lead-source-item').forEach(i => i.classList.remove('active'));
+    document.querySelectorAll('.lead-source-item').forEach(i => { i.classList.remove('active'); i.removeAttribute('aria-pressed'); });
     item.classList.add('active');
+    item.setAttribute('aria-pressed', 'true');
     const source = item.dataset.source;
     el('search-input').value = `"Lead Source: ${source}"`;
+    closeNav();
+    el('app-shell').classList.remove('show-reader');
     performSearch(el('search-input').value);
   });
 });
@@ -2379,11 +3224,15 @@ function isValidEmailList(str){
 
 el('field-recipient-select').addEventListener('change', () => {
   const isCustom = el('field-recipient-select').value === '__custom__';
-  el('field-recipient-custom').style.display = isCustom ? 'block' : 'none';
+  clearFieldError(el('field-recipient-custom'));
+  if(isCustom) requestAnimationFrame(() => el('field-recipient-custom').focus());
+  el('field-recipient-custom').hidden = !(isCustom);
 });
 el('field-subject-select').addEventListener('change', () => {
   const isCustom = el('field-subject-select').value === '__custom__';
-  el('field-subject-custom').style.display = isCustom ? 'block' : 'none';
+  clearFieldError(el('field-subject-custom'));
+  if(isCustom) requestAnimationFrame(() => el('field-subject-custom').focus());
+  el('field-subject-custom').hidden = !(isCustom);
 });
 
 function buildBodyText(){
@@ -2398,7 +3247,7 @@ function renderFileList(){
   container.innerHTML = attachedFiles.map((f, i) => `
     <div class="file-chip">
       <span>${escapeHtml(f.name)} (${(f.size / 1024 / 1024).toFixed(1)}MB)</span>
-      <button type="button" data-idx="${i}">Remove</button>
+      <button type="button" data-idx="${i}" aria-label="Remove ${escapeHtml(f.name)}"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg>Remove</button>
     </div>
   `).join('');
   container.querySelectorAll('button[data-idx]').forEach(btn => {
@@ -2425,7 +3274,7 @@ el('field-attachments').addEventListener('change', (e) => {
     attachedFiles.push(f);
   }
   if(warnings.length > 0){
-    el('send-status').textContent = warnings.join(' ');
+    setSendStatus(warnings.join(' '), 'error');
   }
   e.target.value = '';
   renderFileList();
@@ -2465,10 +3314,10 @@ function getAgentPreferredName(profile){
 function resetForm(){
   el('field-recipient-select').value = '';
   el('field-recipient-custom').value = '';
-  el('field-recipient-custom').style.display = 'none';
+  el('field-recipient-custom').hidden = true;
   el('field-subject-select').value = '';
   el('field-subject-custom').value = '';
-  el('field-subject-custom').style.display = 'none';
+  el('field-subject-custom').hidden = true;
   el('field-reply-to').value = '';
   el('field-reply-subject').value = '';
   FIELD_LABELS.forEach(([id]) => { if(el(id).tagName === 'SELECT') el(id).value = ''; else el(id).value = ''; });
@@ -2476,8 +3325,8 @@ function resetForm(){
   el('field-reply-body').value = '';
   attachedFiles = [];
   renderFileList();
-  el('send-status').textContent = '';
-  el('send-status').className = 'send-status';
+  setSendStatus('');
+  clearFieldErrors();
 
   if(agentProfile){
     el('field-agent').value = getAgentPreferredName(agentProfile);
@@ -2513,12 +3362,11 @@ function openCompose(){
   isReplyMode = false;
   isQuickMode = false;
   replyContext = null;
-  el('reply-message-block').style.display = 'none';
-  el('lead-fields-block').style.display = 'block';
-  el('reply-recipient-subject-block').style.display = 'none';
-  el('lead-recipient-subject-block').style.display = 'block';
-  fadeComposeBody();
-  el('compose-overlay').classList.add('open');
+  el('reply-message-block').hidden = true;
+  el('lead-fields-block').hidden = false;
+  el('reply-recipient-subject-block').hidden = true;
+  el('lead-recipient-subject-block').hidden = false;
+  afterComposeOpened('New lead', 'field-recipient-select');
 }
 
 function openReplyCompose(m, replyAll){
@@ -2553,13 +3401,12 @@ function openReplyCompose(m, replyAll){
   const baseSubj = (m.subject || '').replace(/^\s*(re:\s*)+/i, '').trim();
   el('field-reply-subject').value = baseSubj ? 'Re: ' + baseSubj : 'Re:';
 
-  el('reply-recipient-subject-block').style.display = 'block';
-  el('lead-recipient-subject-block').style.display = 'none';
-  el('reply-message-block').style.display = 'block';
-  el('lead-fields-block').style.display = 'none';
+  el('reply-recipient-subject-block').hidden = false;
+  el('lead-recipient-subject-block').hidden = true;
+  el('reply-message-block').hidden = false;
+  el('lead-fields-block').hidden = true;
 
-  fadeComposeBody();
-  el('compose-overlay').classList.add('open');
+  afterComposeOpened(replyAll ? 'Reply all' : 'Reply', 'field-reply-body');
 }
 
 function openQuickCompose(){
@@ -2568,33 +3415,271 @@ function openQuickCompose(){
   isQuickMode = true;
   replyContext = null;
 
-  el('reply-recipient-subject-block').style.display = 'block';
-  el('lead-recipient-subject-block').style.display = 'none';
-  el('reply-message-block').style.display = 'block';
-  el('lead-fields-block').style.display = 'none';
+  el('reply-recipient-subject-block').hidden = false;
+  el('lead-recipient-subject-block').hidden = true;
+  el('reply-message-block').hidden = false;
+  el('lead-fields-block').hidden = true;
 
+  afterComposeOpened('Quick email', 'field-reply-to');
+}
+
+/* ---------------- Compose state, drafts and validation ---------------- */
+const DRAFT_FIELD_IDS = [
+  'field-recipient-select', 'field-recipient-custom', 'field-subject-select', 'field-subject-custom',
+  'field-reply-to', 'field-reply-subject', 'field-reply-body', 'field-explanation',
+  ...FIELD_LABELS.map(([id]) => id)
+];
+let composeBaseline = null;
+let lastFocusBeforeCompose = null;
+
+function composeValues(){
+  return JSON.stringify(DRAFT_FIELD_IDS.map(id => el(id).value));
+}
+
+// "Dirty" means changed since the window opened — so prefilled values (the
+// agent's name on a lead, To/Subject on a reply) no longer count as edits,
+// and closing an untouched window doesn't ask to discard anything.
+function isComposeDirty(){
+  return attachedFiles.length > 0 || (composeBaseline !== null && composeValues() !== composeBaseline);
+}
+
+function composeIsOpen(){
+  return el('compose-overlay').classList.contains('open');
+}
+
+function afterComposeOpened(title, focusId){
+  if(!composeIsOpen()) lastFocusBeforeCompose = document.activeElement;
+  el('compose-title').textContent = title;
+  clearFieldErrors();
+  setSendStatus('');
+  setSendBusy(false);
+  composeBaseline = composeValues();
+  offerDraftIfAny();
   fadeComposeBody();
   el('compose-overlay').classList.add('open');
+  document.querySelector('.compose-body').scrollTop = 0;
+  requestAnimationFrame(() => {
+    const target = el('draft-banner').hidden ? el(focusId) : el('draft-restore-btn');
+    if(target) target.focus();
+  });
 }
 
-function isComposeDirty(){
-  const hasBody = el('field-reply-body').value.trim() !== '';
-  if(isReplyMode){
-    return el('field-reply-to').value.trim() !== '' ||
-      el('field-reply-subject').value.trim() !== '' ||
-      hasBody || attachedFiles.length > 0;
-  }
-  if(isQuickMode){
-    return getRecipient() !== '' || getSubject() !== '' || hasBody || attachedFiles.length > 0;
-  }
-  const anyLeadField = FIELD_LABELS.some(([id]) => el(id).value && el(id).value.trim() !== '');
-  return getRecipient() !== '' || getSubject() !== '' || anyLeadField ||
-    el('field-explanation').value.trim() !== '' || attachedFiles.length > 0;
-}
-
-function closeComposeWithConfirm(){
-  if(isComposeDirty() && !window.confirm('Discard this message?')) return;
+function closeCompose(){
+  clearTimeout(draftTimer);
   el('compose-overlay').classList.remove('open');
+  if(lastFocusBeforeCompose && document.body.contains(lastFocusBeforeCompose)) lastFocusBeforeCompose.focus();
+  lastFocusBeforeCompose = null;
+}
+
+function setSendStatus(text, kind){
+  el('send-status').textContent = text;
+  el('send-status').className = 'send-status' + (kind ? ' is-' + kind : '');
+}
+
+// ---- Drafts: saved as you type, per agent, for 24 hours. Attachments
+// can't be stored, so they're not part of a draft.
+const DRAFT_TTL = 24 * 60 * 60 * 1000;
+let draftTimer = null;
+let pendingDraft = null;
+
+function draftStoreKey(){
+  return 'leadmail-drafts:' + ((agentProfile && agentProfile.email) || 'anonymous');
+}
+function readDrafts(){
+  try{
+    const all = JSON.parse(localStorage.getItem(draftStoreKey()) || '{}');
+    Object.keys(all).forEach(k => { if(!all[k] || Date.now() - all[k].savedAt > DRAFT_TTL) delete all[k]; });
+    return all;
+  }catch(e){
+    return {};
+  }
+}
+function writeDrafts(all){
+  try{
+    if(Object.keys(all).length) localStorage.setItem(draftStoreKey(), JSON.stringify(all));
+    else localStorage.removeItem(draftStoreKey());
+  }catch(e){ /* storage unavailable — drafts are best-effort */ }
+}
+function currentDraftKey(){
+  if(isReplyMode) return 'reply:' + ((replyContext && replyContext.threadId) || '');
+  return isQuickMode ? 'quick' : 'lead';
+}
+function deleteDraft(key){
+  const all = readDrafts();
+  if(all[key]){ delete all[key]; writeDrafts(all); }
+}
+function clearAllDrafts(){
+  try{ localStorage.removeItem(draftStoreKey()); }catch(e){ /* ignore */ }
+}
+function scheduleDraftSave(){
+  if(pendingDraft) return; // don't overwrite a saved draft before the agent decides on it
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(saveDraftNow, 400);
+}
+function saveDraftNow(){
+  if(!composeIsOpen() || pendingDraft) return;
+  const all = readDrafts();
+  const key = currentDraftKey();
+  if(composeBaseline !== null && composeValues() !== composeBaseline){
+    const values = {};
+    DRAFT_FIELD_IDS.forEach(id => { values[id] = el(id).value; });
+    all[key] = { values, savedAt: Date.now() };
+  }else{
+    delete all[key];
+  }
+  writeDrafts(all);
+}
+function offerDraftIfAny(){
+  const draft = readDrafts()[currentDraftKey()];
+  pendingDraft = draft || null;
+  if(!draft){ el('draft-banner').hidden = true; return; }
+  const t = new Date(draft.savedAt);
+  const when = t.toDateString() === new Date().toDateString()
+    ? t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    : t.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  el('draft-banner-text').textContent = `You have an unsent draft from ${when}.`;
+  el('draft-banner').hidden = false;
+}
+function restoreDraft(){
+  if(!pendingDraft) return;
+  Object.entries(pendingDraft.values || {}).forEach(([id, v]) => {
+    const f = el(id);
+    if(f && typeof v === 'string') f.value = v;
+  });
+  el('field-recipient-custom').hidden = el('field-recipient-select').value !== '__custom__';
+  el('field-subject-custom').hidden = el('field-subject-select').value !== '__custom__';
+  pendingDraft = null;
+  el('draft-banner').hidden = true;
+  clearFieldErrors();
+  setSendStatus("Draft restored. Attachments aren't saved with drafts.");
+  const first = document.querySelector('.compose-body .form-block:not([hidden]) .form-control:not([hidden])');
+  if(first) first.focus();
+}
+function discardSavedDraft(){
+  deleteDraft(currentDraftKey());
+  pendingDraft = null;
+  el('draft-banner').hidden = true;
+  scheduleDraftSave();
+}
+el('draft-restore-btn').addEventListener('click', restoreDraft);
+el('draft-discard-btn').addEventListener('click', discardSavedDraft);
+
+// ---- Inline validation: every problem is marked next to its field.
+function clearFieldError(control){
+  if(!control) return;
+  control.classList.remove('is-invalid');
+  control.removeAttribute('aria-invalid');
+  const block = control.closest('.form-block');
+  const err = block && block.querySelector(`.field-error[data-for="${control.id}"]`);
+  if(err) err.remove();
+  if(control.getAttribute('aria-describedby') === control.id + '-error') control.removeAttribute('aria-describedby');
+}
+function clearFieldErrors(){
+  document.querySelectorAll('.compose-body .is-invalid').forEach(clearFieldError);
+  document.querySelectorAll('.compose-body .field-error').forEach(e => e.remove());
+}
+function setFieldError(control, message){
+  control.classList.add('is-invalid');
+  control.setAttribute('aria-invalid', 'true');
+  const block = control.closest('.form-block');
+  const err = document.createElement('div');
+  err.className = 'field-error';
+  err.id = control.id + '-error';
+  err.dataset.for = control.id;
+  err.textContent = message;
+  block.appendChild(err);
+  control.setAttribute('aria-describedby', err.id);
+}
+function validateCompose(){
+  const errors = [];
+  const simple = isReplyMode || isQuickMode;
+  const toControl = simple ? el('field-reply-to')
+    : (el('field-recipient-select').value === '__custom__' ? el('field-recipient-custom') : el('field-recipient-select'));
+  const subjectControl = simple ? el('field-reply-subject')
+    : (el('field-subject-select').value === '__custom__' ? el('field-subject-custom') : el('field-subject-select'));
+  const to = getRecipient();
+
+  if(!to) errors.push([toControl, 'Choose or enter a recipient.']);
+  else if(!isValidEmailList(to)) errors.push([toControl, 'Enter a valid email address. Separate several with commas.']);
+  if(!getSubject()) errors.push([subjectControl, 'Add a subject.']);
+
+  if(simple){
+    if(!el('field-reply-body').value.trim()) errors.push([el('field-reply-body'), 'Write a message.']);
+  }else{
+    if(!el('field-lead-source').value) errors.push([el('field-lead-source'), 'Choose a lead source.']);
+    const patientEmail = el('field-patient-email').value.trim();
+    if(patientEmail && !isValidEmailList(patientEmail)) errors.push([el('field-patient-email'), 'Enter a valid email address, or leave this blank.']);
+    if(!el('field-explanation').value.trim()) errors.push([el('field-explanation'), 'Add an explanation.']);
+  }
+  return errors;
+}
+
+// Typing in a field clears its error and saves the draft.
+['input', 'change'].forEach(type => {
+  document.querySelector('.compose-body').addEventListener(type, (e) => {
+    if(e.target.classList && e.target.classList.contains('is-invalid')) clearFieldError(e.target);
+    if(e.target.id !== 'field-attachments') scheduleDraftSave();
+  });
+});
+
+/* Custom, centered replacement for window.confirm(). Resolves true when
+   the user chooses Discard, false for Keep editing / Esc / backdrop click. */
+let discardResolver = null;
+let discardReturnFocus = null;
+
+function isDiscardOpen(){
+  return el('discard-overlay').classList.contains('open');
+}
+
+function confirmDiscard(){
+  return new Promise((resolve) => {
+    discardResolver = resolve;
+    discardReturnFocus = document.activeElement;
+    const n = attachedFiles.length;
+    el('discard-detail').textContent = n
+      ? `Includes ${n} attachment${n === 1 ? '' : 's'}`
+      : '';
+    const overlay = el('discard-overlay');
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+    // Focus the safe choice so a stray Enter doesn't wipe the draft
+    el('discard-cancel-btn').focus();
+  });
+}
+
+function closeDiscardDialog(result){
+  const overlay = el('discard-overlay');
+  overlay.classList.remove('open');
+  overlay.setAttribute('aria-hidden', 'true');
+  const resolve = discardResolver;
+  discardResolver = null;
+  if(!result && discardReturnFocus && document.body.contains(discardReturnFocus)){
+    discardReturnFocus.focus();
+  }
+  if(resolve) resolve(result);
+}
+
+el('discard-cancel-btn').addEventListener('click', () => closeDiscardDialog(false));
+el('discard-confirm-btn').addEventListener('click', () => closeDiscardDialog(true));
+el('discard-overlay').addEventListener('click', (e) => {
+  if(e.target === el('discard-overlay')) closeDiscardDialog(false);
+});
+// Keep Tab focus inside the dialog while it's open
+el('discard-overlay').addEventListener('keydown', (e) => {
+  if(e.key !== 'Tab') return;
+  const a = el('discard-cancel-btn'), b = el('discard-confirm-btn');
+  if(e.shiftKey && document.activeElement === a){ e.preventDefault(); b.focus(); }
+  else if(!e.shiftKey && document.activeElement === b){ e.preventDefault(); a.focus(); }
+});
+
+async function closeComposeWithConfirm(){
+  if(isDiscardOpen()) return;
+  // Mid-send there's nothing to discard: the message is already on its way.
+  if(isSending){ closeCompose(); return; }
+  if(isComposeDirty() && !(await confirmDiscard())) return;
+  deleteDraft(currentDraftKey());
+  pendingDraft = null;
+  closeCompose();
 }
 
 el('compose-open-btn').addEventListener('click', openCompose);
@@ -2603,15 +3688,15 @@ el('compose-close-btn').addEventListener('click', closeComposeWithConfirm);
 el('compose-overlay').addEventListener('click', (e) => {
   if(e.target === el('compose-overlay')) closeComposeWithConfirm();
 });
-el('reset-btn').addEventListener('click', resetForm);
+el('reset-btn').addEventListener('click', () => { resetForm(); scheduleDraftSave(); });
 
 el('copy-btn').addEventListener('click', async () => {
   const dump = `Recipient: ${getRecipient()}\nSubject: ${getSubject()}\n\n` + buildBodyText();
   try{
     await navigator.clipboard.writeText(dump);
-    el('send-status').textContent = 'Copied to clipboard.';
+    setSendStatus('Copied to clipboard.');
   }catch(e){
-    el('send-status').textContent = 'Copy failed — check browser permissions.';
+    setSendStatus("Couldn't copy. Allow clipboard access in your browser and try again.", 'error');
   }
 });
 
@@ -2685,67 +3770,90 @@ async function buildRawMessage(to, subject, bodyText, files, replyCtx){
   return b64ToUrlSafe(btoa(unescape(encodeURIComponent(rawMessage)))).replace(/=+$/, '');
 }
 
-el('send-btn').addEventListener('click', async () => {
+let isSending = false;
+
+function setSendBusy(busy){
+  isSending = busy;
+  el('send-btn').disabled = busy;
+  el('reset-btn').disabled = busy;
+  el('send-btn-label').textContent = busy ? 'Sending…' : 'Send email';
+}
+
+async function sendCompose(){
+  if(isSending) return;   // blocks the double-click / double Ctrl+Enter resend
+  clearFieldErrors();
+  const errors = validateCompose();
+  if(errors.length > 0){
+    errors.forEach(([control, msg]) => setFieldError(control, msg));
+    errors[0][0].focus();
+    setSendStatus(errors.length === 1 ? 'Fix the highlighted field to send.' : `Fix the ${errors.length} highlighted fields to send.`, 'error');
+    return;
+  }
+
   const to = getRecipient();
   let subject = getSubject();
-
-  if(!to){ el('send-status').textContent = 'Select or enter a recipient.'; return; }
-  if(!isValidEmailList(to)){ el('send-status').textContent = 'Recipient email address looks invalid.'; return; }
-  if(!subject){ el('send-status').textContent = 'Subject is required.'; return; }
-
   let bodyText;
-  if(isReplyMode || isQuickMode){
+  const mode = isReplyMode ? 'reply' : (isQuickMode ? 'quick' : 'lead');
+  if(mode !== 'lead'){
     bodyText = el('field-reply-body').value.trim();
-    if(!bodyText){ el('send-status').textContent = 'Write a message.'; return; }
   }else{
-    const leadSource = el('field-lead-source').value;
-    const explanation = el('field-explanation').value.trim();
-    if(!leadSource){ el('send-status').textContent = 'Lead Source is required.'; return; }
-    if(!explanation){ el('send-status').textContent = 'Explanation is required.'; return; }
     bodyText = buildBodyText();
-
     // Tack the Chat ID onto the subject line (e.g. "New Lead [Chat ID: 268022]")
     // so it's visible at a glance in the inbox, not just inside the body.
     const chatId = el('field-chat-id').value.trim();
     if(chatId) subject = `${subject} [Chat ID: ${chatId}]`;
   }
+  const draftKey = currentDraftKey();
+  const replyThreadId = mode === 'reply' && replyContext ? replyContext.threadId : null;
 
-  el('send-status').textContent = 'Sending…';
-  el('send-status').className = 'send-status';
+  setSendBusy(true);
+  setSendStatus('');
   try{
-    const raw = await buildRawMessage(to, subject, bodyText, attachedFiles, isReplyMode ? replyContext : null);
+    const raw = await buildRawMessage(to, subject, bodyText, attachedFiles, mode === 'reply' ? replyContext : null);
     const payload = { raw };
-    if(isReplyMode && replyContext && replyContext.threadId){
-      payload.threadId = replyContext.threadId;
-    }
+    if(replyThreadId) payload.threadId = replyThreadId;
     await gmailFetch('/gmail/v1/users/me/messages/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    el('send-status').textContent = '✓ Sent!';
-    el('send-status').className = 'send-status is-success';
-    setTimeout(() => {
-      el('compose-overlay').classList.remove('open');
-      showToast(`Email sent to ${to}`, 'success');
-      if(isReplyMode && currentOpenGroup){
-        // Stay in the conversation and reload it, so the reply appears nested
-        // at the bottom — the way Gmail shows it (see the "Chat Follow Up"
-        // example) — instead of bouncing to the Sent folder, where the reply
-        // would sit alone, detached from the inbound messages it belongs with.
-        openThread(currentOpenGroup);
-        loadFolder(currentFolder, true); // refresh the list cache quietly
-      }else{
-        // Brand-new email (lead / quick compose): Sent folder is the right place.
-        loadFolder('SENT');
-      }
-    }, 700);
   }catch(e){
     console.error(e);
-    el('send-status').textContent = 'Failed to send — check console.';
-    el('send-status').className = 'send-status is-error';
+    setSendBusy(false);
+    setSendStatus("Couldn't send. Check your connection and try again.", 'error');
+    return;
   }
-});
+
+  // Sent: clear the draft and the form, close, and confirm.
+  deleteDraft(draftKey);
+  pendingDraft = null;
+  composeBaseline = null;
+  attachedFiles = [];
+  setSendBusy(false);
+  closeCompose();
+  resetForm();
+
+  const again = mode === 'lead' ? { label: 'Send another', onClick: openCompose }
+    : mode === 'quick' ? { label: 'Send another', onClick: openQuickCompose }
+    : null;
+  showToast(`Email sent to ${to}`, 'success', again);
+
+  if(replyThreadId){
+    // Stay in the conversation and reload it so the reply appears at the
+    // bottom, instead of bouncing to Sent.
+    threadCache.delete(replyThreadId);
+    if(currentOpenGroup && currentOpenGroup.threadId === replyThreadId){
+      openThread(currentOpenGroup, { forceRefresh: true, silent: true });
+    }
+    refreshCurrentView();
+  }else if(currentFolder === 'SENT' && !searchActive){
+    refreshCurrentView();
+  }else{
+    loadFolder('SENT', true);
+  }
+}
+
+el('send-btn').addEventListener('click', sendCompose);
 
 /* ---------------- Keyboard shortcuts ---------------- */
 function navigateList(delta){
@@ -2754,39 +3862,92 @@ function navigateList(delta){
   let idx = rows.findIndex(r => r.classList.contains('selected'));
   idx = idx === -1 ? 0 : Math.min(rows.length - 1, Math.max(0, idx + delta));
   rows[idx].click();
+  rows[idx].focus({ preventScroll: true });
   rows[idx].scrollIntoView({ block: 'nearest' });
 }
 
+let shortcutsReturnFocus = null;
+function isShortcutsOpen(){ return el('shortcuts-overlay').classList.contains('open'); }
+function openShortcuts(){
+  shortcutsReturnFocus = document.activeElement;
+  el('shortcuts-overlay').classList.add('open');
+  el('shortcuts-overlay').setAttribute('aria-hidden', 'false');
+  el('shortcuts-close-btn').focus();
+}
+function closeShortcuts(){
+  el('shortcuts-overlay').classList.remove('open');
+  el('shortcuts-overlay').setAttribute('aria-hidden', 'true');
+  if(shortcutsReturnFocus && document.body.contains(shortcutsReturnFocus)) shortcutsReturnFocus.focus();
+}
+el('shortcuts-btn').addEventListener('click', openShortcuts);
+el('shortcuts-close-btn').addEventListener('click', closeShortcuts);
+el('shortcuts-overlay').addEventListener('click', (e) => { if(e.target === el('shortcuts-overlay')) closeShortcuts(); });
+
+function isTextEntry(target){
+  const tag = (target.tagName || '').toLowerCase();
+  if(tag === 'textarea' || tag === 'select' || target.isContentEditable) return true;
+  if(tag !== 'input') return false;
+  return !['checkbox', 'radio', 'button', 'submit'].includes((target.type || '').toLowerCase());
+}
+
 document.addEventListener('keydown', (e) => {
-  const tag = (e.target.tagName || '').toLowerCase();
-  const isTyping = tag === 'input' || tag === 'textarea' || tag === 'select';
+  const composeOpen = composeIsOpen();
+
+  if(composeOpen && (e.ctrlKey || e.metaKey) && e.key === 'Enter' && !isDiscardOpen()){
+    e.preventDefault();
+    sendCompose();
+    return;
+  }
 
   if(e.key === 'Escape'){
-    if(el('compose-overlay').classList.contains('open')){
-      closeComposeWithConfirm();
-    }else if(searchActive){
-      clearSearch();
-    }
+    if(isShortcutsOpen()) closeShortcuts();
+    else if(isDiscardOpen()) closeDiscardDialog(false);
+    else if(composeOpen) closeComposeWithConfirm();
+    else if(isNavOpen()) closeNav();
+    else if(searchActive) clearSearch();
     return;
   }
 
-  if(isTyping) return;
+  if(isTextEntry(e.target) || isDiscardOpen() || composeOpen) return;
+  if(e.ctrlKey || e.metaKey || e.altKey) return;
+  if(!el('app-shell') || el('app-shell').hidden) return;
 
-  if(e.key === '/'){
+  if(e.key === '?'){
     e.preventDefault();
-    el('search-input').focus();
+    isShortcutsOpen() ? closeShortcuts() : openShortcuts();
     return;
   }
+  if(isShortcutsOpen()) return;
 
-  if(e.key === 'r' && currentThreadMessages.length > 0){
-    e.preventDefault();
-    openReplyCompose(currentThreadMessages[currentThreadMessages.length - 1], false);
-    return;
-  }
-
-  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
-    e.preventDefault();
-    navigateList(e.key === 'ArrowDown' ? 1 : -1);
+  const latest = currentThreadMessages[currentThreadMessages.length - 1];
+  switch(e.key){
+    case '/':
+      e.preventDefault();
+      el('search-input').focus();
+      break;
+    case 'c':
+      e.preventDefault();
+      openCompose();
+      break;
+    case 'q':
+      e.preventDefault();
+      openQuickCompose();
+      break;
+    case 'r':
+      if(latest){ e.preventDefault(); openReplyCompose(latest, false); }
+      break;
+    case 'a':
+      if(latest){ e.preventDefault(); openReplyCompose(latest, true); }
+      break;
+    case 'u':
+      if(latest){ e.preventDefault(); markOpenThreadUnread(); }
+      break;
+    case 'ArrowDown':
+    case 'ArrowUp':
+      if(e.target.classList && e.target.classList.contains('thread-message-collapsed')) break;
+      e.preventDefault();
+      navigateList(e.key === 'ArrowDown' ? 1 : -1);
+      break;
   }
 });
 
