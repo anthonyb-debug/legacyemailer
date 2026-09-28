@@ -2923,35 +2923,66 @@ function setStarButton(btn, on){
 }
 
 // Marks the whole conversation, so it shows in Important Email whichever
-// message matched. Falls back to per-message updates if the mail proxy
-// doesn't allow the threads endpoint.
+// message matched. Tries, in order: the threads endpoint (one call), then a
+// batch update of the thread's real message ids as Gmail reports them now,
+// then one call per message. Each step is only a fallback for the one
+// before, so a Worker that allows any of them is enough.
 let threadModifyUnsupported = false;
 async function setThreadImportant(threadId, on){
   const labels = on ? { addLabelIds: [IMPORTANT_LABEL] } : { removeLabelIds: [IMPORTANT_LABEL] };
+  const post = (path, body) => gmailFetch(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  let lastError = null;
+
   if(!threadModifyUnsupported){
     try{
-      await gmailFetch(`/gmail/v1/users/me/threads/${threadId}/modify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(labels)
-      });
-      return true;
+      await post(`/gmail/v1/users/me/threads/${threadId}/modify`, labels);
+      return;
     }catch(e){
+      if(e.status === 401) throw e;
+      lastError = e;
       if([400, 403, 404, 405].includes(e.status)) threadModifyUnsupported = true;
-      else throw e;
+      console.warn('threads.modify failed, trying per-message updates', e);
     }
   }
-  const ids = [...new Set(allKnownMessages().filter(m => m.threadId === threadId).map(m => m.id))];
-  if(ids.length === 0) return false;
-  const results = await Promise.allSettled(ids.map(id =>
-    gmailFetch(`/gmail/v1/users/me/messages/${id}/modify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(labels)
-    })
-  ));
-  if(results.some(r => r.status === 'rejected')) throw new Error('Some messages could not be updated');
-  return true;
+
+  // The thread's current message ids, straight from Gmail — ids held in the
+  // list can be stale (a deleted message would make the update fail).
+  let ids = [];
+  try{
+    const t = await gmailFetch(`/gmail/v1/users/me/threads/${threadId}?format=minimal&fields=${encodeURIComponent('messages(id,labelIds)')}`);
+    ids = (t.messages || [])
+      .filter(m => on || (m.labelIds || []).includes(IMPORTANT_LABEL))
+      .map(m => m.id);
+    if(!on && ids.length === 0) return;   // nothing is starred any more
+  }catch(e){
+    ids = [...new Set(allKnownMessages().filter(m => m.threadId === threadId).map(m => m.id))];
+  }
+  if(ids.length === 0) throw lastError || new Error('No messages found in this conversation');
+
+  if(!batchModifyUnsupported){
+    try{
+      await post('/gmail/v1/users/me/messages/batchModify', { ids, ...labels });
+      return;
+    }catch(e){
+      lastError = e;
+      if([400, 403, 404, 405].includes(e.status)) batchModifyUnsupported = true;
+    }
+  }
+
+  const results = await Promise.allSettled(ids.map(id => post(`/gmail/v1/users/me/messages/${id}/modify`, labels)));
+  const failures = results.filter(r => r.status === 'rejected' && r.reason && r.reason.status !== 404);
+  if(failures.length) throw failures[0].reason;
+}
+
+function importantErrorText(on, e){
+  const base = on ? "Couldn't mark as important." : "Couldn't remove from important.";
+  if(e && e.status === 403) return `${base} The mail server refused the change (error 403).`;
+  if(e && e.status) return `${base} The mail server returned error ${e.status}. Try again.`;
+  return `${base} Check your connection and try again.`;
 }
 
 async function toggleImportant(threadId, force){
@@ -2964,10 +2995,10 @@ async function toggleImportant(threadId, force){
     threadCache.delete(threadId);
     return true;
   }catch(e){
-    console.error(e);
+    console.error('Important update failed:', e);
     applyImportantToThread(threadId, !on);
     refreshImportantUI();
-    showToast(on ? "Couldn't mark as important. Try again." : "Couldn't remove from important. Try again.", 'error');
+    showToast(importantErrorText(on, e), 'error');
     return false;
   }
 }
