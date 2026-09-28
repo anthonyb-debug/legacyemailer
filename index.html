@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Legacy Healing Center Email Portal</title>
+<title>Legacy Email Portal</title>
 <link rel="icon" id="favicon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22brand-grad%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%232563eb%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%230d9488%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%228%22%20fill%3D%22url%28%23brand-grad%29%22/%3E%3Cpath%20d%3D%22M16%2013.4V9.6%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22/%3E%3Cpath%20d%3D%22M16%2011.2C16%208.6%2013.9%206.9%2011.2%207.1C11.3%209.7%2013.3%2011.3%2016%2011.2Z%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.85%22/%3E%3Cpath%20d%3D%22M16%2010.2C16%207.2%2018.3%205.2%2021.4%205.4C21.3%208.4%2019%2010.3%2016%2010.2Z%22%20fill%3D%22%23fff%22/%3E%3Crect%20x%3D%227.5%22%20y%3D%2213.4%22%20width%3D%2217%22%20height%3D%2211.6%22%20rx%3D%222.2%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.7%22%20fill%3D%22none%22/%3E%3Cpath%20d%3D%22M8.2%2014.6%2016%2019.8l7.8-5.2%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20fill%3D%22none%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,6 +57,14 @@
     --shadow-lg:0 20px 48px rgba(17,24,39,0.14);
     --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
     --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    /* Left header (sidebar): one solid color, no gradient */
+    --side-bg:#0f3557;
+    --side-ink:rgba(255,255,255,0.74);
+    --side-ink-strong:#ffffff;
+    --side-line:rgba(255,255,255,0.12);
+    --side-hover:rgba(255,255,255,0.08);
+    --side-active:rgba(255,255,255,0.15);
+    --star:#f59e0b;
   }
 
   /* ---------- Dark mode ----------
@@ -83,6 +91,8 @@
     --scroll-thumb-hover:#64748b;
     --danger-border:#7f1d1d;
     --danger-soft:rgba(248,113,113,0.1);
+    --side-bg:#0c2340;
+    --star:#fbbf24;
   }
 
   *{box-sizing:border-box;}
@@ -101,7 +111,7 @@
      Limited to background/text/border/shadow, per spec — no layout or
      transform animation. */
   button, .msg-row, .form-control, .nav-item, .compose-btn, a, .refresh-link,
-  body, .compose-modal, .signin-card, .list-header, .list-pane, .sidebar,
+  body, .compose-modal, .list-header, .list-pane, .sidebar,
   .reading-pane, .attachment-chip, .file-chip, .thread-message-collapsed{
     transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
   }
@@ -112,50 +122,40 @@
     outline-offset:2px;
   }
 
-  /* ---------- Top bar ---------- */
+  /* ---------- Top bar (search + account actions only) ---------- */
   .topbar{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:12px 24px;
-    border-bottom:1px solid rgba(255,255,255,0.08);
-    background:linear-gradient(135deg, #0b1730 0%, #16284d 55%, #0a1428 100%);
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:0 24px;min-height:60px;
+    background:var(--panel);
+    border-bottom:1px solid var(--line);
     flex-shrink:0;
   }
-  .brand{display:flex;align-items:center;gap:10px;min-width:0;flex-shrink:1;}
-  .brand-mark{
-    width:32px;height:32px;flex-shrink:0;display:block;
+  .account-area{display:flex;align-items:center;gap:2px;flex-shrink:0;}
+  .topbar .agent-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--line);}
+  .agent-initial{
+    width:32px;height:32px;border-radius:50%;flex-shrink:0;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:var(--side-bg);color:#fff;font-weight:600;font-size:13px;
   }
-  .topbar .brand-name{
-    font-weight:600;font-size:15px;letter-spacing:-0.01em;color:#fff;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  }
-  .brand-sub{font-variant-numeric:tabular-nums;font-size:11px;color:var(--ink-soft);margin-left:6px;}
-  .account-area{display:flex;align-items:center;gap:12px;flex-shrink:0;}
-  .topbar .agent-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,0.3);}
-  .search-bar{flex:1;max-width:440px;position:relative;margin:0 24px;}
+  .search-bar{flex:1;max-width:560px;position:relative;margin:0;}
   .topbar .search-bar input{
-    width:100%;padding:8px 34px 8px 14px;border-radius:var(--radius-sm);
-    font-size:13px;font-family:var(--sans);outline:none;
-    border:1px solid rgba(255,255,255,0.18);
-    background:rgba(255,255,255,0.08);
-    color:#fff;
+    width:100%;padding:9px 34px 9px 14px;border-radius:var(--radius-sm);
+    font-size:13.5px;font-family:var(--sans);outline:none;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
     transition:border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
   }
-  .topbar .search-bar input::placeholder{color:rgba(255,255,255,0.55);}
+  .topbar .search-bar input::placeholder{color:var(--ink-soft);}
   .topbar .search-bar input:focus{
-    border-color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.14);
-    box-shadow:0 0 0 3px rgba(255,255,255,0.08);
+    border-color:var(--accent);background:var(--panel);
+    box-shadow:0 0 0 3px var(--accent-soft);
   }
   .topbar .search-bar button{
     position:absolute;right:6px;top:50%;transform:translateY(-50%);
-    background:transparent;color:rgba(255,255,255,0.65);font-size:12px;padding:4px 6px;border-radius:6px;
+    background:transparent;color:var(--ink-soft);font-size:12px;padding:4px 6px;border-radius:6px;
   }
-  .topbar .search-bar button:hover{color:#fff;background:rgba(255,255,255,0.12);}
-  .topbar .account-email{font-family:var(--sans);font-size:13px;font-weight:500;color:#fff;}
-  .topbar .btn-ghost{
-    background:transparent;color:#fff;
-    border:1px solid rgba(255,255,255,0.28);
-  }
-  .topbar .btn-ghost:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.45);}
+  .topbar .search-bar button:hover{color:var(--ink);background:var(--hover-bg);}
 
   /* Theme toggle — deliberately simple: an icon button, not a switch */
   .theme-toggle-btn{
@@ -206,31 +206,38 @@
     min-height:0;
   }
   .sidebar{
-    width:196px;
+    width:236px;
     flex-shrink:0;
-    border-right:1px solid var(--line);
-    padding:20px 14px;
-    background:var(--panel);
+    background:var(--side-bg);
+    color:var(--side-ink);
     display:flex;
     flex-direction:column;
+    min-height:0;
   }
-  .sidebar-nav{flex:1;}
+  .sidebar-brand{
+    display:flex;align-items:center;gap:10px;
+    min-height:60px;padding:0 18px;
+    border-bottom:1px solid var(--side-line);
+    flex-shrink:0;
+  }
+  .sidebar-brand .brand-mark{width:30px;height:30px;flex-shrink:0;display:block;}
+  .sidebar-brand .brand-name{
+    font-weight:700;font-size:15px;letter-spacing:-0.01em;color:var(--side-ink-strong);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .sidebar-nav{flex:1;min-height:0;overflow-y:auto;padding:18px 14px 12px;}
   .sidebar-footer{
-    margin-top:16px;
-    display:flex;
-    justify-content:flex-start;
+    padding:12px 14px 16px;
+    border-top:1px solid var(--side-line);
+    display:flex;align-items:center;justify-content:flex-end;gap:8px;
+    flex-shrink:0;
   }
-  .sidebar-logo{
-    display:inline-flex;
-    align-items:center;
-    padding:6px 8px;
-    border-radius:var(--radius-sm);
+  .side-icon-btn{
+    background:transparent;color:var(--side-ink);border:0;
+    padding:8px;border-radius:8px;line-height:1;display:inline-flex;align-items:center;justify-content:center;
   }
-  .sidebar-logo img{
-    height:30px;
-    width:auto;
-    display:block;
-  }
+  .side-icon-btn:hover{background:var(--side-hover);color:var(--side-ink-strong);}
+  .sidebar ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);}
   .compose-btn{
     width:100%;
     background:var(--accent);
@@ -246,21 +253,26 @@
   .nav-item{
     display:flex;align-items:center;gap:10px;
     padding:9px 12px;border-radius:var(--radius-sm);
-    font-size:13.5px;color:var(--ink-soft);
+    font-size:13.5px;color:var(--side-ink);
     cursor:pointer;margin-bottom:2px;
   }
-  .nav-item:hover{background:var(--hover-bg);color:var(--ink);}
-  .nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:600;}
+  .nav-item:hover{background:var(--side-hover);color:var(--side-ink-strong);}
+  .nav-item.active{background:var(--side-active);color:var(--side-ink-strong);font-weight:600;}
   .nav-count{
-    margin-left:auto;font-variant-numeric:tabular-nums;font-size:11px;color:var(--ink-soft);
+    margin-left:auto;font-variant-numeric:tabular-nums;font-size:11px;color:var(--side-ink);
   }
-  .nav-item.active .nav-count{color:var(--accent);}
   .nav-section-label{
-    font-size:11.5px;font-weight:600;color:var(--ink-soft);
-    
-    margin:16px 12px 6px;
+    font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.5);
+    margin:18px 12px 6px;
   }
 
+  .workspace{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    min-height:0;
+  }
   .main{
     flex:1;
     display:flex;
@@ -471,19 +483,55 @@
   }
   .attachment-download-btn:hover{border-color:var(--accent);background:var(--accent-soft);}
 
-  /* ---------- Sign-in screen ---------- */
-  .signin-screen{
-    flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;
-    background:var(--paper);
+  /* ---------- Sign-in screen: brand panel + sign-in column ---------- */
+  .signin-screen{flex:1;display:flex;min-height:0;background:var(--panel);}
+  .signin-brand{
+    flex:0 0 44%;max-width:620px;
+    background:var(--side-bg);color:#fff;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:36px 48px 32px;overflow:hidden;
   }
-  .signin-card{
-    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);
-    padding:40px 44px;text-align:center;max-width:380px;
-    box-shadow:var(--shadow-md);
+  .signin-brand-top{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:-0.01em;}
+  .signin-brand-top .brand-mark{width:30px;height:30px;}
+  .signin-pitch{max-width:420px;}
+  .signin-pitch h2{font-size:30px;line-height:1.2;font-weight:700;letter-spacing:-0.02em;margin:0 0 14px;}
+  .signin-pitch p{font-size:14.5px;line-height:1.6;color:rgba(255,255,255,0.72);margin:0 0 32px;}
+  .signin-sample{
+    background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);
+    border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;max-width:360px;
   }
-  .signin-card .brand-mark{width:56px;height:56px;margin:0 auto 18px;filter:drop-shadow(0 6px 14px rgba(37,99,235,0.25));}
-  .signin-card h1{font-size:18px;margin:0 0 8px;color:var(--ink);}
-  .signin-card p{font-size:13.5px;color:var(--ink-soft);margin:0 0 22px;line-height:1.55;}
+  .signin-sample-avatar{
+    width:34px;height:34px;border-radius:50%;flex-shrink:0;background:#349ac8;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;
+  }
+  .signin-sample-body{flex:1;min-width:0;font-size:12.5px;color:rgba(255,255,255,0.7);line-height:1.55;}
+  .signin-sample-name{display:flex;justify-content:space-between;gap:8px;font-size:13.5px;font-weight:600;color:#fff;margin-bottom:2px;}
+  .signin-sample-name span{font-weight:400;font-size:11.5px;color:rgba(255,255,255,0.55);}
+  .signin-sample .icon{width:12px;height:12px;vertical-align:-1px;margin-right:5px;color:rgba(255,255,255,0.55);}
+  .signin-sample-star{color:var(--star);}
+  .signin-sample-star .icon{fill:currentColor;color:var(--star);width:14px;height:14px;margin:0;}
+  .signin-foot{font-size:12px;color:rgba(255,255,255,0.5);}
+  .signin-main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px;overflow-y:auto;}
+  .signin-panel{width:100%;max-width:360px;}
+  .signin-mobile-brand{display:none;}
+  .signin-panel h1{font-size:26px;font-weight:700;letter-spacing:-0.02em;margin:0 0 8px;color:var(--ink);}
+  .signin-lede{font-size:14px;line-height:1.6;color:var(--ink-soft);margin:0 0 28px;}
+  #g_id_signin{display:flex;justify-content:flex-start;min-height:44px;}
+  .signin-note{
+    margin:28px 0 0;padding-top:20px;border-top:1px solid var(--line);
+    font-size:12.5px;line-height:1.6;color:var(--ink-soft);
+  }
+  .signin-error{
+    color:var(--warn);margin:16px 0 0;font-size:13px;line-height:1.5;
+    padding:10px 12px;border-radius:8px;background:var(--danger-soft);border:1px solid var(--danger-border);
+  }
+  @media (max-width:860px){
+    .signin-brand{display:none;}
+    .signin-screen{background:var(--paper);}
+    .signin-main{align-items:flex-start;padding-top:12vh;}
+    .signin-mobile-brand{display:flex;align-items:center;gap:10px;margin-bottom:28px;font-weight:700;font-size:15px;color:var(--ink);}
+    .signin-mobile-brand .brand-mark{width:30px;height:30px;}
+  }
 
   /* ---------- Discard confirmation dialog ----------
      Replaces the browser's native confirm(), which rendered as a plain
@@ -677,38 +725,36 @@
   /* ---------- Search ---------- */
   .search-bar .search-icon{
     position:absolute;left:11px;top:50%;transform:translateY(-50%);
-    color:rgba(255,255,255,0.55);pointer-events:none;
+    color:var(--ink-soft);pointer-events:none;
   }
-  .topbar .search-bar input{padding-left:34px;}
+  .topbar .search-bar input{padding-left:36px;}
   .search-kbd{
     position:absolute;right:10px;top:50%;transform:translateY(-50%);
-    pointer-events:none;
-    background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);
+    pointer-events:none;color:var(--ink-soft);
   }
   .search-bar input:focus ~ .search-kbd,
   .search-bar input:not(:placeholder-shown) ~ .search-kbd{display:none;}
 
   /* ---------- Sidebar ---------- */
   .compose-btn.compose-btn-secondary{
-    background:var(--panel);color:var(--ink);
-    border:1px solid var(--line);box-shadow:none;margin-bottom:18px;
+    background:transparent;color:var(--side-ink-strong);
+    border:1px solid rgba(255,255,255,0.28);box-shadow:none;margin-bottom:18px;
   }
-  .compose-btn.compose-btn-secondary:hover{background:var(--hover-bg);border-color:var(--hover-border);}
+  .compose-btn.compose-btn-secondary:hover{background:var(--side-hover);border-color:rgba(255,255,255,0.45);}
+  .sidebar .compose-btn:focus-visible, .sidebar button:focus-visible{outline:2px solid #fff;outline-offset:2px;}
   button.nav-item{
     width:100%;border:0;background:transparent;text-align:left;
     font-family:var(--sans);font-size:13.5px;font-weight:400;
   }
-  button.nav-item.active{font-weight:600;background:var(--accent-soft);}
-  .nav-item .icon{color:var(--ink-soft);}
-  .nav-item.active .icon{color:var(--accent);}
-  .nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+  button.nav-item.active{font-weight:600;background:var(--side-active);}
+  .nav-item .icon{color:rgba(255,255,255,0.6);}
+  .nav-item.active .icon{color:#fff;}
+  .sidebar .nav-item:focus-visible{outline:2px solid #fff;outline-offset:-2px;}
   .nav-count:not(:empty){
-    background:var(--accent-soft);color:var(--accent);
+    background:rgba(255,255,255,0.14);color:#fff;
     font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;
   }
-  .nav-item.active .nav-count:not(:empty){background:var(--accent);color:#fff;}
-  #g_id_signin{display:flex;justify-content:center;}
-  .signin-error{color:var(--warn);margin-top:14px;}
+  .nav-item.active .nav-count:not(:empty){background:#fff;color:var(--side-bg);}
 
   /* ---------- List header controls (real buttons now) ---------- */
   button.refresh-link{
@@ -777,9 +823,22 @@
   .toast-action:hover{background:rgba(255,255,255,0.28);}
 
   /* ---------- Desktop notifications toggle ---------- */
-  .topbar .notif-btn.is-on{border-color:rgba(125,211,252,0.55);}
-  .topbar .notif-btn.is-on .icon{color:#7dd3fc;}
-  .topbar .notif-btn.is-blocked .icon{color:rgba(255,255,255,0.5);}
+  .flat-icon-btn{
+    background:transparent;border:0;color:var(--ink-soft);
+    width:36px;height:36px;padding:0;border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  .flat-icon-btn .icon{width:18px;height:18px;}
+  .flat-icon-btn:hover{background:var(--hover-bg);color:var(--ink);}
+  html[data-theme="dark"] .flat-icon-btn:hover, html[data-theme="dark"] .flat-text-btn:hover{background:var(--hover-bg);}
+  .flat-text-btn{
+    background:transparent;border:0;color:var(--ink-soft);
+    padding:8px 10px;border-radius:8px;font-size:13px;font-weight:500;
+  }
+  .flat-text-btn:hover{background:var(--hover-bg);color:var(--ink);}
+  .account-area .agent-avatar, .account-area .agent-initial{margin:0 4px 0 6px;}
+  .topbar .notif-btn.is-on .icon{color:var(--accent);}
+  .topbar .notif-btn.is-blocked .icon{color:var(--ink-soft);}
 
   /* ---------- Shortcuts panel (reuses the confirm dialog shell) ---------- */
   .shortcuts-dialog{text-align:left;width:420px;padding:22px 24px 20px;}
@@ -794,12 +853,79 @@
   .shortcut-list dt{margin:0;white-space:nowrap;}
   .shortcut-list dd{margin:0;color:var(--ink-soft);}
 
+  /* ---------- Important (star) ---------- */
+  .star-btn{
+    background:transparent;border:0;padding:3px;margin:-3px -3px -3px 4px;border-radius:6px;
+    color:var(--ink-soft);display:inline-flex;align-items:center;flex-shrink:0;
+  }
+  .star-btn:hover{color:var(--star);background:var(--hover-bg);}
+  .star-btn.is-on{color:var(--star);}
+  .star-btn.is-on .icon, .important-btn.is-on .icon{fill:currentColor;}
+  .star-btn:focus-visible{outline:2px solid var(--accent);outline-offset:0;}
+  .msg-meta{display:flex;align-items:center;gap:2px;flex-shrink:0;}
+  .important-btn.is-on{
+    color:#92400e;background:color-mix(in srgb, var(--star) 14%, var(--panel));
+    border-color:color-mix(in srgb, var(--star) 55%, var(--line));
+  }
+  .important-btn.is-on .icon{color:var(--star);}
+  html[data-theme="dark"] .important-btn.is-on{color:#fde68a;}
+
+  .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+  /* ---------- My Chat Leads rows ---------- */
+  .lead-contact{display:flex;flex-wrap:wrap;gap:4px 14px;margin:2px 0 4px;font-size:12.5px;color:var(--ink);}
+  .lead-contact-item{display:inline-flex;align-items:center;gap:5px;min-width:0;overflow-wrap:anywhere;}
+  .lead-contact-item .icon{color:var(--ink-soft);}
+  .lead-contact-missing{font-size:12.5px;color:var(--ink-soft);margin:2px 0 4px;}
+
+  /* ---------- My Chat Leads: status, contact links, filters, today count ---------- */
+  .lead-status{
+    display:inline-flex;align-items:center;flex-shrink:0;margin-left:8px;
+    font-size:11px;font-weight:600;line-height:1;padding:3px 7px;border-radius:999px;
+  }
+  .lead-status.is-replied{background:color-mix(in srgb, var(--success) 14%, transparent);color:#15803d;}
+  .lead-status.is-waiting{background:color-mix(in srgb, var(--star) 16%, transparent);color:#a16207;}
+  html[data-theme="dark"] .lead-status.is-replied{color:#86efac;}
+  html[data-theme="dark"] .lead-status.is-waiting{color:#fde68a;}
+  a.lead-contact-link{color:var(--ink);text-decoration:none;border-radius:4px;}
+  a.lead-contact-link:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
+  a.lead-contact-link:hover .icon{color:var(--accent);}
+  a.lead-contact-link:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .lead-filters{
+    display:flex;gap:8px;padding:10px 14px 10px 18px;
+    border-bottom:1px solid var(--line);background:var(--panel);
+    position:sticky;top:49px;z-index:1;
+  }
+  .filter-select{
+    flex:1;min-width:0;appearance:none;cursor:pointer;
+    font-family:var(--sans);font-size:12.5px;color:var(--ink);
+    background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-sm);
+    padding:6px 28px 6px 10px;outline:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%236b7280'/></svg>");
+    background-repeat:no-repeat;background-position:right 10px center;
+  }
+  .filter-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+  .filter-select.is-set{border-color:color-mix(in srgb, var(--accent) 50%, var(--line));color:var(--accent);font-weight:500;}
+  .nav-count.is-today:not(:empty){background:rgba(255,255,255,0.14);font-weight:500;}
+
+  /* ---------- Duplicate lead warning (New Lead) ---------- */
+  .dup-warning{
+    display:flex;gap:10px;align-items:flex-start;
+    margin:0 0 14px;padding:10px 12px;border-radius:var(--radius-sm);
+    background:color-mix(in srgb, var(--star) 12%, var(--panel));
+    border:1px solid color-mix(in srgb, var(--star) 45%, var(--line));
+    font-size:12.5px;line-height:1.55;color:var(--ink);
+  }
+  .dup-warning .icon{color:#b45309;margin-top:1px;}
+  html[data-theme="dark"] .dup-warning .icon{color:var(--star);}
+  .dup-warning strong{font-weight:600;}
+
   /* ---------- Responsive ---------- */
   .nav-toggle-btn{
-    display:none;background:transparent;color:#fff;padding:6px;border-radius:6px;
-    align-items:center;
+    display:none;background:transparent;color:var(--ink);padding:6px;border-radius:6px;
+    align-items:center;flex-shrink:0;
   }
-  .nav-toggle-btn:hover{background:rgba(255,255,255,0.12);}
+  .nav-toggle-btn:hover{background:var(--hover-bg);}
   .nav-backdrop{display:none;}
 
   @media (max-width:1100px){
@@ -807,13 +933,13 @@
     .reading-pane{padding:28px;}
   }
   @media (max-width:900px){
-    .topbar{padding:10px 12px;gap:10px;}
+    .topbar{padding:10px 12px;gap:10px;min-height:56px;}
     .nav-toggle-btn{display:inline-flex;}
-    .topbar .brand-name, .topbar .account-email, #shortcuts-btn, .search-kbd{display:none;}
+    #shortcuts-btn, .search-kbd{display:none;}
     .search-bar{margin:0;max-width:none;}
     .account-area{gap:8px;}
     .sidebar{
-      position:fixed;top:0;bottom:0;left:0;z-index:45;width:260px;
+      position:fixed;top:0;bottom:0;left:0;z-index:45;width:264px;
       transform:translateX(-100%);transition:transform .2s ease;box-shadow:var(--shadow-lg);
     }
     .app.nav-open .sidebar{transform:none;}
@@ -835,7 +961,7 @@
     .form-grid{grid-template-columns:1fr;}
   }
   @media (max-width:560px){
-    #agent-signout-btn{padding:7px 9px;}
+    #agent-signout-btn{padding:7px 6px;}
     .compose-foot{flex-direction:column-reverse;align-items:stretch;}
     .foot-actions button{flex:1;}
     .toast{max-width:calc(100vw - 40px);}
@@ -888,32 +1014,12 @@
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
   <symbol id="i-bell-on" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M2 8c0-2.2.7-4.3 2-6M22 8a10 10 0 0 0-2-6"/></symbol>
   <symbol id="i-bell-off" viewBox="0 0 24 24"><path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5"/><path d="M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="m2 2 20 20"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2.8 2.84 5.76 6.36.93-4.6 4.48 1.09 6.33L12 17.3l-5.69 2.99 1.09-6.33-4.6-4.48 6.36-.93z"/></symbol>
+  <symbol id="i-user-check" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.18 2 2 0 0 1 4.09 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.1 9.9a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
 </svg>
-
-<div class="topbar">
-  <div class="brand">
-    <button type="button" class="nav-toggle-btn" id="nav-toggle-btn" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button>
-    <svg class="brand-mark" aria-hidden="true"><use href="#i-brand"/></svg>
-    <div class="brand-name">Legacy Healing Center Email Portal</div>
-  </div>
-  <div class="search-bar">
-    <svg class="icon search-icon" aria-hidden="true"><use href="#i-search"/></svg>
-    <input type="text" id="search-input" placeholder="Search mail" aria-label="Search mail" autocomplete="off">
-    <kbd class="search-kbd" aria-hidden="true">/</kbd>
-    <button type="button" id="search-clear-btn" hidden aria-label="Clear search"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg></button>
-  </div>
-  <div class="account-area">
-    <button type="button" class="btn-ghost icon-btn notif-btn" id="notif-btn" hidden aria-pressed="false" aria-label="Turn on desktop notifications" title="Turn on desktop notifications"><svg class="icon" aria-hidden="true"><use href="#i-bell"/></svg></button>
-    <button type="button" class="btn-ghost icon-btn" id="shortcuts-btn" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)"><svg class="icon" aria-hidden="true"><use href="#i-keyboard"/></svg></button>
-    <button type="button" class="btn-ghost icon-btn theme-toggle-btn" id="theme-toggle-btn" aria-label="Switch to dark mode" title="Toggle dark mode">
-      <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg><svg class="icon i-sun" aria-hidden="true"><use href="#i-sun"/></svg>
-    </button>
-    <img id="agent-avatar" class="agent-avatar" hidden alt="">
-    <span class="account-email" id="agent-label" hidden></span>
-    <button type="button" class="btn-ghost" id="agent-signout-btn" hidden>Sign out</button>
-  </div>
-</div>
 
 <div class="banner" id="config-banner">
   Set WORKER_BASE_URL and PROXY_API_KEY in the script before this will work — see comment at top of &lt;script&gt; block.
@@ -922,6 +1028,10 @@
 <div class="app" id="app-shell" hidden>
   <div class="nav-backdrop" id="nav-backdrop"></div>
   <nav class="sidebar" id="sidebar" aria-label="Mailboxes">
+    <div class="sidebar-brand">
+      <svg class="brand-mark" aria-hidden="true"><use href="#i-brand"/></svg>
+      <div class="brand-name">Legacy Email Portal</div>
+    </div>
     <div class="sidebar-nav">
       <button type="button" class="compose-btn" id="compose-open-btn" title="New lead (c)"><svg class="icon" aria-hidden="true"><use href="#i-user-plus"/></svg>New Lead</button>
       <button type="button" class="compose-btn compose-btn-secondary" id="quick-compose-open-btn" title="Quick email (q)"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg>Quick Email</button>
@@ -931,6 +1041,15 @@
       <button type="button" class="nav-item" data-folder="SENT">
         <svg class="icon" aria-hidden="true"><use href="#i-send"/></svg>Sent <span class="nav-count" id="count-sent"></span>
       </button>
+      <button type="button" class="nav-item view-item" data-view="important">
+        <svg class="icon" aria-hidden="true"><use href="#i-star"/></svg>Important Email <span class="nav-count" id="count-important"></span>
+      </button>
+      <div class="nav-section-label" id="my-work-label">My work</div>
+      <div role="group" aria-labelledby="my-work-label">
+        <button type="button" class="nav-item view-item" data-view="my-leads">
+          <svg class="icon" aria-hidden="true"><use href="#i-user-check"/></svg>My Chat Leads <span class="nav-count is-today" id="count-my-leads"></span>
+        </button>
+      </div>
       <div class="nav-section-label" id="lead-source-label">Lead source</div>
       <div role="group" aria-labelledby="lead-source-label">
         <button type="button" class="nav-item lead-source-item" data-source="Legacy Healing LA Chat"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg>LA Chat <span class="nav-count" data-source-count="Legacy Healing LA Chat"></span></button>
@@ -938,12 +1057,28 @@
         <button type="button" class="nav-item lead-source-item" data-source="DCF Chat"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg>DCF Chat <span class="nav-count" data-source-count="DCF Chat"></span></button>
       </div>
     </div>
-    <div class="sidebar-footer">
-      <div class="sidebar-logo">
-        <img src="data:image/png;base64,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" alt="Legacy Healing Center">
-      </div>
-    </div>
   </nav>
+
+  <div class="workspace">
+  <header class="topbar">
+    <button type="button" class="nav-toggle-btn" id="nav-toggle-btn" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button>
+    <div class="search-bar">
+      <svg class="icon search-icon" aria-hidden="true"><use href="#i-search"/></svg>
+      <input type="text" id="search-input" placeholder="Search mail" aria-label="Search mail" autocomplete="off">
+      <kbd class="search-kbd" aria-hidden="true">/</kbd>
+      <button type="button" id="search-clear-btn" hidden aria-label="Clear search"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="account-area">
+      <button type="button" class="flat-icon-btn notif-btn" id="notif-btn" hidden aria-pressed="false" aria-label="Turn on desktop notifications" title="Turn on desktop notifications"><svg class="icon" aria-hidden="true"><use href="#i-bell"/></svg></button>
+      <button type="button" class="flat-icon-btn" id="shortcuts-btn" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)"><svg class="icon" aria-hidden="true"><use href="#i-keyboard"/></svg></button>
+      <button type="button" class="flat-icon-btn theme-toggle-btn" id="theme-toggle-btn" aria-label="Switch to dark mode" title="Toggle dark mode">
+        <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg><svg class="icon i-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+      </button>
+      <img id="agent-avatar" class="agent-avatar" hidden alt="">
+      <span class="agent-initial" id="agent-initial" hidden aria-hidden="true"></span>
+      <button type="button" class="flat-text-btn" id="agent-signout-btn" hidden>Sign out</button>
+    </div>
+  </header>
 
   <div class="main">
     <div class="list-pane">
@@ -956,9 +1091,26 @@
           <span class="selection-info" id="selection-info" hidden></span>
           <button type="button" class="refresh-link" id="mark-read-btn" hidden>Mark read</button>
           <button type="button" class="refresh-link" id="mark-unread-btn" hidden>Mark unread</button>
+          <button type="button" class="refresh-link" id="mark-important-btn" hidden>Mark important</button>
           <span class="sync-info" id="sync-info"></span>
           <button type="button" class="refresh-link" id="refresh-btn" aria-label="Refresh" title="Refresh"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-refresh"/></svg></button>
         </div>
+      </div>
+      <div class="lead-filters" id="lead-filters" hidden>
+        <label class="visually-hidden" for="lead-filter-source">Lead source</label>
+        <select class="filter-select" id="lead-filter-source">
+          <option value="">All sources</option>
+          <option value="Legacy Healing LA Chat">LA Chat</option>
+          <option value="Legacy Healing Chat">Legacy Chat</option>
+          <option value="DCF Chat">DCF Chat</option>
+        </select>
+        <label class="visually-hidden" for="lead-filter-date">Date sent</label>
+        <select class="filter-select" id="lead-filter-date">
+          <option value="">Any time</option>
+          <option value="today">Today</option>
+          <option value="7">Last 7 days</option>
+          <option value="30">Last 30 days</option>
+        </select>
       </div>
       <div id="msg-list"></div>
     </div>
@@ -970,16 +1122,37 @@
       </div>
     </div>
   </div>
+  </div>
 </div>
 
 <div class="signin-screen" id="signin-screen">
-  <div class="signin-card">
-    <svg class="brand-mark" aria-hidden="true"><use href="#i-brand"/></svg>
-    <h1>Legacy Healing Center Email Portal</h1>
-    <p>Sign in with your work Google account to identify yourself. Mail is always sent and read as the shared Legacy Healing inbox — your personal account is only used to confirm who you are.</p>
-    <div id="g_id_signin"></div>
-    <p id="agent-error" class="signin-error" hidden></p>
-  </div>
+  <aside class="signin-brand" aria-hidden="true">
+    <div class="signin-brand-top"><svg class="brand-mark"><use href="#i-brand"/></svg>Legacy Email Portal</div>
+    <div class="signin-pitch">
+      <h2>The shared inbox for the chat team.</h2>
+      <p>Send leads to admissions, follow up with families, and keep track of every lead you've sent.</p>
+      <div class="signin-sample">
+        <div class="signin-sample-avatar">M</div>
+        <div class="signin-sample-body">
+          <div class="signin-sample-name">Maria Lopez <span>2:21 PM</span></div>
+          <div><svg class="icon"><use href="#i-phone"/></svg>(310) 555-0182</div>
+          <div>LA Chat lead, sent to Admissions</div>
+        </div>
+        <div class="signin-sample-star"><svg class="icon"><use href="#i-star"/></svg></div>
+      </div>
+    </div>
+    <div class="signin-foot">Legacy Healing Center</div>
+  </aside>
+  <main class="signin-main">
+    <div class="signin-panel">
+      <div class="signin-mobile-brand"><svg class="brand-mark" aria-hidden="true"><use href="#i-brand"/></svg>Legacy Email Portal</div>
+      <h1>Sign in</h1>
+      <p class="signin-lede">Use your work Google account to continue.</p>
+      <div id="g_id_signin"></div>
+      <p id="agent-error" class="signin-error" hidden></p>
+      <p class="signin-note">Mail is always sent and read as the shared Legacy inbox. Your Google account only confirms who you are, so your leads are credited to you.</p>
+    </div>
+  </main>
 </div>
 
 <!-- Discard confirmation dialog -->
@@ -1009,6 +1182,7 @@
       <dt><kbd>r</kbd></dt><dd>Reply to the open conversation</dd>
       <dt><kbd>a</kbd></dt><dd>Reply all</dd>
       <dt><kbd>u</kbd></dt><dd>Mark the open conversation unread</dd>
+      <dt><kbd>i</kbd></dt><dd>Mark the open conversation important, or remove it</dd>
       <dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Move through the list</dd>
       <dt><kbd>/</kbd></dt><dd>Search mail</dd>
       <dt><kbd>Ctrl</kbd> <kbd>Enter</kbd></dt><dd>Send, while writing</dd>
@@ -1068,6 +1242,7 @@
       </div>
 
       <div id="lead-fields-block">
+        <div class="dup-warning" id="dup-warning" role="status" hidden></div>
         <div class="form-grid">
           <div class="form-block">
             <label class="form-label" for="field-agent">Agent</label>
@@ -1188,6 +1363,8 @@ const PROXY_API_KEY = "legacyhealingcenterphilippines";
 const SIGNIN_CLIENT_ID = "51238718236-p196530q4f4v5filfjevagj46sjsojet.apps.googleusercontent.com";
 
 let currentFolder = "INBOX";
+// Sidebar views that aren't a plain folder: 'important' | 'my-leads' | null
+let currentView = null;
 let messagesCache = { INBOX: [], SENT: [] };
 let agentIdToken = null;
 let agentProfile = null;
@@ -1259,7 +1436,7 @@ function slimMeta(m){
   return {
     id: m.id, threadId: m.threadId, messageIdHeader: m.messageIdHeader, references: m.references,
     from: m.from, to: m.to, cc: m.cc, subject: m.subject, date: m.date, snippet: m.snippet,
-    unread: m.unread, hasAttachments: m.hasAttachments
+    unread: m.unread, important: m.important, isSent: m.isSent, hasAttachments: m.hasAttachments
   };
 }
 function saveListCacheSoon(){
@@ -1320,14 +1497,19 @@ function applyAgentSessionUI(){
   syncNotifButton();
   el('app-shell').hidden = false;
   el('agent-error').hidden = true;
-  el('agent-label').textContent = agentProfile.name || agentProfile.email;
-  el('agent-label').hidden = false;
   el('agent-signout-btn').hidden = false;
 
+  const who = agentProfile.name ? `${agentProfile.name} (${agentProfile.email})` : (agentProfile.email || '');
   if(agentProfile.picture){
     el('agent-avatar').src = agentProfile.picture;
     el('agent-avatar').alt = agentProfile.name || agentProfile.email || '';
+    el('agent-avatar').title = 'Signed in as ' + who;
     el('agent-avatar').hidden = false;
+    el('agent-initial').hidden = true;
+  }else{
+    el('agent-initial').textContent = (agentProfile.name || agentProfile.email || '?').trim().charAt(0).toUpperCase();
+    el('agent-initial').title = 'Signed in as ' + who;
+    el('agent-initial').hidden = false;
   }
 }
 
@@ -1437,10 +1619,10 @@ function signOutAgent(){
   resetMailState();
   el('app-shell').hidden = true;
   el('signin-screen').hidden = false;
-  el('agent-label').hidden = true;
   el('agent-signout-btn').hidden = true;
   el('agent-avatar').hidden = true;
   el('agent-avatar').src = '';
+  el('agent-initial').hidden = true;
 }
 
 // Clears everything loaded for the previous session so the next person to
@@ -1457,6 +1639,13 @@ function resetMailState(){
   currentThreadMessages = [];
   lastRenderedGroups = [];
   selectedThreadIds.clear();
+  currentView = null;
+  leadStatusCache.clear();
+  clearLeadFilters();
+  el('count-my-leads').textContent = '';
+  setActiveNav(document.querySelector('.nav-item[data-folder="INBOX"]'));
+  currentFolder = 'INBOX';
+  el('list-title').textContent = 'Inbox';
   el('compose-overlay').classList.remove('open');
   el('msg-list').innerHTML = '';
   el('reading-pane').innerHTML = emptyReaderHtml();
@@ -1466,7 +1655,10 @@ function resetMailState(){
   el('notif-btn').hidden = true;
 }
 
-el('agent-signout-btn').addEventListener('click', signOutAgent);
+el('agent-signout-btn').addEventListener('click', async () => {
+  if(heldSend) await flushHeldSend();
+  signOutAgent();
+});
 
 function initAgentSignIn(){
   google.accounts.id.initialize({
@@ -1477,7 +1669,7 @@ function initAgentSignIn(){
     auto_select: true,
     use_fedcm_for_prompt: true
   });
-  google.accounts.id.renderButton(el('g_id_signin'), { theme: 'outline', size: 'large', width: 260 });
+  google.accounts.id.renderButton(el('g_id_signin'), { theme: 'outline', size: 'large', shape: 'rectangular', text: 'continue_with', width: 320 });
 }
 
 function isAgentTokenExpired(){
@@ -1505,7 +1697,7 @@ function showSessionExpired(){
   clearPersistedAgentSession();
   el('app-shell').hidden = true;
   el('agent-avatar').hidden = true;
-  el('agent-label').hidden = true;
+  el('agent-initial').hidden = true;
   el('agent-signout-btn').hidden = true;
   el('signin-screen').hidden = false;
   el('agent-error').textContent = 'Your session timed out. Please sign in again to continue.';
@@ -1601,6 +1793,7 @@ async function boot(){
   }
   loadFolder('SENT', true);
   scheduleLeadSourceCounts(0);
+  refreshMyLeadsCount();
 
   // Begin silent polling for new mail once the app is up and running.
   startAutoRefresh();
@@ -1705,6 +1898,8 @@ function parseMessageMetadata(m){
     date: headerVal(headers, 'Date'),
     snippet: m.snippet,
     unread: (m.labelIds || []).includes('UNREAD'),
+    important: (m.labelIds || []).includes(IMPORTANT_LABEL),
+    isSent: (m.labelIds || []).includes('SENT'),
     hasAttachments: extractParts(m.payload || {}).attachments.length > 0,
     hydrated: false,
     body: null,
@@ -1779,6 +1974,7 @@ function processFullMessage(m){
     date: headerVal(headers, 'Date'),
     snippet: m.snippet,
     unread: (m.labelIds || []).includes('UNREAD'),
+    important: (m.labelIds || []).includes(IMPORTANT_LABEL),
     isSent: (m.labelIds || []).includes('SENT'),
     hasAttachments: attachments.length > 0,
     hydrated: true,
@@ -1936,6 +2132,7 @@ function reconcileFolderFirstPage(folder, fetched){
     const existing = cacheById.get(fm.id);
     if(existing){
       if(existing.unread !== fm.unread){ existing.unread = fm.unread; changed = true; }
+      if(existing.important !== fm.important){ existing.important = fm.important; changed = true; }
     }else{
       cache.push(fm);
       changed = true;
@@ -1959,7 +2156,7 @@ function setRefreshBusy(busy){
 // an active search re-runs the search.
 async function refreshCurrentView(){
   if(searchActive){
-    performSearch(el('search-input').value.trim());
+    performSearch(currentView ? (currentSearchTerm || '') : el('search-input').value.trim());
     return;
   }
   const folder = currentFolder;
@@ -2027,6 +2224,7 @@ function scheduleLeadSourceCounts(delay = 1500){
 }
 async function refreshLeadSourceCounts(){
   if(!agentIdToken) return;
+  refreshMyLeadsCount();
   const results = await Promise.allSettled(LEAD_SOURCES.map(src => {
     const q = `label:inbox is:unread "Lead Source: ${src}"`;
     return gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(q)}&maxResults=100&fields=${encodeURIComponent('messages/id')}`);
@@ -2107,6 +2305,7 @@ function updateSelectionToolbar(){
   el('selection-info').textContent = count > 0 ? `${count} selected` : '';
   el('mark-read-btn').hidden = count === 0;
   el('mark-unread-btn').hidden = count === 0;
+  el('mark-important-btn').hidden = count === 0;
   updateSyncInfo();
 }
 
@@ -2175,7 +2374,8 @@ function showToast(text, variant, action){
   container.appendChild(toast);
 
   requestAnimationFrame(() => toast.classList.add('toast-show'));
-  dismissTimer = setTimeout(dismiss, action ? 8000 : (isSuccess ? 6000 : 4500));
+  dismissTimer = setTimeout(dismiss, (action && action.duration) || (action ? 8000 : (isSuccess ? 6000 : 4500)));
+  return { dismiss };
 }
 
 // Kept as a thin alias so every existing call site (folder/search/bulk
@@ -2286,17 +2486,17 @@ let searchNextPageToken = null;
 let currentSearchTerm = null;
 
 async function performSearch(term){
-  if(!term){
+  if(!term && !currentView){
     clearSearch();
     return;
   }
   const requestId = ++searchRequestId;
   searchActive = true;
-  currentSearchTerm = term;
+  currentSearchTerm = term || null;
   searchNextPageToken = null;
   searchResultsCache = [];
-  el('search-clear-btn').hidden = false;
-  el('list-title').textContent = `Search: "${term}"`;
+  el('search-clear-btn').hidden = !term;
+  el('list-title').textContent = listTitleText();
   el('msg-list').innerHTML = skeletonRows(4);
   updateSyncInfo();
   try{
@@ -2319,8 +2519,9 @@ async function performSearch(term){
 // re-fetched — only genuinely-new IDs cost a round-trip. Pages at PAGE_SIZE
 // with a "Load more", so the worst-case fan-out is a folder page, not 50.
 async function fetchSearchPage(term, requestId, append){
-  const labelQuery = currentFolder === 'INBOX' ? 'label:inbox' : 'label:sent';
-  const q = `${labelQuery} ${term}`;
+  const scope = await currentScopeQuery();
+  if(requestId !== searchRequestId) return;
+  const q = `${scope} ${term || ''}`.trim();
   let url = `/gmail/v1/users/me/messages?q=${encodeURIComponent(q)}&maxResults=${PAGE_SIZE}`;
   if(append && searchNextPageToken){
     url += `&pageToken=${encodeURIComponent(searchNextPageToken)}`;
@@ -2328,7 +2529,7 @@ async function fetchSearchPage(term, requestId, append){
   const listRes = await gmailFetch(url);
   const ids = (listRes.messages || []).map(m => m.id);
 
-  const cacheById = new Map((messagesCache[currentFolder] || []).map(m => [m.id, m]));
+  const cacheById = new Map([...(messagesCache.INBOX || []), ...(messagesCache.SENT || [])].map(m => [m.id, m]));
   const toFetch = ids.filter(id => !cacheById.has(id));
   const { values: fetchedRaw, failures } = await fetchAllSettled(toFetch, id =>
     gmailFetch(`/gmail/v1/users/me/messages/${id}?fields=${encodeURIComponent(LIST_FIELDS)}`)
@@ -2343,6 +2544,14 @@ async function fetchSearchPage(term, requestId, append){
 
   // Preserve Gmail's relevance ordering from the ids array; reuse cache hits.
   const pageResults = ids.map(id => cacheById.get(id) || fetchedById.get(id)).filter(Boolean);
+
+  // My Chat Leads shows the lead's name, phone and email, which live in the
+  // message body — load the bodies for this page (also makes opening instant).
+  if(currentView === 'my-leads'){
+    await fetchAllSettled(pageResults.filter(m => !m.hydrated), hydrateMessage);
+    if(requestId !== searchRequestId) return;
+  }
+
   searchResultsCache = append ? searchResultsCache.concat(pageResults) : pageResults;
   searchNextPageToken = listRes.nextPageToken || null;
 
@@ -2365,6 +2574,13 @@ async function loadMoreSearch(){
 }
 
 function clearSearch(){
+  if(currentView){
+    // Inside a sidebar view, clearing the search goes back to the whole view.
+    el('search-input').value = '';
+    clearSelection();
+    performSearch('');
+    return;
+  }
   searchActive = false;
   searchRequestId++;
   searchNextPageToken = null;
@@ -2384,6 +2600,387 @@ el('search-input').addEventListener('keydown', (e) => {
 });
 el('search-clear-btn').addEventListener('click', clearSearch);
 
+/* =========================================================================
+   SIDEBAR VIEWS: Important Email, My Chat Leads
+   Everything is sent from the one shared legacy@ mailbox, so "mine" is
+   worked out from who is signed in with Google: My Chat Leads shows sent
+   leads whose body says "Agent: <your name>" (the Agent field on New Lead
+   is pre-filled with your name).
+   ========================================================================= */
+// Gmail label used for "Important". STARRED is set only by people, never by
+// Gmail itself (Gmail's own IMPORTANT label is auto-assigned by its
+// classifier, which would flood the view). Change to 'IMPORTANT' if wanted.
+const IMPORTANT_LABEL = 'STARRED';
+const IMPORTANT_QUERY = IMPORTANT_LABEL === 'STARRED' ? 'is:starred' : 'is:important';
+
+const VIEWS = {
+  'important': { title: 'Important Email' },
+  'my-leads':  { title: 'My Chat Leads' }
+};
+
+function agentQueryName(){
+  return getAgentPreferredName(agentProfile).replace(/["{}()]/g, '').trim();
+}
+
+async function currentScopeQuery(){
+  if(currentView === 'important') return IMPORTANT_QUERY;
+  if(currentView === 'my-leads'){
+    let q = `label:sent "Lead Source:" "Agent: ${agentQueryName()}"`;
+    const src = el('lead-filter-source').value;
+    const range = el('lead-filter-date').value;
+    if(src) q += ` "Lead Source: ${src}"`;
+    if(range === 'today') q += ` after:${startOfTodayEpoch()}`;
+    else if(range) q += ` newer_than:${range}d`;
+    return q;
+  }
+  return currentFolder === 'INBOX' ? 'label:inbox' : 'label:sent';
+}
+
+function listTitleText(){
+  const t = currentSearchTerm;
+  if(currentView){
+    const v = VIEWS[currentView].title;
+    return t ? `${v}: “${t}”` : v;
+  }
+  return t ? `Search: "${t}"` : (currentFolder === 'INBOX' ? 'Inbox' : 'Sent');
+}
+
+function setActiveNav(btn){
+  document.querySelectorAll('.sidebar .nav-item').forEach(i => {
+    i.classList.remove('active');
+    i.removeAttribute('aria-current');
+    i.removeAttribute('aria-pressed');
+  });
+  if(btn){
+    btn.classList.add('active');
+    btn.setAttribute('aria-current', 'page');
+  }
+}
+
+function openView(view, btn){
+  currentView = view;
+  setActiveNav(btn);
+  clearSelection();
+  el('search-input').value = '';
+  closeReader();
+  closeNav();
+  performSearch('');
+}
+
+function startOfTodayEpoch(){
+  const d = new Date(); d.setHours(0, 0, 0, 0);
+  return Math.floor(d.getTime() / 1000);
+}
+function leadFiltersActive(){
+  return !!(el('lead-filter-source').value || el('lead-filter-date').value);
+}
+function syncLeadFiltersBar(){
+  el('lead-filters').hidden = currentView !== 'my-leads';
+  ['lead-filter-source', 'lead-filter-date'].forEach(id => el(id).classList.toggle('is-set', !!el(id).value));
+}
+function clearLeadFilters(){
+  el('lead-filter-source').value = '';
+  el('lead-filter-date').value = '';
+  syncLeadFiltersBar();
+}
+['lead-filter-source', 'lead-filter-date'].forEach(id => el(id).addEventListener('change', () => {
+  syncLeadFiltersBar();
+  clearSelection();
+  closeReader();
+  performSearch(currentSearchTerm || '');
+}));
+
+/* ---------------- "3 today" badge on My Chat Leads ---------------- */
+async function refreshMyLeadsCount(){
+  if(!agentIdToken || !agentProfile) return;
+  const badge = el('count-my-leads');
+  try{
+    const q = `label:sent "Lead Source:" "Agent: ${agentQueryName()}" after:${startOfTodayEpoch()}`;
+    const res = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(q)}&maxResults=100&fields=${encodeURIComponent('messages/id')}`);
+    const n = (res.messages || []).length;
+    badge.textContent = n ? `${n >= 100 ? '99+' : n} today` : '';
+    badge.title = n ? `You've sent ${n} lead${n === 1 ? '' : 's'} today` : '';
+  }catch(e){ /* the badge is optional */ }
+}
+
+/* ---------------- Reply status on My Chat Leads ----------------
+   A lead is "Replied" once anyone other than us has written in its
+   conversation after it was sent. Checked with a light metadata-only
+   thread fetch, cached for a couple of minutes. */
+const leadStatusCache = new Map();   // threadId -> { replied, by, at, checkedAt }
+const LEAD_STATUS_TTL = 2 * 60 * 1000;
+let leadStatusRun = 0;
+
+function leadStatusHtml(threadId){
+  const st = leadStatusCache.get(threadId);
+  if(!st) return '';
+  if(st.replied){
+    const title = `${st.by || 'Someone'} replied ${formatDate(st.at)}`;
+    return `<span class="lead-status is-replied" title="${escapeHtml(title)}">Replied</span>`;
+  }
+  return '<span class="lead-status is-waiting" title="No reply since this lead was sent">Waiting</span>';
+}
+function applyLeadStatusToRow(threadId){
+  const row = findRowByThreadId(threadId);
+  const slot = row && row.querySelector('.lead-status-slot');
+  if(slot) slot.innerHTML = leadStatusHtml(threadId);
+}
+async function updateLeadStatuses(){
+  if(currentView !== 'my-leads') return;
+  const run = ++leadStatusRun;
+  const groups = lastRenderedGroups.slice();
+  const stale = groups.filter(g => {
+    const st = leadStatusCache.get(g.threadId);
+    return !st || Date.now() - st.checkedAt > LEAD_STATUS_TTL;
+  });
+  groups.forEach(g => applyLeadStatusToRow(g.threadId));
+  if(stale.length === 0) return;
+  const fields = 'messages(id,labelIds,payload/headers)';
+  await fetchAllSettled(stale, async (g) => {
+    const res = await gmailFetch(`/gmail/v1/users/me/threads/${g.threadId}?format=metadata&metadataHeaders=From&metadataHeaders=Date&fields=${encodeURIComponent(fields)}`);
+    const leadMsg = g.messages.find(m => leadInfoFor(m)) || g.messages[0];
+    const leadTime = new Date(leadMsg.date).getTime() || 0;
+    const replies = (res.messages || []).filter(m => {
+      if((m.labelIds || []).includes('SENT')) return false;
+      const t = new Date(headerVal((m.payload && m.payload.headers) || [], 'Date')).getTime();
+      return !t || t >= leadTime;
+    });
+    const last = replies[replies.length - 1];
+    const lastHeaders = (last && last.payload && last.payload.headers) || [];
+    const from = last ? parseAddress(headerVal(lastHeaders, 'From')) : null;
+    leadStatusCache.set(g.threadId, {
+      replied: replies.length > 0,
+      by: from ? (from.name || from.email) : '',
+      at: last ? headerVal(lastHeaders, 'Date') : '',
+      checkedAt: Date.now()
+    });
+    if(run === leadStatusRun) applyLeadStatusToRow(g.threadId);
+  }, 6);
+}
+
+/* ---------------- Copy or call from a lead row ---------------- */
+const IS_TOUCH = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+async function copyText(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    return true;
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false;
+    try{ ok = document.execCommand('copy'); }catch(err){ ok = false; }
+    ta.remove();
+    return ok;
+  }
+}
+function leadContactLink(kind, value){
+  const isPhone = kind === 'phone';
+  const href = isPhone ? 'tel:' + value.replace(/[^\d+]/g, '') : 'mailto:' + value;
+  const label = isPhone ? 'Phone number' : 'Email address';
+  const title = IS_TOUCH ? (isPhone ? 'Call' : 'Email') : `Copy ${label.toLowerCase()}`;
+  return `<a class="lead-contact-item lead-contact-link" href="${escapeHtml(href)}" data-copy="${escapeHtml(value)}" data-copy-label="${label}" title="${title}"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-${isPhone ? 'phone' : 'mail'}"/></svg><span class="visually-hidden">${isPhone ? 'Phone ' : 'Email '}</span>${escapeHtml(value)}</a>`;
+}
+
+/* ---------------- Duplicate lead warning (New Lead) ----------------
+   While the agent types a phone number or email, checks whether a lead
+   with the same contact went out in the last 30 days, and by whom. */
+const DUP_WINDOW_DAYS = 30;
+let dupTimer = null;
+let dupRequestId = 0;
+
+function hideDuplicateWarning(){
+  dupRequestId++;
+  clearTimeout(dupTimer);
+  el('dup-warning').hidden = true;
+  el('dup-warning').innerHTML = '';
+}
+function scheduleDuplicateCheck(){
+  clearTimeout(dupTimer);
+  dupTimer = setTimeout(checkDuplicateLead, 700);
+}
+function phoneSearchTerms(v){
+  let d = (v || '').replace(/\D/g, '');
+  if(d.length === 11 && d[0] === '1') d = d.slice(1);
+  if(d.length < 7) return [];
+  const terms = [`"${d}"`];
+  if(d.length === 10) terms.push(`"${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6)}"`);
+  return terms;
+}
+function relativeWhen(dateStr){
+  const d = new Date(dateStr);
+  if(isNaN(d)) return 'recently';
+  const bucket = dateBucket(dateStr);
+  if(bucket === 'Today') return 'today at ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  if(bucket === 'Yesterday') return 'yesterday';
+  return 'on ' + d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+async function checkDuplicateLead(){
+  const reqId = ++dupRequestId;
+  const box = el('dup-warning');
+  if(isReplyMode || isQuickMode || !composeIsOpen()){ box.hidden = true; return; }
+  const phone = el('field-phone').value.trim();
+  const email = el('field-patient-email').value.trim();
+  const terms = phoneSearchTerms(phone);
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if(emailOk) terms.push(`"${email.replace(/"/g, '')}"`);
+  if(terms.length === 0){ box.hidden = true; return; }
+
+  const q = `label:sent "Lead Source:" newer_than:${DUP_WINDOW_DAYS}d {${terms.join(' ')}}`;
+  try{
+    const res = await gmailFetch(`/gmail/v1/users/me/messages?q=${encodeURIComponent(q)}&maxResults=5&fields=${encodeURIComponent('messages(id,threadId)')}`);
+    if(reqId !== dupRequestId) return;
+    const hits = res.messages || [];
+    if(hits.length === 0){ box.hidden = true; return; }
+
+    let m = allKnownMessages().find(x => x.id === hits[0].id);
+    if(!m) m = parseMessageMetadata(await gmailFetch(`/gmail/v1/users/me/messages/${hits[0].id}?fields=${encodeURIComponent(LIST_FIELDS)}`));
+    await hydrateMessage(m);
+    if(reqId !== dupRequestId) return;
+
+    const info = leadInfoFor(m) || {};
+    const agentMatch = (m.body || '').match(/^\s*Agent:[ \t]*(.*)$/mi);
+    const agent = agentMatch ? agentMatch[1].trim() : '';
+    const mine = agent && agent.toLowerCase() === getAgentPreferredName(agentProfile).toLowerCase();
+    const who = mine ? 'you' : (agent && agent.toUpperCase() !== 'N/A' ? agent : 'another agent');
+    const phoneDigits = phone.replace(/\D/g, '').slice(-10);
+    const byPhone = phoneDigits.length >= 7 && (m.body || '').replace(/\D/g, '').includes(phoneDigits);
+    const what = byPhone ? 'phone number' : 'email';
+    const detail = [info.name, info.source].filter(Boolean).join(', ');
+    const more = hits.length > 1 ? ` It matches ${hits.length >= 5 ? '5 or more' : hits.length} leads from the last ${DUP_WINDOW_DAYS} days.` : '';
+
+    box.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
+      <div><strong>This may be a duplicate.</strong> A lead with this ${what} was sent by ${escapeHtml(who)} ${escapeHtml(relativeWhen(m.date))}${detail ? ` (${escapeHtml(detail)})` : ''}.${escapeHtml(more)} Check with Admissions before sending again.</div>`;
+    box.hidden = false;
+  }catch(e){
+    console.debug('Duplicate check skipped:', e);
+  }
+}
+el('field-phone').addEventListener('input', scheduleDuplicateCheck);
+el('field-patient-email').addEventListener('input', scheduleDuplicateCheck);
+
+/* ---------------- Lead details for My Chat Leads ---------------- */
+function escapeRegExp(str){ return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function leadInfoFor(m){
+  if(!m || !m.body) return null;
+  if(m.leadInfo) return m.leadInfo;
+  const get = (label) => {
+    const match = m.body.match(new RegExp('^\\s*' + escapeRegExp(label) + ':[ \\t]*(.*)$', 'mi'));
+    const v = match ? match[1].trim() : '';
+    return (v && v.toUpperCase() !== 'N/A') ? v : '';
+  };
+  const info = {
+    patient: get("Patient's First/Last Name"),
+    chatter: get("Chatter's First/Last Name"),
+    phone: get('Phone'),
+    email: get('Email'),
+    source: get('Lead Source'),
+    chatId: get('Chat ID')
+  };
+  if(!info.source && !info.patient && !info.chatter && !info.phone && !info.email) return null;
+  info.name = info.patient || info.chatter;
+  m.leadInfo = info;
+  return info;
+}
+
+/* ---------------- Important (star) ---------------- */
+function allKnownMessages(){
+  const list = [...(messagesCache.INBOX || []), ...(messagesCache.SENT || []), ...searchResultsCache, ...currentThreadMessages];
+  threadCache.forEach(t => list.push(...t.messages));
+  return list;
+}
+function applyImportantEverywhere(ids, on){
+  const set = new Set(ids);
+  allKnownMessages().forEach(m => { if(set.has(m.id)) m.important = on; });
+}
+function applyImportantToThread(threadId, on){
+  allKnownMessages().forEach(m => { if(m.threadId === threadId) m.important = on; });
+}
+function isThreadImportant(threadId){
+  return allKnownMessages().some(m => m.threadId === threadId && m.important);
+}
+
+// Re-reads the important state into every visible star, the bulk toolbar
+// and the open conversation — without re-rendering the list.
+function refreshImportantUI(){
+  lastRenderedGroups.forEach(g => {
+    g.important = g.messages.some(m => m.important);
+    const row = findRowByThreadId(g.threadId);
+    const star = row && row.querySelector('.star-btn');
+    if(star) setStarButton(star, g.important);
+  });
+  const btn = el('important-btn');
+  if(btn && currentOpenGroup) setStarButton(btn, isThreadImportant(currentOpenGroup.threadId));
+}
+function setStarButton(btn, on){
+  btn.classList.toggle('is-on', on);
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  if(btn.classList.contains('star-btn')){
+    btn.setAttribute('aria-label', on ? 'Remove from important' : 'Mark as important');
+    btn.title = on ? 'Important — click to remove' : 'Mark as important';
+  }
+}
+
+// Marks the whole conversation, so it shows in Important Email whichever
+// message matched. Falls back to per-message updates if the mail proxy
+// doesn't allow the threads endpoint.
+let threadModifyUnsupported = false;
+async function setThreadImportant(threadId, on){
+  const labels = on ? { addLabelIds: [IMPORTANT_LABEL] } : { removeLabelIds: [IMPORTANT_LABEL] };
+  if(!threadModifyUnsupported){
+    try{
+      await gmailFetch(`/gmail/v1/users/me/threads/${threadId}/modify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(labels)
+      });
+      return true;
+    }catch(e){
+      if([400, 403, 404, 405].includes(e.status)) threadModifyUnsupported = true;
+      else throw e;
+    }
+  }
+  const ids = [...new Set(allKnownMessages().filter(m => m.threadId === threadId).map(m => m.id))];
+  if(ids.length === 0) return false;
+  const results = await Promise.allSettled(ids.map(id =>
+    gmailFetch(`/gmail/v1/users/me/messages/${id}/modify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(labels)
+    })
+  ));
+  if(results.some(r => r.status === 'rejected')) throw new Error('Some messages could not be updated');
+  return true;
+}
+
+async function toggleImportant(threadId, force){
+  if(!threadId) return;
+  const on = typeof force === 'boolean' ? force : !isThreadImportant(threadId);
+  applyImportantToThread(threadId, on);   // optimistic
+  refreshImportantUI();
+  try{
+    await setThreadImportant(threadId, on);
+    threadCache.delete(threadId);
+    return true;
+  }catch(e){
+    console.error(e);
+    applyImportantToThread(threadId, !on);
+    refreshImportantUI();
+    showToast(on ? "Couldn't mark as important. Try again." : "Couldn't remove from important. Try again.", 'error');
+    return false;
+  }
+}
+
+async function bulkMarkImportant(){
+  if(selectedThreadIds.size === 0) return;
+  const ids = [...selectedThreadIds];
+  const results = await Promise.all(ids.map(id => toggleImportant(id, true)));
+  const failed = results.filter(ok => !ok).length;
+  clearSelection();
+  if(failed === 0) showToast(ids.length === 1 ? 'Marked as important' : `${ids.length} conversations marked as important`);
+}
+
 function groupByThread(list){
   const map = new Map();
   list.forEach(m => {
@@ -2398,7 +2995,8 @@ function groupByThread(list){
       messages,
       latest: messages[messages.length - 1],
       count: messages.length,
-      unread: messages.some(m => m.unread)
+      unread: messages.some(m => m.unread),
+      important: messages.some(m => m.important)
     });
   });
   groups.sort((a, b) => new Date(b.latest.date) - new Date(a.latest.date));
@@ -2484,6 +3082,32 @@ function setRowUnreadUI(row, isUnread){
 }
 
 function emptyListHtml(){
+  if(currentView){
+    const title = VIEWS[currentView].title;
+    if(currentSearchTerm){
+      return `<div class="list-placeholder">
+        <p>Nothing in ${escapeHtml(title)} matches “${escapeHtml(currentSearchTerm)}”.</p>
+        <div class="placeholder-actions"><button type="button" class="btn-ghost" data-list-action="clear-search">Clear search</button></div>
+      </div>`;
+    }
+    if(currentView === 'important'){
+      return `<div class="list-placeholder">
+        <p>No important email yet.</p>
+        Select the star on a conversation, or press <kbd>i</kbd> while reading it.
+      </div>`;
+    }
+    if(leadFiltersActive()){
+      return `<div class="list-placeholder">
+        <p>No leads match these filters.</p>
+        <div class="placeholder-actions"><button type="button" class="btn-ghost" data-list-action="clear-lead-filters">Clear filters</button></div>
+      </div>`;
+    }
+    return `<div class="list-placeholder">
+      <p>No chat leads from you yet.</p>
+      Leads you send with New Lead show up here.
+      <div class="placeholder-actions"><button type="button" class="btn-primary" data-list-action="new-lead">New Lead</button></div>
+    </div>`;
+  }
   const folderName = currentFolder === 'INBOX' ? 'Inbox' : 'Sent';
   const activeSource = document.querySelector('.lead-source-item.active');
   if(searchActive && activeSource){
@@ -2519,6 +3143,7 @@ function renderList(){
   lastRenderedGroups = groups;
   const container = el('msg-list');
   updateSyncInfo();
+  syncLeadFiltersBar();
   if(groups.length === 0){
     container.innerHTML = emptyListHtml();
     updateSelectAllCheckboxState();
@@ -2526,7 +3151,8 @@ function renderList(){
   }
   let lastBucket = null;
   let html = groups.map((g, i) => {
-    const addr = parseAddress(currentFolder === 'INBOX' ? g.latest.from : g.latest.to);
+    const showRecipient = currentView ? !!g.latest.isSent : currentFolder !== 'INBOX';
+    const addr = parseAddress(showRecipient ? g.latest.to : g.latest.from);
     const hasAttachment = g.messages.some(m => m.hasAttachments);
     const color = avatarColor(addr.email || addr.name || 'x');
     const initial = (addr.name || addr.email || '?').trim().charAt(0).toUpperCase();
@@ -2540,6 +3166,38 @@ function renderList(){
     }
 
     const checked = selectedThreadIds.has(g.threadId) ? ' checked' : '';
+    const starBtn = `<button type="button" class="star-btn${g.important ? ' is-on' : ''}" data-star-thread="${escapeHtml(g.threadId)}" aria-pressed="${g.important ? 'true' : 'false'}" aria-label="${g.important ? 'Remove from important' : 'Mark as important'}" title="${g.important ? 'Important — click to remove' : 'Mark as important'}"><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg></button>`;
+
+    if(currentView === 'my-leads'){
+      const leadMsg = g.messages.find(m => leadInfoFor(m)) || g.latest;
+      const info = leadInfoFor(leadMsg) || {};
+      const name = info.name || 'Unnamed lead';
+      const leadInitial = name.trim().charAt(0).toUpperCase() || '?';
+      const leadColor = avatarColor(info.phone || info.email || name);
+      const contact = (info.phone || info.email)
+        ? `<div class="lead-contact">
+            ${info.phone ? leadContactLink('phone', info.phone) : ''}
+            ${info.email ? leadContactLink('email', info.email) : ''}
+          </div>`
+        : '<div class="lead-contact-missing">No phone or email on this lead</div>';
+      const toName = addr.name || addr.email;
+      const detail = [info.source, toName ? `sent to ${toName}` : ''].filter(Boolean).join(', ');
+      return bucketHeader + `
+    <div class="msg-row" tabindex="0" data-idx="${i}" data-threadid="${escapeHtml(g.threadId)}">
+      <input type="checkbox" class="msg-checkbox" data-threadid="${escapeHtml(g.threadId)}" aria-label="Select lead"${checked}>
+      <div class="msg-avatar" style="background:${leadColor};" aria-hidden="true">${escapeHtml(leadInitial)}</div>
+      <div class="msg-content">
+        <div class="msg-top">
+          <span class="msg-from-wrap"><span class="msg-from">${escapeHtml(name)}</span><span class="lead-status-slot">${leadStatusHtml(g.threadId)}</span></span>
+          <span class="msg-meta"><span class="msg-date">${formatDate(leadMsg.date)}</span>${starBtn}</span>
+        </div>
+        ${contact}
+        <div class="msg-snippet">${escapeHtml(detail || leadMsg.subject)}</div>
+      </div>
+    </div>
+  `;
+    }
+
     return bucketHeader + `
     <div class="msg-row ${g.unread ? 'unread' : ''}" tabindex="0" data-idx="${i}" data-threadid="${escapeHtml(g.threadId)}">
       <input type="checkbox" class="msg-checkbox" data-threadid="${escapeHtml(g.threadId)}" aria-label="Select conversation"${checked}>
@@ -2550,7 +3208,7 @@ function renderList(){
             ${g.unread ? '<span class="unread-dot" aria-hidden="true" title="Unread"></span>' : ''}
             <span class="msg-from">${escapeHtml(participants)}</span>
           </span>
-          <span class="msg-date">${formatDate(g.latest.date)}</span>
+          <span class="msg-meta"><span class="msg-date">${formatDate(g.latest.date)}</span>${starBtn}</span>
         </div>
         <div class="msg-subject">${escapeHtml(g.latest.subject)}${g.count > 1 ? `<span class="thread-count">${g.count}</span>` : ''}${hasAttachment ? '<svg class="icon icon-sm attachment-flag" role="img" aria-label="Has attachment"><use href="#i-paperclip"/></svg>' : ''}</div>
         <div class="msg-snippet">${escapeHtml(g.latest.snippet)}</div>
@@ -2565,6 +3223,7 @@ function renderList(){
   }
   container.innerHTML = html;
   updateSelectAllCheckboxState();
+  if(currentView === 'my-leads') updateLeadStatuses();
 }
 
 /* One set of listeners on the list container (instead of re-attaching a
@@ -2593,17 +3252,36 @@ function handleListAction(action, btn){
     clearSearch();
   }else if(action === 'new-lead'){
     openCompose();
+  }else if(action === 'clear-lead-filters'){
+    clearLeadFilters();
+    performSearch(currentSearchTerm || '');
   }
 }
 
 el('msg-list').addEventListener('click', (e) => {
   const actionBtn = e.target.closest('[data-list-action]');
   if(actionBtn){ handleListAction(actionBtn.dataset.listAction, actionBtn); return; }
+  const contact = e.target.closest('.lead-contact-link');
+  if(contact){
+    if(!IS_TOUCH){
+      e.preventDefault();
+      copyText(contact.dataset.copy).then(ok => showToast(ok ? `${contact.dataset.copyLabel} copied` : "Couldn't copy. Select the text instead.", ok ? undefined : 'error'));
+    }
+    return;
+  }
+  const star = e.target.closest('.star-btn');
+  if(star){
+    const tid = star.dataset.starThread;
+    const turningOn = !star.classList.contains('is-on');
+    toggleImportant(tid, turningOn).then(ok => { if(ok) showToast(turningOn ? 'Marked as important' : 'Removed from important'); });
+    return;
+  }
   if(e.target.closest('.msg-checkbox')) return;
   const row = e.target.closest('.msg-row');
   if(row) selectRow(row);
 });
 el('msg-list').addEventListener('keydown', (e) => {
+  if(e.target.closest && e.target.closest('.star-btn')) return;
   if((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('msg-row')){
     e.preventDefault();
     selectRow(e.target);
@@ -2668,6 +3346,7 @@ function mergePolledMessages(folder, fetched){
     const existing = byId.get(fm.id);
     if(existing){
       if(existing.unread !== fm.unread){ existing.unread = fm.unread; changed = true; }
+      if(existing.important !== fm.important){ existing.important = fm.important; changed = true; }
     }else{
       cache.push(fm);
       byId.set(fm.id, fm);
@@ -2729,9 +3408,14 @@ async function pollViaHistory(){
       if(!labels.includes(folder)){ cache.splice(i, 1); changed[folder] = true; continue; }
       const u = labels.includes('UNREAD');
       if(m.unread !== u){ m.unread = u; changed[folder] = true; }
+      const imp = labels.includes(IMPORTANT_LABEL);
+      if(m.important !== imp){ m.important = imp; changed[folder] = true; }
     }
   });
-  labelChanges.forEach((labels, id) => applyUnreadEverywhere([id], labels.includes('UNREAD')));
+  labelChanges.forEach((labels, id) => {
+    applyUnreadEverywhere([id], labels.includes('UNREAD'));
+    applyImportantEverywhere([id], labels.includes(IMPORTANT_LABEL));
+  });
 
   // Genuinely new messages: fetch list metadata for just those.
   const inFolder = (folder, id) => (messagesCache[folder] || []).some(m => m.id === id);
@@ -2842,6 +3526,14 @@ async function pollForNewMail(){
     }
     if(!searchActive && result.changed[currentFolder]){
       renderListPreservingView();
+    }else{
+      // Someone else may have marked or unmarked something important.
+      refreshImportantUI();
+    }
+    // A reply may have landed on one of the agent's leads.
+    if(result.threadsWithNewMail && result.threadsWithNewMail.size){
+      result.threadsWithNewMail.forEach(t => leadStatusCache.delete(t));
+      if(currentView === 'my-leads') updateLeadStatuses();
     }
     // Someone replied in the conversation that's open: refresh it quietly.
     if(currentOpenGroup && result.threadsWithNewMail.has(currentOpenGroup.threadId)){
@@ -2982,6 +3674,7 @@ function renderReadingThread(messages, keepScroll){
         <button type="button" class="btn-ghost icon-btn read-back-btn" id="read-back-btn" aria-label="Back to list"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg></button>
         <h2 class="read-subject">${escapeHtml(latest.subject)}</h2>
         <div class="read-actions-top">
+          <button type="button" class="btn-ghost important-btn${messages.some(m => m.important) ? ' is-on' : ''}" id="important-btn" aria-pressed="${messages.some(m => m.important) ? 'true' : 'false'}" title="Important (i)"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-star"/></svg>Important</button>
           <button type="button" class="btn-ghost" id="reply-btn" title="Reply (r)"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-reply"/></svg>Reply</button>
           <button type="button" class="btn-ghost" id="reply-all-btn" title="Reply all (a)"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-reply-all"/></svg>Reply All</button>
         </div>
@@ -2991,6 +3684,7 @@ function renderReadingThread(messages, keepScroll){
   `;
   pane.scrollTop = scrollTop;
 
+  el('important-btn').addEventListener('click', () => toggleOpenThreadImportant());
   el('reply-btn').addEventListener('click', () => openReplyCompose(latest, false));
   el('reply-all-btn').addEventListener('click', () => openReplyCompose(latest, true));
   el('read-back-btn').addEventListener('click', closeReader);
@@ -3035,7 +3729,7 @@ let currentThreadMessages = [];
 // messagesCache — without this, read/unread state and hydrated content
 // wouldn't be reflected back in the list view.
 function syncMessageIntoCache(freshMsg){
-  const fieldsToSync = ['unread', 'hasAttachments', 'body', 'bodyHtml', 'attachments', 'pendingInlineImages', 'hydrated'];
+  const fieldsToSync = ['unread', 'important', 'hasAttachments', 'body', 'bodyHtml', 'attachments', 'pendingInlineImages', 'hydrated'];
   ['INBOX', 'SENT'].forEach(folder => {
     const cached = (messagesCache[folder] || []).find(m => m.id === freshMsg.id);
     if(cached) fieldsToSync.forEach(f => { cached[f] = freshMsg[f]; });
@@ -3141,6 +3835,14 @@ function closeReader(){
   el('app-shell').classList.remove('show-reader');
 }
 
+async function toggleOpenThreadImportant(){
+  if(!currentOpenGroup) return;
+  const tid = currentOpenGroup.threadId;
+  const turningOn = !isThreadImportant(tid);
+  const ok = await toggleImportant(tid, turningOn);
+  if(ok) showToast(turningOn ? 'Marked as important' : 'Removed from important');
+}
+
 async function markOpenThreadUnread(){
   if(!currentOpenGroup || currentThreadMessages.length === 0) return;
   const group = currentOpenGroup;
@@ -3192,10 +3894,8 @@ el('nav-backdrop').addEventListener('click', closeNav);
 
 document.querySelectorAll('.nav-item[data-folder]').forEach(item => {
   item.addEventListener('click', () => {
-    document.querySelectorAll('.nav-item[data-folder]').forEach(i => { i.classList.remove('active'); i.removeAttribute('aria-current'); });
-    item.classList.add('active');
-    item.setAttribute('aria-current', 'page');
-    document.querySelectorAll('.lead-source-item').forEach(i => { i.classList.remove('active'); i.removeAttribute('aria-pressed'); });
+    setActiveNav(item);
+    currentView = null;
     currentFolder = item.dataset.folder;
     searchActive = false;
     // Invalidate any in-flight search page so it can't render over this folder.
@@ -3212,8 +3912,17 @@ document.querySelectorAll('.nav-item[data-folder]').forEach(item => {
   });
 });
 
+document.querySelectorAll('.nav-item[data-view]').forEach(item => {
+  item.addEventListener('click', () => openView(item.dataset.view, item));
+});
+
 document.querySelectorAll('.lead-source-item').forEach(item => {
   item.addEventListener('click', () => {
+    if(currentView){
+      // Lead-source filters search a folder; leave the sidebar view first.
+      currentView = null;
+      setActiveNav(document.querySelector(`.nav-item[data-folder="${currentFolder}"]`));
+    }
     document.querySelectorAll('.lead-source-item').forEach(i => { i.classList.remove('active'); i.removeAttribute('aria-pressed'); });
     item.classList.add('active');
     item.setAttribute('aria-pressed', 'true');
@@ -3226,6 +3935,7 @@ document.querySelectorAll('.lead-source-item').forEach(item => {
 });
 
 el('refresh-btn').addEventListener('click', () => refreshCurrentView());
+el('mark-important-btn').addEventListener('click', bulkMarkImportant);
 
 /* ---------------- Compose: intake form logic ---------------- */
 const MAX_FILES = 10;
@@ -3377,6 +4087,7 @@ function resetForm(){
   renderFileList();
   setSendStatus('');
   clearFieldErrors();
+  hideDuplicateWarning();
 
   if(agentProfile){
     el('field-agent').value = getAgentPreferredName(agentProfile);
@@ -3408,6 +4119,7 @@ function fadeComposeBody(){
 }
 
 function openCompose(){
+  flushHeldSend();
   resetForm();
   isReplyMode = false;
   isQuickMode = false;
@@ -3420,6 +4132,7 @@ function openCompose(){
 }
 
 function openReplyCompose(m, replyAll){
+  flushHeldSend();
   resetForm();
   isReplyMode = true;
   isQuickMode = false;
@@ -3460,6 +4173,7 @@ function openReplyCompose(m, replyAll){
 }
 
 function openQuickCompose(){
+  flushHeldSend();
   resetForm();
   isReplyMode = false;
   isQuickMode = true;
@@ -3602,6 +4316,7 @@ function restoreDraft(){
   el('draft-banner').hidden = true;
   clearFieldErrors();
   setSendStatus("Draft restored. Attachments aren't saved with drafts.");
+  if(!isReplyMode && !isQuickMode) scheduleDuplicateCheck();
   const first = document.querySelector('.compose-body .form-block:not([hidden]) .form-control:not([hidden])');
   if(first) first.focus();
 }
@@ -3884,12 +4599,64 @@ async function sendCompose(){
   const draftKey = currentDraftKey();
   const replyThreadId = mode === 'reply' && replyContext ? replyContext.threadId : null;
 
-  setSendBusy(true);
-  setSendStatus('');
+  holdSend({
+    to, subject, bodyText, mode, draftKey, replyThreadId,
+    files: attachedFiles.slice(),
+    replyCtx: mode === 'reply' && replyContext ? { ...replyContext } : null
+  });
+}
+
+/* ---------------- Undo send ----------------
+   Sending waits a few seconds with an Undo button. The compose window is
+   only hidden during that time (nothing is cleared), so Undo puts the
+   agent straight back where they were. Opening another compose window,
+   signing out or leaving the page sends the held message right away. */
+const UNDO_SEND_MS = 5000;
+let heldSend = null;
+
+function holdSend(job){
+  isSending = true;
+  clearTimeout(draftTimer);
+  saveDraftNow();                 // safety net until it's actually sent
+  job.formIntact = true;
+  heldSend = job;
+  el('compose-overlay').classList.remove('open');
+  job.toast = showToast(`Sending to ${job.to}…`, undefined, { label: 'Undo', onClick: undoHeldSend, duration: UNDO_SEND_MS });
+  job.timer = setTimeout(commitHeldSend, UNDO_SEND_MS);
+}
+
+function undoHeldSend(){
+  const job = heldSend;
+  if(!job) return;
+  clearTimeout(job.timer);
+  heldSend = null;
+  isSending = false;
+  if(job.formIntact){
+    el('compose-overlay').classList.add('open');
+    setSendBusy(false);
+    setSendStatus('Sending canceled. Your message is still here.');
+    requestAnimationFrame(() => el('send-btn').focus());
+  }
+}
+
+// Used before anything that would reuse or clear the compose form.
+function flushHeldSend(){
+  if(!heldSend) return Promise.resolve();
+  heldSend.formIntact = false;
+  return commitHeldSend();
+}
+
+async function commitHeldSend(){
+  const job = heldSend;
+  if(!job) return;
+  heldSend = null;
+  clearTimeout(job.timer);
+  if(job.toast) job.toast.dismiss();
+
   try{
-    const raw = await buildRawMessage(to, subject, bodyText, attachedFiles, mode === 'reply' ? replyContext : null);
+    const raw = await buildRawMessage(job.to, job.subject, job.bodyText, job.files, job.replyCtx);
     const payload = { raw };
-    if(replyThreadId) payload.threadId = replyThreadId;
+    if(job.replyThreadId) payload.threadId = job.replyThreadId;
     await gmailFetch('/gmail/v1/users/me/messages/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -3897,42 +4664,62 @@ async function sendCompose(){
     });
   }catch(e){
     console.error(e);
-    setSendBusy(false);
+    isSending = false;
     const tooLarge = e.status === 413 || /too large|exceed|size limit/i.test(e.message || '');
-    setSendStatus(tooLarge
+    const msg = tooLarge
       ? 'This email is too large to send. Remove an attachment or two and try again.'
-      : "Couldn't send. Check your connection and try again.", 'error');
+      : "Couldn't send. Check your connection and try again.";
+    if(job.formIntact && !composeIsOpen()){
+      el('compose-overlay').classList.add('open');
+      setSendBusy(false);
+      setSendStatus(msg, 'error');
+    }else{
+      showToast(`Your email to ${job.to} wasn't sent. It's saved as a draft.`, 'error');
+    }
     return;
   }
 
-  // Sent: clear the draft and the form, close, and confirm.
-  deleteDraft(draftKey);
-  pendingDraft = null;
-  composeBaseline = null;
-  attachedFiles = [];
-  setSendBusy(false);
-  closeCompose();
-  resetForm();
+  isSending = false;
+  deleteDraft(job.draftKey);
+  if(job.formIntact){
+    pendingDraft = null;
+    composeBaseline = null;
+    attachedFiles = [];
+    setSendBusy(false);
+    closeCompose();
+    resetForm();
+  }
 
-  const again = mode === 'lead' ? { label: 'Send another', onClick: openCompose }
-    : mode === 'quick' ? { label: 'Send another', onClick: openQuickCompose }
+  const again = job.mode === 'lead' ? { label: 'Send another', onClick: openCompose }
+    : job.mode === 'quick' ? { label: 'Send another', onClick: openQuickCompose }
     : null;
-  showToast(`Email sent to ${to}`, 'success', again);
+  showToast(`Email sent to ${job.to}`, 'success', again);
+  if(job.mode === 'lead') refreshMyLeadsCount();
 
+  const replyThreadId = job.replyThreadId;
   if(replyThreadId){
     // Stay in the conversation and reload it so the reply appears at the
     // bottom, instead of bouncing to Sent.
     threadCache.delete(replyThreadId);
+    leadStatusCache.delete(replyThreadId);
     if(currentOpenGroup && currentOpenGroup.threadId === replyThreadId){
       openThread(currentOpenGroup, { forceRefresh: true, silent: true });
     }
     refreshCurrentView();
-  }else if(currentFolder === 'SENT' && !searchActive){
+  }else if((currentFolder === 'SENT' && !searchActive) || currentView === 'my-leads'){
     refreshCurrentView();
+    if(currentView) loadFolder('SENT', true);
   }else{
     loadFolder('SENT', true);
   }
 }
+
+window.addEventListener('beforeunload', (e) => {
+  if(!heldSend) return;
+  flushHeldSend();
+  e.preventDefault();
+  e.returnValue = '';
+});
 
 el('send-btn').addEventListener('click', sendCompose);
 
@@ -4173,7 +4960,7 @@ document.addEventListener('keydown', (e) => {
     else if(composeOpen) closeComposeWithConfirm();
     else if(isNavOpen()) closeNav();
     else if(selectedThreadIds.size > 0) clearSelection();
-    else if(searchActive) clearSearch();
+    else if(searchActive && currentSearchTerm) clearSearch();
     return;
   }
 
@@ -4210,6 +4997,9 @@ document.addEventListener('keydown', (e) => {
       break;
     case 'u':
       if(latest){ e.preventDefault(); markOpenThreadUnread(); }
+      break;
+    case 'i':
+      if(latest){ e.preventDefault(); toggleOpenThreadImportant(); }
       break;
     case 'ArrowDown':
     case 'ArrowUp':
